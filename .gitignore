@@ -6,4 +6,7 @@ dist/
 __pycache__/
 
 # Legacy docs system
-docs/
+/docs/
+
+# Generated doc pages (created by scripts/generate_docs.py)
+src/content/docs/
