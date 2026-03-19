@@ -17,5 +17,8 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Generate docs
+        run: python3 scripts/generate_docs.py
+
       - name: Validate manifests and skill links
         run: python3 scripts/validate_plugin.py
