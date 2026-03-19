@@ -1,0 +1,9 @@
+# Generated local/build artifacts
+node_modules/
+.astro/
+.uv-cache/
+dist/
+__pycache__/
+
+# Legacy docs system
+docs/

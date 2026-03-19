@@ -1,0 +1,22 @@
+{
+  "name": "apple-text-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "hooks:install": "python3 scripts/install_git_hooks.py",
+    "test": "python3 -m unittest discover -s tests",
+    "check": "python3 scripts/validate_plugin.py && npm run test",
+    "release:check": "npm run check && npm run docs:build",
+    "skills:freshness": "python3 scripts/skill_freshness.py",
+    "version:set": "python3 scripts/set_version.py",
+    "docs:generate": "python3 scripts/generate_docs.py",
+    "docs:check": "python3 scripts/generate_docs.py --check",
+    "docs:dev": "python3 scripts/generate_docs.py && astro dev",
+    "docs:build": "python3 scripts/generate_docs.py && astro build",
+    "docs:preview": "astro preview"
+  },
+  "devDependencies": {
+    "@astrojs/starlight": "^0.38.0",
+    "astro": "^6.0.0"
+  }
+}

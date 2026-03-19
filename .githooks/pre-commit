@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -eu
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+
+python3 scripts/generate_docs.py
+
+git add \
+  README.md \
+  docs/index.md \
+  docs/guide/index.md \
+  docs/guide/entry-points.md \
+  docs/guide/problem-routing.md \
+  docs/guide/skill-catalog.md \
+  docs/guide/commands-and-agents.md \
+  docs/guide/install.md
+
+python3 scripts/validate_plugin.py

@@ -1,0 +1,6 @@
+node_modules/
+.astro/
+.uv-cache/
+dist/
+tests/
+__pycache__/

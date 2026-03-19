@@ -1,0 +1,17 @@
+:root {
+  --sl-content-width: 60rem;
+}
+
+.sl-markdown-content pre {
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.75rem;
+}
+
+.sl-markdown-content .expressive-code pre {
+  border: 0;
+  border-radius: 0;
+}
+
+.sl-markdown-content code:not(pre code) {
+  border-radius: 0.35rem;
+}

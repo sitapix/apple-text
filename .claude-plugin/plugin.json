@@ -1,0 +1,30 @@
+{
+  "name": "apple-text",
+  "version": "1.0.0",
+  "description": "Apple text system skills focused on TextKit, UITextView, NSTextView, attributed text, and Writing Tools",
+  "homepage": "https://github.com/sitapix/apple-text",
+  "repository": "https://github.com/sitapix/apple-text",
+  "author": {
+    "name": "Steven"
+  },
+  "license": "MIT",
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "hooks": "./hooks/hooks.json",
+  "skills": "./skills/",
+  "keywords": [
+    "apple",
+    "textkit",
+    "textkit1",
+    "textkit2",
+    "uikit",
+    "appkit",
+    "uitextview",
+    "nstextview",
+    "non-swiftui",
+    "attributedstring",
+    "writing-tools",
+    "ios",
+    "macos"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "name": "apple-text-marketplace",
+  "owner": {
+    "name": "sitapix"
+  },
+  "metadata": {
+    "description": "Apple text system skills focused on TextKit, UITextView, NSTextView, attributed text, and Writing Tools",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "apple-text",
+      "source": "./",
+      "description": "Reference and diagnostic skills for TextKit, UIKit/AppKit text views, and other non-SwiftUI Apple text work",
+      "homepage": "https://github.com/sitapix/apple-text",
+      "repository": "https://github.com/sitapix/apple-text",
+      "version": "1.0.0",
+      "author": {
+        "name": "Steven"
+      },
+      "license": "MIT",
+      "keywords": [
+        "apple",
+        "textkit",
+        "textkit1",
+        "textkit2",
+        "uikit",
+        "appkit",
+        "uitextview",
+        "nstextview",
+        "non-swiftui",
+        "attributedstring",
+        "writing-tools",
+        "ios",
+        "macos"
+      ],
+      "tags": [
+        "apple-text",
+        "text-editing",
+        "textkit",
+        "uikit",
+        "appkit"
+      ],
+      "category": "productivity",
+      "commands": "./commands/",
+      "agents": "./agents/",
+      "hooks": "./hooks/hooks.json",
+      "skills": "./skills/"
+    }
+  ]
+}
