@@ -10,19 +10,6 @@
   "license": "MIT",
   "commands": "./commands/",
   "agents": ["./agents/textkit-auditor.md"],
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "UV_CACHE_DIR=\"${CLAUDE_PLUGIN_ROOT}/.uv-cache\" uv run python \"${CLAUDE_PLUGIN_ROOT}/scripts/validate_after_edit.py\""
-          }
-        ]
-      }
-    ]
-  },
   "skills": "./skills/",
   "keywords": [
     "apple",
