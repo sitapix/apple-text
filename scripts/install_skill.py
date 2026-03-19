@@ -11,7 +11,7 @@ SKILLS_DIR = ROOT / "skills"
 AGENTS_DIR = ROOT / "agents"
 
 SKILL_AGENT_DEPENDENCIES = {
-    "text-audit": ["textkit-auditor.md"],
+    "apple-text-audit": ["textkit-auditor.md"],
 }
 
 

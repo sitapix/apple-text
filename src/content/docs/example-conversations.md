@@ -17,7 +17,7 @@ Use this page when you want to see how the public entry points should feel in pr
 
 **Expected behavior**
 
-- Routes to [`text-layout-invalidation`](/skills/text-layout-invalidation/), [`text-storage`](/skills/text-storage/), or [`text-textkit-diag`](/skills/text-textkit-diag/)
+- Routes to [`apple-text-layout-invalidation`](/skills/apple-text-layout-invalidation/), [`apple-text-storage`](/skills/apple-text-storage/), or [`apple-text-textkit-diag`](/skills/apple-text-textkit-diag/)
 - Does not require the user to know plugin internals
 - Keeps the answer on Apple text layout mechanics rather than generic editor advice
 
@@ -33,7 +33,7 @@ Use apple-text and explain why my UITextView lost TextKit 2.
 
 **Expected behavior**
 
-- Routes to [`text-fallback-triggers`](/skills/text-fallback-triggers/) or [`text-textkit-diag`](/skills/text-textkit-diag/)
+- Routes to [`apple-text-fallback-triggers`](/skills/apple-text-fallback-triggers/) or [`apple-text-textkit-diag`](/skills/apple-text-textkit-diag/)
 - Explains fallback triggers first
 - Avoids drifting into generic SwiftUI guidance
 
@@ -44,7 +44,7 @@ Use apple-text and explain why my UITextView lost TextKit 2.
 **User**
 
 ```text
-Use text-views and tell me whether this should be TextEditor or UITextView.
+Use apple-text-views and tell me whether this should be TextEditor or UITextView.
 I need syntax highlighting and inline attachments.
 ```
 
@@ -52,7 +52,7 @@ I need syntax highlighting and inline attachments.
 
 - Chooses `UITextView`
 - Explains why `TextEditor` is not enough
-- Points to [`text-representable`](/skills/text-representable/) if the user is in SwiftUI
+- Points to [`apple-text-representable`](/skills/apple-text-representable/) if the user is in SwiftUI
 - Keeps the choice concrete instead of listing every possible text surface
 
 > Why this matters: decision skills should answer the choice directly and only then pull in supporting skills.
@@ -62,7 +62,7 @@ I need syntax highlighting and inline attachments.
 **User**
 
 ```text
-Use text-audit on Sources/Editor and list the highest-risk issues first.
+Use apple-text-audit on Sources/Editor and list the highest-risk issues first.
 ```
 
 **Expected behavior**
@@ -78,14 +78,14 @@ Use text-audit on Sources/Editor and list the highest-risk issues first.
 **User**
 
 ```text
-Use text-writing-tools and show how to keep code blocks out of Writing Tools rewrites.
+Use apple-text-writing-tools and show how to keep code blocks out of Writing Tools rewrites.
 ```
 
 **Expected behavior**
 
 - Focuses on Writing Tools APIs and ignored ranges
 - Does not turn into a generic AI feature explanation
-- Links protected-range guidance back to [`text-writing-tools`](/skills/text-writing-tools/)
+- Links protected-range guidance back to [`apple-text-writing-tools`](/skills/apple-text-writing-tools/)
 
 > Why this matters: this plugin should stay on editor implementation details even when the feature touches AI.
 
@@ -94,7 +94,7 @@ Use text-writing-tools and show how to keep code blocks out of Writing Tools rew
 **User**
 
 ```text
-Use text-representable and fix cursor jump in my SwiftUI wrapper around UITextView.
+Use apple-text-representable and fix cursor jump in my SwiftUI wrapper around UITextView.
 ```
 
 **Expected behavior**
@@ -108,5 +108,5 @@ Use text-representable and fix cursor jump in my SwiftUI wrapper around UITextVi
 ## Coverage Map
 
 - Broad intake: [`/apple-text:ask`](/commands/), [`apple-text`](/skills/apple-text/)
-- Decision paths: [`text-views`](/skills/text-views/), [`text-layout-manager-selection`](/skills/text-layout-manager-selection/)
-- Workflow paths: [`text-audit`](/skills/text-audit/), [`text-writing-tools`](/skills/text-writing-tools/), [`text-representable`](/skills/text-representable/)
+- Decision paths: [`apple-text-views`](/skills/apple-text-views/), [`apple-text-layout-manager-selection`](/skills/apple-text-layout-manager-selection/)
+- Workflow paths: [`apple-text-audit`](/skills/apple-text-audit/), [`apple-text-writing-tools`](/skills/apple-text-writing-tools/), [`apple-text-representable`](/skills/apple-text-representable/)

@@ -14,14 +14,14 @@ class InstallSkillTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             claude_home = Path(temp_dir) / ".claude"
             result = subprocess.run(
-                [sys.executable, str(INSTALL_SCRIPT), "text-audit", "--claude-home", str(claude_home)],
+                [sys.executable, str(INSTALL_SCRIPT), "apple-text-audit", "--claude-home", str(claude_home)],
                 cwd=ROOT,
                 capture_output=True,
                 text=True,
             )
 
             self.assertEqual(result.returncode, 0, msg=result.stderr or result.stdout)
-            self.assertTrue((claude_home / "skills" / "text-audit" / "SKILL.md").exists())
+            self.assertTrue((claude_home / "skills" / "apple-text-audit" / "SKILL.md").exists())
             self.assertTrue((claude_home / "agents" / "textkit-auditor.md").exists())
 
 

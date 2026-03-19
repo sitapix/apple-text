@@ -6,8 +6,8 @@
 
 ## Unreleased
 
-- Split `text-views` into a short `SKILL.md` plus `reference.md` and `examples.md` to improve retrieval quality.
-- Added `/skill text-audit` as a public audit entry point backed by the `textkit-auditor` agent.
+- Split `apple-text-views` into a short `SKILL.md` plus `reference.md` and `examples.md` to improve retrieval quality.
+- Added `/skill apple-text-audit` as a public audit entry point backed by the `textkit-auditor` agent.
 - Added `/apple-text:ask` as a natural-language command that routes users to the right Apple Text skill or agent.
 - Added marketplace metadata for agents, license, author, and tags.
 - Added a plugin hook and helper script to rerun validation after relevant edits.

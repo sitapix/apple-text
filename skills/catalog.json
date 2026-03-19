@@ -4,376 +4,538 @@
       "name": "apple-text",
       "kind": "router",
       "entrypoint_priority": 1,
-      "aliases": ["apple text", "text router", "non-swiftui text"],
+      "aliases": [
+        "apple text",
+        "text router",
+        "non-swiftui text"
+      ],
       "related_skills": [
-        "text-audit",
-        "text-textkit-diag",
-        "text-views",
-        "text-layout-manager-selection"
+        "apple-text-audit",
+        "apple-text-textkit-diag",
+        "apple-text-views",
+        "apple-text-layout-manager-selection"
       ]
     },
     {
-      "name": "text-audit",
+      "name": "apple-text-audit",
       "kind": "workflow",
       "entrypoint_priority": 2,
-      "aliases": ["audit", "review", "scan", "textkit audit"],
+      "aliases": [
+        "audit",
+        "review",
+        "scan",
+        "textkit audit"
+      ],
       "related_skills": [
         "apple-text",
-        "text-textkit-diag",
-        "text-fallback-triggers"
+        "apple-text-textkit-diag",
+        "apple-text-fallback-triggers"
       ],
       "agent": "textkit-auditor"
     },
     {
-      "name": "text-textkit-diag",
+      "name": "apple-text-textkit-diag",
       "kind": "diag",
       "entrypoint_priority": 2,
-      "aliases": ["debug", "diagnose", "textkit troubleshooting"],
+      "aliases": [
+        "debug",
+        "diagnose",
+        "textkit troubleshooting"
+      ],
       "related_skills": [
         "apple-text",
-        "text-fallback-triggers",
-        "text-layout-invalidation"
+        "apple-text-fallback-triggers",
+        "apple-text-layout-invalidation"
       ]
     },
     {
-      "name": "text-views",
+      "name": "apple-text-views",
       "kind": "decision",
       "entrypoint_priority": 2,
-      "aliases": ["which view", "text view choice", "view selection"],
+      "aliases": [
+        "which view",
+        "text view choice",
+        "view selection"
+      ],
       "related_skills": [
         "apple-text",
-        "text-representable",
-        "text-layout-manager-selection"
+        "apple-text-representable",
+        "apple-text-layout-manager-selection"
       ]
     },
     {
-      "name": "text-representable",
+      "name": "apple-text-representable",
       "kind": "workflow",
       "entrypoint_priority": 3,
-      "aliases": ["uiviewrepresentable", "nsviewrepresentable", "swiftui wrapper"],
+      "aliases": [
+        "uiviewrepresentable",
+        "nsviewrepresentable",
+        "swiftui wrapper"
+      ],
       "related_skills": [
-        "text-views",
-        "text-swiftui-bridging",
-        "text-layout-manager-selection"
+        "apple-text-views",
+        "apple-text-swiftui-bridging",
+        "apple-text-layout-manager-selection"
       ]
     },
     {
-      "name": "text-writing-tools",
+      "name": "apple-text-writing-tools",
       "kind": "workflow",
       "entrypoint_priority": 3,
-      "aliases": ["writing tools", "apple intelligence editor", "uiwritingtoolscoordinator"],
+      "aliases": [
+        "writing tools",
+        "apple intelligence editor",
+        "uiwritingtoolscoordinator"
+      ],
       "related_skills": [
         "apple-text",
-        "text-textkit2-ref",
-        "text-fallback-triggers"
+        "apple-text-textkit2-ref",
+        "apple-text-fallback-triggers"
       ]
     },
     {
-      "name": "text-layout-manager-selection",
+      "name": "apple-text-layout-manager-selection",
       "kind": "decision",
       "entrypoint_priority": 3,
-      "aliases": ["textkit 1 vs 2", "layout manager choice", "migration choice"],
+      "aliases": [
+        "textkit 1 vs 2",
+        "layout manager choice",
+        "migration choice"
+      ],
       "related_skills": [
-        "text-textkit1-ref",
-        "text-textkit2-ref",
-        "text-fallback-triggers"
+        "apple-text-textkit1-ref",
+        "apple-text-textkit2-ref",
+        "apple-text-fallback-triggers"
       ]
     },
     {
-      "name": "text-fallback-triggers",
+      "name": "apple-text-fallback-triggers",
       "kind": "diag",
       "entrypoint_priority": 3,
-      "aliases": ["fallback", "compatibility mode", "textkit 1 fallback"],
+      "aliases": [
+        "fallback",
+        "compatibility mode",
+        "textkit 1 fallback"
+      ],
       "related_skills": [
-        "text-textkit-diag",
-        "text-layout-manager-selection",
-        "text-audit"
+        "apple-text-textkit-diag",
+        "apple-text-layout-manager-selection",
+        "apple-text-audit"
       ]
     },
     {
-      "name": "text-layout-invalidation",
+      "name": "apple-text-layout-invalidation",
       "kind": "ref",
       "entrypoint_priority": 3,
-      "aliases": ["layout stale", "rerender", "invalidate layout"],
+      "aliases": [
+        "layout stale",
+        "rerender",
+        "invalidate layout"
+      ],
       "related_skills": [
-        "text-textkit-diag",
-        "text-storage",
-        "text-textkit2-ref"
+        "apple-text-textkit-diag",
+        "apple-text-storage",
+        "apple-text-textkit2-ref"
       ]
     },
     {
-      "name": "text-storage",
+      "name": "apple-text-storage",
       "kind": "ref",
       "entrypoint_priority": 3,
-      "aliases": ["text storage", "ntextstorage", "text content storage"],
+      "aliases": [
+        "text storage",
+        "ntextstorage",
+        "text content storage"
+      ],
       "related_skills": [
-        "text-layout-invalidation",
-        "text-textkit1-ref",
-        "text-textkit2-ref"
+        "apple-text-layout-invalidation",
+        "apple-text-textkit1-ref",
+        "apple-text-textkit2-ref"
       ]
     },
     {
-      "name": "text-swiftui-bridging",
+      "name": "apple-text-swiftui-bridging",
       "kind": "decision",
       "entrypoint_priority": 3,
-      "aliases": ["swiftui text bridge", "attributedstring bridge", "swiftui text limits"],
+      "aliases": [
+        "swiftui text bridge",
+        "attributedstring bridge",
+        "swiftui text limits"
+      ],
       "related_skills": [
-        "text-representable",
-        "text-attributed-string",
-        "text-markdown"
+        "apple-text-representable",
+        "apple-text-attributed-string",
+        "apple-text-markdown"
       ]
     },
     {
-      "name": "text-attributed-string",
+      "name": "apple-text-attributed-string",
       "kind": "decision",
       "entrypoint_priority": 3,
-      "aliases": ["attributedstring vs nsattributedstring", "custom attributes", "attribute scopes"],
+      "aliases": [
+        "attributedstring vs nsattributedstring",
+        "custom attributes",
+        "attribute scopes"
+      ],
       "related_skills": [
-        "text-formatting-ref",
-        "text-swiftui-bridging",
-        "text-markdown"
+        "apple-text-formatting-ref",
+        "apple-text-swiftui-bridging",
+        "apple-text-markdown"
       ]
     },
     {
-      "name": "text-formatting-ref",
+      "name": "apple-text-formatting-ref",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["formatting", "paragraph style", "underline style"],
+      "aliases": [
+        "formatting",
+        "paragraph style",
+        "underline style"
+      ],
       "related_skills": [
-        "text-attributed-string",
-        "text-colors",
-        "text-attachments-ref"
+        "apple-text-attributed-string",
+        "apple-text-colors",
+        "apple-text-attachments-ref"
       ]
     },
     {
-      "name": "text-colors",
+      "name": "apple-text-colors",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["semantic colors", "dark mode text", "display p3 text"],
+      "aliases": [
+        "semantic colors",
+        "dark mode text",
+        "display p3 text"
+      ],
       "related_skills": [
-        "text-formatting-ref",
-        "text-dynamic-type",
-        "text-attributed-string"
+        "apple-text-formatting-ref",
+        "apple-text-dynamic-type",
+        "apple-text-attributed-string"
       ]
     },
     {
-      "name": "text-dynamic-type",
+      "name": "apple-text-dynamic-type",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["dynamic type", "font scaling", "uifontmetrics"],
+      "aliases": [
+        "dynamic type",
+        "font scaling",
+        "uifontmetrics"
+      ],
       "related_skills": [
-        "text-views",
-        "text-colors",
-        "text-writing-tools"
+        "apple-text-views",
+        "apple-text-colors",
+        "apple-text-writing-tools"
       ]
     },
     {
-      "name": "text-appkit-vs-uikit",
+      "name": "apple-text-appkit-vs-uikit",
       "kind": "decision",
       "entrypoint_priority": 4,
-      "aliases": ["appkit vs uikit", "nstextview vs uitextview", "platform differences"],
+      "aliases": [
+        "appkit vs uikit",
+        "nstextview vs uitextview",
+        "platform differences"
+      ],
       "related_skills": [
-        "text-views",
-        "text-representable",
-        "text-writing-tools"
+        "apple-text-views",
+        "apple-text-representable",
+        "apple-text-writing-tools"
       ]
     },
     {
-      "name": "text-foundation-ref",
+      "name": "apple-text-foundation-ref",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["foundation text", "nsregularexpression", "nldetector"],
+      "aliases": [
+        "foundation text",
+        "nsregularexpression",
+        "nldetector"
+      ],
       "related_skills": [
-        "text-parsing",
-        "text-attributed-string",
-        "text-markdown"
+        "apple-text-parsing",
+        "apple-text-attributed-string",
+        "apple-text-markdown"
       ]
     },
     {
-      "name": "text-parsing",
+      "name": "apple-text-parsing",
       "kind": "decision",
       "entrypoint_priority": 4,
-      "aliases": ["regex choice", "swift regex", "text parsing"],
+      "aliases": [
+        "regex choice",
+        "swift regex",
+        "text parsing"
+      ],
       "related_skills": [
-        "text-foundation-ref",
-        "text-markdown",
-        "text-attributed-string"
+        "apple-text-foundation-ref",
+        "apple-text-markdown",
+        "apple-text-attributed-string"
       ]
     },
     {
-      "name": "text-markdown",
+      "name": "apple-text-markdown",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["markdown", "presentationintent", "markdown attributed string"],
+      "aliases": [
+        "markdown",
+        "presentationintent",
+        "markdown attributed string"
+      ],
       "related_skills": [
-        "text-attributed-string",
-        "text-swiftui-bridging",
-        "text-writing-tools"
+        "apple-text-attributed-string",
+        "apple-text-swiftui-bridging",
+        "apple-text-writing-tools"
       ]
     },
     {
-      "name": "text-input-ref",
+      "name": "apple-text-input-ref",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["uitextinput", "nstextinputclient", "marked text"],
+      "aliases": [
+        "uitextinput",
+        "nstextinputclient",
+        "marked text"
+      ],
       "related_skills": [
-        "text-representable",
-        "text-writing-tools",
-        "text-textkit-diag"
+        "apple-text-representable",
+        "apple-text-writing-tools",
+        "apple-text-textkit-diag"
       ]
     },
     {
-      "name": "text-attachments-ref",
+      "name": "apple-text-attachments-ref",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["text attachments", "nstextattachment", "attachment view provider"],
+      "aliases": [
+        "text attachments",
+        "nstextattachment",
+        "attachment view provider"
+      ],
       "related_skills": [
-        "text-formatting-ref",
-        "text-textkit2-ref",
-        "text-fallback-triggers"
+        "apple-text-formatting-ref",
+        "apple-text-textkit2-ref",
+        "apple-text-fallback-triggers"
       ]
     },
     {
-      "name": "text-textkit1-ref",
+      "name": "apple-text-textkit1-ref",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["textkit 1", "nslayoutmanager", "legacy textkit"],
+      "aliases": [
+        "textkit 1",
+        "nslayoutmanager",
+        "legacy textkit"
+      ],
       "related_skills": [
-        "text-layout-manager-selection",
-        "text-storage",
-        "text-fallback-triggers"
+        "apple-text-layout-manager-selection",
+        "apple-text-storage",
+        "apple-text-fallback-triggers"
       ]
     },
     {
-      "name": "text-textkit2-ref",
+      "name": "apple-text-textkit2-ref",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["textkit 2", "nstextlayoutmanager", "viewport layout"],
+      "aliases": [
+        "textkit 2",
+        "nstextlayoutmanager",
+        "viewport layout"
+      ],
       "related_skills": [
-        "text-layout-manager-selection",
-        "text-storage",
-        "text-viewport-rendering"
+        "apple-text-layout-manager-selection",
+        "apple-text-storage",
+        "apple-text-viewport-rendering"
       ]
     },
     {
-      "name": "text-viewport-rendering",
+      "name": "apple-text-viewport-rendering",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["viewport rendering", "layout fragments", "rendering attributes"],
+      "aliases": [
+        "viewport rendering",
+        "layout fragments",
+        "rendering attributes"
+      ],
       "related_skills": [
-        "text-textkit2-ref",
-        "text-layout-invalidation",
-        "text-attachments-ref"
+        "apple-text-textkit2-ref",
+        "apple-text-layout-invalidation",
+        "apple-text-attachments-ref"
       ]
     },
     {
-      "name": "text-undo",
+      "name": "apple-text-undo",
       "kind": "workflow",
       "entrypoint_priority": 3,
-      "aliases": ["undo", "redo", "undo manager", "undo grouping", "undo coalescing"],
+      "aliases": [
+        "undo",
+        "redo",
+        "undo manager",
+        "undo grouping",
+        "undo coalescing"
+      ],
       "related_skills": [
-        "text-storage",
-        "text-writing-tools",
-        "text-textkit-diag"
+        "apple-text-storage",
+        "apple-text-writing-tools",
+        "apple-text-textkit-diag"
       ]
     },
     {
-      "name": "text-find-replace",
+      "name": "apple-text-find-replace",
       "kind": "workflow",
       "entrypoint_priority": 3,
-      "aliases": ["find", "replace", "search", "uifindinteraction", "nstextfinder"],
+      "aliases": [
+        "find",
+        "replace",
+        "search",
+        "uifindinteraction",
+        "nstextfinder"
+      ],
       "related_skills": [
-        "text-viewport-rendering",
-        "text-attributed-string",
-        "text-undo"
+        "apple-text-viewport-rendering",
+        "apple-text-attributed-string",
+        "apple-text-undo"
       ]
     },
     {
-      "name": "text-pasteboard",
+      "name": "apple-text-pasteboard",
       "kind": "workflow",
       "entrypoint_priority": 3,
-      "aliases": ["paste", "copy", "cut", "clipboard", "pasteboard", "nsitemprovider"],
+      "aliases": [
+        "paste",
+        "copy",
+        "cut",
+        "clipboard",
+        "pasteboard",
+        "nsitemprovider"
+      ],
       "related_skills": [
-        "text-attachments-ref",
-        "text-attributed-string",
-        "text-undo"
+        "apple-text-attachments-ref",
+        "apple-text-attributed-string",
+        "apple-text-undo"
       ]
     },
     {
-      "name": "text-interaction",
+      "name": "apple-text-interaction",
       "kind": "workflow",
       "entrypoint_priority": 3,
-      "aliases": ["context menu", "link tap", "cursor", "selection", "gestures", "uieditmenuinteraction"],
+      "aliases": [
+        "context menu",
+        "link tap",
+        "cursor",
+        "selection",
+        "gestures",
+        "uieditmenuinteraction"
+      ],
       "related_skills": [
-        "text-input-ref",
-        "text-writing-tools",
-        "text-pasteboard"
+        "apple-text-input-ref",
+        "apple-text-writing-tools",
+        "apple-text-pasteboard"
       ]
     },
     {
-      "name": "text-accessibility",
+      "name": "apple-text-accessibility",
       "kind": "workflow",
       "entrypoint_priority": 3,
-      "aliases": ["voiceover", "accessibility", "dynamic type editor", "screen reader", "assistive technology"],
+      "aliases": [
+        "voiceover",
+        "accessibility",
+        "dynamic type editor",
+        "screen reader",
+        "assistive technology"
+      ],
       "related_skills": [
-        "text-dynamic-type",
-        "text-colors",
-        "text-representable"
+        "apple-text-dynamic-type",
+        "apple-text-colors",
+        "apple-text-representable"
       ]
     },
     {
-      "name": "text-texteditor-26",
+      "name": "apple-text-texteditor-26",
       "kind": "ref",
       "entrypoint_priority": 2,
-      "aliases": ["texteditor attributedstring", "swiftui rich text editing", "texteditor ios 26", "attributedtextselection"],
+      "aliases": [
+        "texteditor attributedstring",
+        "swiftui rich text editing",
+        "texteditor ios 26",
+        "attributedtextselection"
+      ],
       "related_skills": [
-        "text-views",
-        "text-representable",
-        "text-attributed-string"
+        "apple-text-views",
+        "apple-text-representable",
+        "apple-text-attributed-string"
       ]
     },
     {
-      "name": "text-core-text",
+      "name": "apple-text-core-text",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["core text", "ctline", "ctrun", "ctfont", "ctframesetter", "glyph access"],
+      "aliases": [
+        "core text",
+        "ctline",
+        "ctrun",
+        "ctfont",
+        "ctframesetter",
+        "glyph access"
+      ],
       "related_skills": [
-        "text-textkit1-ref",
-        "text-textkit2-ref",
-        "text-viewport-rendering"
+        "apple-text-textkit1-ref",
+        "apple-text-textkit2-ref",
+        "apple-text-viewport-rendering"
       ]
     },
     {
-      "name": "text-spell-autocorrect",
+      "name": "apple-text-spell-autocorrect",
       "kind": "workflow",
       "entrypoint_priority": 3,
-      "aliases": ["spell checking", "autocorrect", "uitextchecker", "nsspellchecker", "autocorrection"],
+      "aliases": [
+        "spell checking",
+        "autocorrect",
+        "uitextchecker",
+        "nsspellchecker",
+        "autocorrection"
+      ],
       "related_skills": [
-        "text-input-ref",
-        "text-interaction",
-        "text-appkit-vs-uikit"
+        "apple-text-input-ref",
+        "apple-text-interaction",
+        "apple-text-appkit-vs-uikit"
       ]
     },
     {
-      "name": "text-drag-drop",
+      "name": "apple-text-drag-drop",
       "kind": "workflow",
       "entrypoint_priority": 3,
-      "aliases": ["drag", "drop", "uitextdraggable", "uitextdroppable", "text drag", "text drop"],
+      "aliases": [
+        "drag",
+        "drop",
+        "uitextdraggable",
+        "uitextdroppable",
+        "text drag",
+        "text drop"
+      ],
       "related_skills": [
-        "text-pasteboard",
-        "text-interaction",
-        "text-input-ref"
+        "apple-text-pasteboard",
+        "apple-text-interaction",
+        "apple-text-input-ref"
       ]
     },
     {
-      "name": "text-bidi",
+      "name": "apple-text-bidi",
       "kind": "ref",
       "entrypoint_priority": 4,
-      "aliases": ["rtl", "right to left", "bidirectional", "arabic", "hebrew", "writing direction", "natural selection"],
+      "aliases": [
+        "rtl",
+        "right to left",
+        "bidirectional",
+        "arabic",
+        "hebrew",
+        "writing direction",
+        "natural selection"
+      ],
       "related_skills": [
-        "text-formatting-ref",
-        "text-input-ref",
-        "text-interaction"
+        "apple-text-formatting-ref",
+        "apple-text-input-ref",
+        "apple-text-interaction"
       ]
     }
   ]

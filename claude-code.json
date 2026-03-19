@@ -10,7 +10,7 @@
       "description": "Use when working with ANY non-SwiftUI text rendering, editing, or display \u2014 TextKit 1/2 architecture, UITextView, NSTextView, NSLayoutManager, NSTextLayoutManager, text storage, attributed strings, text input, layout invalidation, Writing Tools. Routes to specialized text system skills."
     },
     {
-      "name": "text-audit",
+      "name": "apple-text-audit",
       "description": "Use when auditing Apple text system code for TextKit fallback triggers, editing lifecycle bugs, deprecated APIs, performance risks, or Writing Tools compatibility problems."
     }
   ]

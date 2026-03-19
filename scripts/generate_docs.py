@@ -479,7 +479,7 @@ def render_home(plugin: Dict, marketplace: Dict, skills: List[Dict], commands: L
         f"Or install individual skills with [openskills](https://github.com/numman-ali/openskills):",
         "",
         "```bash",
-        f"npx openskills install {owner}/{plugin['name']} --skill text-views",
+        f"npx openskills install {owner}/{plugin['name']} --skill apple-text-views",
         "```",
         "",
         f"Package surface: {len(skills)} skills, {len(commands)} command{'s' if len(commands) != 1 else ''}, {len(agents)} agent{'s' if len(agents) != 1 else ''}.",
@@ -562,7 +562,7 @@ def render_setup_page(marketplace: Dict, plugin: Dict, commands: List[Dict], age
         f"Pick only the skills you need with [openskills](https://github.com/numman-ali/openskills):",
         "",
         "```bash",
-        f"npx openskills install {owner}/{plugin['name']} --skill text-views",
+        f"npx openskills install {owner}/{plugin['name']} --skill apple-text-views",
         "```",
         "",
         "Each skill page shows the exact command to install it.",
@@ -733,7 +733,7 @@ def render_commands_page(root: Path, commands: List[Dict], skills: List[Dict]) -
 
 
 def render_agents_page(root: Path, agents: List[Dict], skills: List[Dict]) -> str:
-    audit_skill = find_skill(skills, "text-audit")
+    audit_skill = find_skill(skills, "apple-text-audit")
 
     lines = [
         GENERATED_NOTICE,
@@ -800,7 +800,7 @@ def render_guide_index(skills: List[Dict]) -> str:
     else:
         broad_line = f"- Question is broad: read [Problem Routing]({docs_page_link('problem-routing', 'guide')})."
 
-    debug_targets = [name for name in ("text-textkit-diag", "text-audit") if name in skill_names]
+    debug_targets = [name for name in ("apple-text-textkit-diag", "apple-text-audit") if name in skill_names]
     if len(debug_targets) == 2:
         editor_line = f"- Editor is broken: jump to `/skill {debug_targets[0]}` or `/skill {debug_targets[1]}`."
     elif len(debug_targets) == 1:
@@ -1040,12 +1040,12 @@ def render_routing_model(skills: List[Dict], commands: List[Dict]) -> str:
     )
     if "apple-text" in skill_names:
         lines.append("- Broad Apple text question -> [`apple-text`](/skills/apple-text/)")
-    if "text-audit" in skill_names:
-        lines.append("- Findings-first review -> [`text-audit`](/skills/text-audit/)")
-    if "text-textkit-diag" in skill_names:
-        lines.append("- Debugging a broken editor -> [`text-textkit-diag`](/skills/text-textkit-diag/)")
-    if "text-views" in skill_names:
-        lines.append("- Choosing among text stacks -> [`text-views`](/skills/text-views/)")
+    if "apple-text-audit" in skill_names:
+        lines.append("- Findings-first review -> [`apple-text-audit`](/skills/apple-text-audit/)")
+    if "apple-text-textkit-diag" in skill_names:
+        lines.append("- Debugging a broken editor -> [`apple-text-textkit-diag`](/skills/apple-text-textkit-diag/)")
+    if "apple-text-views" in skill_names:
+        lines.append("- Choosing among text stacks -> [`apple-text-views`](/skills/apple-text-views/)")
     lines.extend(
         [
             "",
@@ -1224,13 +1224,13 @@ def render_install(marketplace: Dict, plugin: Dict, agents: List[Dict]) -> str:
         f"Install specific skills directly from GitHub with [openskills](https://github.com/numman-ali/openskills):",
         "",
         "```bash",
-        f"npx openskills install {owner}/{plugin['name']} --skill text-views",
+        f"npx openskills install {owner}/{plugin['name']} --skill apple-text-views",
         "```",
         "",
         "Install multiple skills at once:",
         "",
         "```bash",
-        f"npx openskills install {owner}/{plugin['name']} --skill text-views --skill text-audit",
+        f"npx openskills install {owner}/{plugin['name']} --skill apple-text-views --skill apple-text-audit",
         "```",
         "",
         "Each skill page shows the exact install command.",

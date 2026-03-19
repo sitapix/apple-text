@@ -43,10 +43,10 @@ Or use the command directly:
 ## Key Skills
 
 - **`/skill apple-text`** — Use when working with ANY non-SwiftUI text rendering, editing, or display.
-- **`/skill text-audit`** — Use when auditing Apple text system code for anti-patterns, fallback triggers, editing lifecycle bugs, deprecated APIs, or Writing Tools compatibility problems. Runs a focused TextKit review via the textkit-auditor agent. Also useful as a standalone inline checklist when no agent is available.
-- **`/skill text-texteditor-26`** — Use when building rich text editing in SwiftUI with TextEditor and AttributedString (iOS 26+).
-- **`/skill text-textkit-diag`** — Use when debugging text system issues.
-- **`/skill text-views`** — Use when choosing among Apple text views or deciding whether a problem belongs in SwiftUI text, UIKit/AppKit text views, or TextKit 1 vs TextKit 2 mode.
+- **`/skill apple-text-audit`** — Use when auditing Apple text system code for anti-patterns, fallback triggers, editing lifecycle bugs, deprecated APIs, or Writing Tools compatibility problems. Runs a focused TextKit review via the textkit-auditor agent. Also useful as a standalone inline checklist when no agent is available.
+- **`/skill apple-text-texteditor-26`** — Use when building rich text editing in SwiftUI with TextEditor and AttributedString (iOS 26+).
+- **`/skill apple-text-textkit-diag`** — Use when debugging text system issues.
+- **`/skill apple-text-views`** — Use when choosing among Apple text views or deciding whether a problem belongs in SwiftUI text, UIKit/AppKit text views, or TextKit 1 vs TextKit 2 mode.
 
 ## Documentation
 

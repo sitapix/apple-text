@@ -15,7 +15,7 @@ Use this before publishing or updating the plugin marketplace entry.
 
 - README explains what the plugin is for in the first screenful
 - Installation is obvious for marketplace users
-- Entry points are explicit: `apple-text`, `text-audit`, major reference skills
+- Entry points are explicit: `apple-text`, `apple-text-audit`, major reference skills
 - `/apple-text:ask` works as the plain-language front door
 - The docs site navigation is coherent and the main guide pages build cleanly
 - Relative markdown links work on GitHub
@@ -26,11 +26,11 @@ Use this before publishing or updating the plugin marketplace entry.
 
 - `apple-text` routes to the right specialist skill for at least three common prompts
 - `/apple-text:ask` chooses the right specialist route for at least three common prompts
-- `text-views` stays concise and points to `reference.md` / `examples.md`
-- `text-audit` invokes the `textkit-auditor` workflow cleanly
+- `apple-text-views` stays concise and points to `reference.md` / `examples.md`
+- `apple-text-audit` invokes the `textkit-auditor` workflow cleanly
 - Agent and skill names are consistent across docs and manifests
 - Editing a watched file in `commands/`, `skills/`, `agents/`, `hooks/`, or `.claude-plugin/` triggers `scripts/validate_after_edit.py`
-- `uv run python scripts/install_skill.py text-audit` installs both the skill and its dependent agent
+- `uv run python scripts/install_skill.py apple-text-audit` installs both the skill and its dependent agent
 
 ## Release Notes Inputs
 
