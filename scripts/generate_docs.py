@@ -329,10 +329,14 @@ def top_skill_of_kind(skills: List[Dict], kind: str) -> Optional[Dict]:
     return sorted(matches, key=lambda skill: (skill["entrypoint_priority"], skill["name"]))[0]
 
 
+# Set once by generated_docs(); matches the Astro `base` config.
+_BASE = ""
+
+
 def skill_doc_link(skill_name: str, scope: str) -> str:
     if scope not in {"root", "skills", "guide", "skill"}:
         raise ValueError("Unknown scope: " + scope)
-    return f"/skills/{skill_name}/"
+    return f"{_BASE}/skills/{skill_name}/"
 
 
 def docs_page_link(route: str, scope: str) -> str:
@@ -343,7 +347,7 @@ def docs_page_link(route: str, scope: str) -> str:
     }
     if scope not in prefixes:
         raise ValueError("Unknown scope: " + scope)
-    return f"/{prefixes[scope]}{route.strip('/')}/"
+    return f"{_BASE}/{prefixes[scope]}{route.strip('/')}/"
 
 
 def linked_skill_line(skill: Dict, scope: str) -> str:
@@ -1295,7 +1299,9 @@ def render_skill_page(skill: Dict, skills: List[Dict], owner: str, plugin_name: 
 
 
 def generated_docs(root: Path) -> Dict[Path, str]:
+    global _BASE
     plugin = load_json(root / ".claude-plugin" / "plugin.json")
+    _BASE = f"/{plugin['name']}"
     marketplace = load_json(root / ".claude-plugin" / "marketplace.json")
     skills = load_skill_entries(root)
     commands = load_commands(root, plugin["name"])
@@ -1365,7 +1371,7 @@ def generated_docs(root: Path) -> Dict[Path, str]:
                 "  order: 4",
             ],
         ),
-        root / "src" / "content" / "docs" / "guide" / "problem-routing.md": with_doc_frontmatter(
+        root / "src" / "content" / "docs" / "guide" / "problem-routing.mdx": with_doc_frontmatter(
             "Problem Routing",
             render_problem_routing(skills),
             extra_frontmatter=[

@@ -26,7 +26,7 @@ const skillGroups = kindSpecs.map(({ key, sidebar_label: sidebarLabel }) => ({
 
 export default defineConfig({
   site: "https://sitapix.github.io",
-  base: process.env.GITHUB_ACTIONS ? `/${repoName}` : undefined,
+  base: `/${repoName}`,
   integrations: [
     starlight({
       title: "Apple Text",

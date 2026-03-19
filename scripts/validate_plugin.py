@@ -440,8 +440,8 @@ def validate(root: Path) -> str:
     markdown_files = [root / "README.md"]
     markdown_files.extend(sorted(skills_dir.rglob("*.md")))
     markdown_files.extend(sorted(commands_dir.glob("*.md")))
-    markdown_files.extend(sorted(docs_dir.rglob("*.md")))
-    markdown_files.extend(sorted(docs_dir.rglob("*.mdx")))
+    # Generated docs (src/content/docs/) use Astro routes with base path
+    # prefixes — the Astro build validates those, so skip them here.
     markdown_files.extend(sorted(agents_dir.glob("*.md")))
 
     for markdown_file in markdown_files:
@@ -507,10 +507,15 @@ def validate(root: Path) -> str:
 
     if plugin.get("skills") != "./skills/" or market_plugin.get("skills") != "./skills/":
         fail("Plugin manifests must point skills to ./skills/")
-    if plugin.get("agents") != "./agents/" or market_plugin.get("agents") != "./agents/":
-        fail("Plugin manifests must point agents to ./agents/")
-    if plugin.get("hooks") != "./hooks/hooks.json" or market_plugin.get("hooks") != "./hooks/hooks.json":
-        fail("Plugin manifests must point hooks to ./hooks/hooks.json")
+    # agents can be a directory string or an array of file paths
+    for manifest_name, manifest in [("plugin.json", plugin), ("marketplace.json", market_plugin)]:
+        agents_val = manifest.get("agents")
+        if agents_val != "./agents/" and not (isinstance(agents_val, list) and all(a.startswith("./agents/") for a in agents_val)):
+            fail(f"{manifest_name} agents must be ./agents/ or an array of paths under ./agents/")
+    # hooks/hooks.json is auto-loaded; manifests should omit the hooks field
+    for manifest_name, manifest in [("plugin.json", plugin), ("marketplace.json", market_plugin)]:
+        if "hooks" in manifest:
+            fail(f"{manifest_name} should not declare hooks (hooks/hooks.json is auto-loaded)")
     if plugin.get("commands") != "./commands/" or market_plugin.get("commands") != "./commands/":
         fail("Plugin manifests must point commands to ./commands/")
     if market_plugin.get("source") != "./":
