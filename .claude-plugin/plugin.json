@@ -9,7 +9,7 @@
   },
   "license": "MIT",
   "commands": "./commands/",
-  "agents": "./agents/",
+  "agents": ["./agents/textkit-auditor.md"],
   "hooks": "./hooks/hooks.json",
   "skills": "./skills/",
   "keywords": [
