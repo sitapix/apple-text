@@ -11,7 +11,7 @@
 - Added `/apple-text:ask` as a natural-language command that routes users to the right Apple Text skill or agent.
 - Added marketplace metadata for agents, license, author, and tags.
 - Added a plugin hook and helper script to rerun validation after relevant edits.
-- Hardened `scripts/validate_plugin.py` with `SKILL.md` size checks, markdown link validation, and manifest metadata drift checks.
-- Added `docs/example-conversations.md` and `MARKETPLACE-SUBMISSION.md`.
+- Hardened `tooling/scripts/quality/validate_plugin.py` with `SKILL.md` size checks, markdown link validation, and manifest metadata drift checks.
+- Added `docs/src/content/docs/example-conversations.md` and `MARKETPLACE-SUBMISSION.md`.
 - Added a VitePress docs site scaffold with guide, catalog, command, agent, and maintenance pages.
-- Added `scripts/install_skill.py` for selective skill installs and GitHub Pages deployment for the docs site.
+- Added `tooling/scripts/dev/install_skill.py` for selective skill installs and GitHub Pages deployment for the docs site.

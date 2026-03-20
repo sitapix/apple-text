@@ -1,0 +1,66 @@
+---
+name: apple-text-apple-docs
+description: Use when you need direct access to Apple-authored text-system documentation from the Xcode-bundled for-LLM markdown docs that MCP can expose at runtime, especially for AttributedString updates, styled TextEditor behavior, toolbars near editors, or official Swift diagnostic writeups. Reach for this when Apple’s wording matters more than repo-authored guidance.
+license: MIT
+---
+
+# Apple Documentation Access
+
+Router skill providing direct access to Apple's official for-LLM markdown documentation bundled inside Xcode.
+
+Use this skill when you want Apple-authored guidance from the Xcode-bundled Apple docs that MCP can expose at runtime, rather than only repo-authored summaries.
+
+## When to Use
+
+- You need the exact API signature or behavior from Apple.
+- A Swift compiler diagnostic needs explanation with examples.
+- Another Apple Text skill references an Apple framework and you want the official source.
+- You want authoritative code examples for `AttributedString`, styled `TextEditor`, toolbar behavior, or related text-system changes that ship in Xcode docs.
+
+Priority: Apple Text skills provide opinionated guidance and project-specific tradeoffs. Apple docs provide authoritative API detail. Use both together.
+
+## Example Prompts
+
+- "What does Apple's AttributedString update doc say about the newest Foundation text changes?"
+- "Show me Apple's official guidance for styled TextEditor editing."
+- "What does the Swift diagnostic `actor-isolated-call` mean?"
+- "What Apple-authored docs ship in Xcode for text and editor-adjacent APIs?"
+
+## What's Covered
+
+### Apple Guide Topics
+
+- `AttributedString` updates and Foundation text changes.
+- SwiftUI styled text editing behavior.
+- Toolbar features near editing and text-centric UI.
+- The checked-in sidecar index at [xcode-docs-index.md](xcode-docs-index.md) listing the local Apple-text subset and the bundled Swift diagnostics catalog.
+
+### Swift Compiler Diagnostics
+
+- Official explanations with examples for Swift diagnostics bundled in the Xcode toolchain.
+- Especially useful when concurrency or type-system diagnostics intersect with text code and editor integrations.
+
+## How It Works
+
+Apple bundles for-LLM markdown documentation inside Xcode at two locations:
+
+- `AdditionalDocumentation` for framework guides and implementation patterns.
+- Swift diagnostics for compiler error and warning explanations with examples.
+
+Apple Text can read these files at runtime from the local Xcode installation when `APPLE_TEXT_APPLE_DOCS=true`.
+
+When runtime Apple docs are enabled in the current client, use them first. Treat the checked-in sidecars in this skill as the repo-backed fallback and the fastest local subset for Apple text questions.
+
+## Configuration
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `APPLE_TEXT_XCODE_PATH` | `/Applications/Xcode.app` | Custom Xcode path, such as `Xcode-beta.app` |
+| `APPLE_TEXT_APPLE_DOCS` | `false` | Set to `true` to enable runtime loading of Apple-authored markdown docs from the local Xcode install |
+
+## Related Skills
+
+- Use `/skill apple-text-texteditor-26` for project-specific `TextEditor` guidance after reading Apple’s docs results.
+- Use `/skill apple-text-attributed-string` for AttributedString vs NSAttributedString decisions and conversion strategy.
+- Use `/skill apple-text-writing-tools` when the real problem is Writing Tools integration, not Apple-doc lookup.
+- Use `/skill apple-text-foundation-ref` for broader Foundation text utilities beyond the Xcode-bundled subset.

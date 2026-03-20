@@ -1,0 +1,70 @@
+---
+import { logos } from "virtual:starlight/user-images";
+import config from "virtual:starlight/user-config";
+import RetroWordmark from "./RetroWordmark.astro";
+
+const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
+---
+
+<a href={siteTitleHref} class="site-title">
+  {
+    config.logo && logos.dark && (
+      <>
+        <img
+          class:list={[{ "light:sl-hidden print:hidden": !("src" in config.logo) }, "logo-size"]}
+          alt={config.logo.alt}
+          src={logos.dark.src}
+          width={logos.dark.width}
+          height={logos.dark.height}
+        />
+        {
+          !("src" in config.logo) && (
+            <img
+              class="dark:sl-hidden print:block logo-size"
+              alt={config.logo.alt}
+              src={logos.light?.src}
+              width={logos.light?.width}
+              height={logos.light?.height}
+            />
+          )
+        }
+      </>
+    )
+  }
+  <span class:list={[{ "sr-only": config.logo?.replacesTitle }, "title-text"]} translate="no" aria-label={siteTitle}>
+    <RetroWordmark />
+  </span>
+</a>
+
+<style>
+  .logo-size {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .site-title {
+    gap: 0.5rem;
+    align-items: center;
+    display: flex;
+    margin-right: 1rem;
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  @media (min-width: 1024px) {
+    .site-title {
+      margin-right: 1.5rem;
+    }
+  }
+
+  .title-text {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .title-text {
+      display: inline-block;
+      overflow: hidden;
+    }
+  }
+</style>

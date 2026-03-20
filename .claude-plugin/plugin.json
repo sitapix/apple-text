@@ -5,7 +5,7 @@
   "homepage": "https://github.com/sitapix/apple-text",
   "repository": "https://github.com/sitapix/apple-text",
   "author": {
-    "name": "Steven"
+    "name": "sitapix"
   },
   "license": "MIT",
   "commands": "./commands/",

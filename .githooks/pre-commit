@@ -5,16 +5,14 @@ set -eu
 ROOT=$(git rev-parse --show-toplevel)
 cd "$ROOT"
 
-python3 scripts/generate_docs.py
+python3 tooling/scripts/docs/generate_docs.py
+python3 tooling/scripts/mcp/generate_mcp_annotations.py
+python3 tooling/scripts/mcp/generate_mcp_bundle.py
 
 git add \
   README.md \
-  docs/index.md \
-  docs/guide/index.md \
-  docs/guide/entry-points.md \
-  docs/guide/problem-routing.md \
-  docs/guide/skill-catalog.md \
-  docs/guide/commands-and-agents.md \
-  docs/guide/install.md
+  mcp-server/skill-annotations.json \
+  mcp-server/bundle.json \
+  docs/src/content/docs
 
-python3 scripts/validate_plugin.py
+npm run check

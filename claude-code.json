@@ -2,7 +2,7 @@
   "name": "apple-text",
   "version": "1.0.1",
   "description": "Comprehensive reference for Apple text systems \u2014 especially TextKit, UITextView, NSTextView, layout managers, text storage, attributed strings, text input, and other non-SwiftUI text work",
-  "author": "Steven",
+  "author": "sitapix",
   "license": "MIT",
   "skills": [
     {

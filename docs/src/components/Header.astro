@@ -1,0 +1,70 @@
+---
+import config from "virtual:starlight/user-config";
+import LanguageSelect from "@astrojs/starlight/components/LanguageSelect.astro";
+import Search from "starlight-theme-black/overrides/Search.astro";
+import SocialIcons from "starlight-theme-black/overrides/SocialIcons.astro";
+import ThemeSelect from "starlight-theme-black/overrides/ThemeSelect.astro";
+import ThemeMobileMenuToggle from "./ThemeMobileMenuToggle.astro";
+import ThemeNavBar from "./ThemeNavBar.astro";
+import SiteTitle from "./SiteTitle.astro";
+
+const shouldRenderSearch =
+  config.pagefind ||
+  config.components.Search !== "@astrojs/starlight/components/Search.astro";
+---
+
+<div class="site-title-wrapper">
+  <SiteTitle />
+  <ThemeNavBar />
+</div>
+
+<ThemeMobileMenuToggle />
+
+<div class="header-right">
+  {shouldRenderSearch && <Search />}
+
+  <nav class="header-nav">
+    <div>
+      <SocialIcons />
+    </div>
+    <div>
+      <ThemeSelect />
+    </div>
+    <div>
+      <LanguageSelect />
+    </div>
+  </nav>
+</div>
+
+<style>
+  .site-title-wrapper {
+    display: none;
+    margin-right: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .site-title-wrapper {
+      display: flex;
+    }
+  }
+
+  .header-right {
+    gap: 0.5rem;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1 1 0%;
+    display: flex;
+  }
+
+  @media (min-width: 768px) {
+    .header-right {
+      justify-content: flex-end;
+    }
+  }
+
+  .header-nav {
+    gap: 0.125rem;
+    align-items: center;
+    display: flex;
+  }
+</style>

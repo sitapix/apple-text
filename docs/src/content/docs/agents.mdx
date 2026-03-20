@@ -1,0 +1,65 @@
+---
+title: "Agents"
+description: "Agent overview for the Apple Text plugin."
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+<div class="docs-intro">
+
+<p class="docs-eyebrow">Code review and audit agents</p>
+
+<p class="docs-lead">Use an agent when you want findings, file references, and fix directions instead of a general explanation.</p>
+
+<p>Apple Text currently ships 1 agent. Use this page when you want the agent surface directly.</p>
+
+</div>
+
+## `textkit-auditor`
+
+Use this agent when the user mentions TextKit review, text view code review, or asks to scan for TextKit anti-patterns. Automatically scans Swift/Objective-C code for TextKit issues — detects TextKit 1 fallback triggers, deprecated glyph APIs, missing editing lifecycle calls, unsafe text storage patterns, and Writing Tools compatibility problems.
+
+<div class="docs-spec-grid">
+
+<div class="docs-spec-card">
+<p class="docs-section-label">Best for</p>
+<ul>
+<li>findings-first reviews of editor code</li>
+<li>scanning a codebase for TextKit anti-patterns</li>
+<li>focused audits where file references and fix directions matter</li>
+</ul>
+
+</div>
+
+<div class="docs-spec-card">
+<p class="docs-section-label">You get</p>
+
+<ul>
+<li>findings grouped by severity</li>
+<li>file references for each issue</li>
+<li>one concrete fix direction per finding</li>
+</ul>
+
+</div>
+
+</div>
+
+<p class="docs-section-label">Audit focus</p>
+
+- TextKit 1 fallback triggers
+- deprecated glyph and layout APIs
+- missing editing lifecycle calls
+- unsafe text storage patterns
+- Writing Tools compatibility problems
+
+<p class="docs-section-label">Default entry point</p>
+
+<CardGrid>
+
+  <LinkCard title="apple-text-audit" href="/apple-text/skills/apple-text-audit/" description="Natural-language audit entry point for most review requests." />
+
+  <LinkCard title="Skills" href="/apple-text/skills/" description="Browse the rest of the catalog when the work is not a code scan." />
+
+</CardGrid>
+
+If the user just asked for a review in natural language, start with [`apple-text-audit`](/apple-text/skills/apple-text-audit/). Reach for the agent page when you want a direct tool handoff instead.

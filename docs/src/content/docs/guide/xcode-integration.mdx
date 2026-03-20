@@ -1,0 +1,167 @@
+---
+title: "Xcode Integration"
+sidebar:
+  order: 4
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+Use Apple Text inside Xcode 26.3+ with Claude Agent or Codex via MCP.
+
+This is the same Apple Text collection you use from the Claude Code plugin or other MCP clients. The difference in Xcode is only the transport: MCP instead of `/plugin` commands.
+
+Apple Text and Xcode Tools solve different problems:
+
+- `apple-text` is a read-only knowledge server for Apple text systems
+- `xcode` via `xcrun mcpbridge` exposes Xcode actions like build, test, and project access
+
+Use them together when you want both guidance and Xcode execution.
+
+## What You Get
+
+The same Apple Text catalog available to other MCP clients, with the same route-first MCP workflow:
+
+- 35 skills for Apple text systems
+- 1 command as prompt entry points
+- 5 read-only MCP tools including `apple_text_route` as the front door for natural-language questions
+
+## Prerequisites
+
+- Xcode 26.3+ with Claude Agent or Codex enabled
+- Xcode Tools enabled in Xcode > Settings > Intelligence
+- Node.js 18+
+- A local Apple Text checkout built with `npm run mcp:bundle`
+
+Build the server before configuring Xcode:
+
+```bash
+git clone https://github.com/sitapix/apple-text
+cd apple-text
+npm run setup:all
+npm run mcp:bundle
+```
+
+If you want Xcode actions in addition to Apple Text guidance, add Apple's Xcode MCP bridge too:
+
+```bash
+codex mcp add xcode -- xcrun mcpbridge
+```
+
+## Claude Agent Setup
+
+Xcode's Claude Agent uses its own config directory and does not read your normal Claude Desktop config.
+
+### 1. Create the config directory
+
+```bash
+mkdir -p ~/Library/Developer/Xcode/CodingAssistant/ClaudeAgentConfig
+```
+
+### 2. Find your absolute `node` path
+
+Xcode does not inherit your shell setup, so use an absolute path:
+
+```bash
+which node
+```
+
+### 3. Create the config file
+
+Create `~/Library/Developer/Xcode/CodingAssistant/ClaudeAgentConfig/.claude.json`:
+
+```json
+{
+  "projects": {
+    "*": {
+      "mcpServers": {
+        "apple-text": {
+          "type": "stdio",
+          "command": "/absolute/path/to/node",
+          "args": ["/absolute/path/to/apple-text/mcp-server/dist/index.js"],
+          "env": {
+            "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Replace the `node` path with the result of `which node`. Replace `"*"` with a specific project path if you want narrower scope.
+
+### 4. Restart Xcode
+
+Close and reopen Xcode completely for the config to take effect.
+
+### 5. Verify
+
+Type `/context` in the Claude Agent panel. You should see Apple Text listed as a connected MCP server.
+
+For normal questions, start from `apple_text_route` rather than manually browsing the catalog.
+
+## Codex Setup
+
+Codex uses `.codex/config.toml` in your project root, or `~/.codex/config.toml` for global config.
+
+### 1. Add the MCP server
+
+```toml
+[mcp_servers.apple-text]
+command = "/absolute/path/to/node"
+args = ["/absolute/path/to/apple-text/mcp-server/dist/index.js"]
+env = { "PATH" = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
+```
+
+### 2. Restart Xcode
+
+Close and reopen Xcode for the config to take effect.
+
+After setup, use the same MCP flow as other clients: `apple_text_route` first, then `apple_text_read_skill`.
+
+## Gotchas
+
+- Absolute paths are safer. Xcode's MCP environment is more restricted than your terminal.
+- Restart Xcode after config changes. Editing the file while Xcode is open usually has no effect.
+- Apple Text does not replace `xcrun mcpbridge`. Run both if you want Xcode actions plus Apple Text guidance.
+- This is different from the Claude Code plugin path. In Xcode you get the MCP surface, not the `/plugin` menu or hooks.
+
+If you are contributing and want live skill edits without rebundling, add these env values to the MCP config:
+
+```json
+{
+  "APPLE_TEXT_MCP_MODE": "development",
+  "APPLE_TEXT_DEV_PATH": "/absolute/path/to/apple-text",
+  "APPLE_TEXT_APPLE_DOCS": "true"
+}
+```
+
+## Troubleshooting
+
+### MCP not appearing in `/context`
+
+- Check that the config file exists at the correct path
+- Verify the `node` path is absolute and correct by running it in Terminal
+- Confirm `mcp-server/dist/index.js` exists and you already ran `npm run mcp:bundle`
+
+### Skills not loading
+
+Enable debug logging and run the server directly:
+
+```bash
+APPLE_TEXT_MCP_LOG_LEVEL=debug /absolute/path/to/node /absolute/path/to/apple-text/mcp-server/dist/index.js 2>&1 | head -20
+```
+
+If the server starts and reports resources, the issue is usually in Xcode's MCP connection rather than Apple Text itself.
+
+## What's Next
+
+<CardGrid>
+
+  <LinkCard title="MCP Server" href="/apple-text/guide/mcp-server/" description="Setup for Claude Desktop, Cursor, VS Code, Gemini CLI, and OpenCode." />
+
+  <LinkCard title="Skills" href="/apple-text/skills/" description="Browse the Apple Text skill catalog." />
+
+  <LinkCard title="Quick Start" href="/apple-text/guide/quick-start/" description="Return to the main Apple Text install flow." />
+
+</CardGrid>

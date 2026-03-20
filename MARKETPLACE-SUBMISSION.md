@@ -4,12 +4,13 @@ Use this before publishing or updating the plugin marketplace entry.
 
 ## Package Integrity
 
-- Run `uv run python scripts/validate_plugin.py`
+- Run `npm run setup`
+- Run `uv run python tooling/scripts/quality/validate_plugin.py`
 - Confirm `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `claude-code.json` agree on version and core metadata
 - Confirm every skill directory contains `SKILL.md`
 - Confirm no `SKILL.md` exceeds the size budget enforced by the validator
-- Confirm the validation hook in `hooks/hooks.json` still targets the right script
-- Confirm `scripts/install_skill.py` still works for selective installs
+- Confirm the validation hook in `tooling/hooks/hooks.json` still targets the right script
+- Confirm `tooling/scripts/dev/install_skill.py` still works for selective installs
 
 ## Public-Facing Review
 
@@ -29,8 +30,8 @@ Use this before publishing or updating the plugin marketplace entry.
 - `apple-text-views` stays concise and points to `reference.md` / `examples.md`
 - `apple-text-audit` invokes the `textkit-auditor` workflow cleanly
 - Agent and skill names are consistent across docs and manifests
-- Editing a watched file in `commands/`, `skills/`, `agents/`, `hooks/`, or `.claude-plugin/` triggers `scripts/validate_after_edit.py`
-- `uv run python scripts/install_skill.py apple-text-audit` installs both the skill and its dependent agent
+- Editing a watched file in `commands/`, `skills/`, `agents/`, `tooling/hooks/`, or `.claude-plugin/` triggers `tooling/scripts/quality/validate_after_edit.py`
+- `uv run python tooling/scripts/dev/install_skill.py apple-text-audit` installs both the skill and its dependent agent
 
 ## Release Notes Inputs
 

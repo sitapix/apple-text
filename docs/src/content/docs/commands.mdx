@@ -1,0 +1,69 @@
+---
+title: "Commands"
+description: "Command overview for the Apple Text plugin."
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+<div class="docs-intro">
+
+<p class="docs-eyebrow">One front door</p>
+
+<p class="docs-lead">Use the command surface when you know the question belongs to Apple text, but you do not want to pick the skill yourself.</p>
+
+<p>This page covers the main intake command and the routes it typically suggests.</p>
+
+</div>
+
+## `/apple-text:ask`
+
+Natural-language entry point for Apple Text. Use when the user has an Apple text question but does not know which skill or agent to invoke.
+
+<div class="docs-spec-grid">
+
+<div class="docs-spec-card">
+<p class="docs-section-label">Good prompts</p>
+<ul>
+<li>broad Apple text questions</li>
+<li>first-contact prompts that mention symptoms instead of APIs</li>
+<li>mixed requests where routing matters more than memorizing the catalog</li>
+</ul>
+
+</div>
+
+<div class="docs-spec-card">
+<p class="docs-section-label">Skip this when</p>
+
+<ul>
+<li>the user already named the exact subsystem</li>
+<li>you are already on a matching skill page</li>
+<li>the task is a findings-first scan over real code</li>
+</ul>
+
+</div>
+
+</div>
+
+## Typical routes
+
+<CardGrid>
+
+  <LinkCard title="apple-text" href="/apple-text/skills/apple-text/" description="Broad questions route here first." />
+
+  <LinkCard title="apple-text-audit" href="/apple-text/skills/apple-text-audit/" description="Review or integration flows usually land here." />
+
+  <LinkCard title="apple-text-textkit-diag" href="/apple-text/skills/apple-text-textkit-diag/" description="Broken behavior routes into diagnosis." />
+
+  <LinkCard title="apple-text-views" href="/apple-text/skills/apple-text-views/" description="Tradeoff questions route into comparison." />
+
+</CardGrid>
+
+## Try prompts like these
+
+- "Why did my UITextView fall back to TextKit 1?"
+- "Review this editor code for TextKit problems."
+- "Should this screen use TextEditor or UITextView?"
+
+## Next move
+
+If the prompt is already scoped, start with [Skills](/apple-text/skills/). If the task is a specialist code scan, use [Agents](/apple-text/agents/).

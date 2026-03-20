@@ -2,6 +2,7 @@
   "skills": [
     {
       "name": "apple-text",
+      "category": "entrypoints",
       "kind": "router",
       "entrypoint_priority": 1,
       "aliases": [
@@ -18,6 +19,7 @@
     },
     {
       "name": "apple-text-audit",
+      "category": "entrypoints",
       "kind": "workflow",
       "entrypoint_priority": 2,
       "aliases": [
@@ -35,6 +37,7 @@
     },
     {
       "name": "apple-text-textkit-diag",
+      "category": "entrypoints",
       "kind": "diag",
       "entrypoint_priority": 2,
       "aliases": [
@@ -50,6 +53,7 @@
     },
     {
       "name": "apple-text-views",
+      "category": "platform-selection",
       "kind": "decision",
       "entrypoint_priority": 2,
       "aliases": [
@@ -65,6 +69,7 @@
     },
     {
       "name": "apple-text-representable",
+      "category": "swiftui-bridging",
       "kind": "workflow",
       "entrypoint_priority": 3,
       "aliases": [
@@ -80,6 +85,7 @@
     },
     {
       "name": "apple-text-writing-tools",
+      "category": "editor-features",
       "kind": "workflow",
       "entrypoint_priority": 3,
       "aliases": [
@@ -95,6 +101,7 @@
     },
     {
       "name": "apple-text-layout-manager-selection",
+      "category": "platform-selection",
       "kind": "decision",
       "entrypoint_priority": 3,
       "aliases": [
@@ -110,6 +117,7 @@
     },
     {
       "name": "apple-text-fallback-triggers",
+      "category": "textkit-runtime",
       "kind": "diag",
       "entrypoint_priority": 3,
       "aliases": [
@@ -125,7 +133,8 @@
     },
     {
       "name": "apple-text-layout-invalidation",
-      "kind": "ref",
+      "category": "textkit-runtime",
+      "kind": "router",
       "entrypoint_priority": 3,
       "aliases": [
         "layout stale",
@@ -140,6 +149,7 @@
     },
     {
       "name": "apple-text-storage",
+      "category": "text-model",
       "kind": "ref",
       "entrypoint_priority": 3,
       "aliases": [
@@ -155,6 +165,7 @@
     },
     {
       "name": "apple-text-swiftui-bridging",
+      "category": "swiftui-bridging",
       "kind": "decision",
       "entrypoint_priority": 3,
       "aliases": [
@@ -170,6 +181,7 @@
     },
     {
       "name": "apple-text-attributed-string",
+      "category": "rich-text-modeling",
       "kind": "decision",
       "entrypoint_priority": 3,
       "aliases": [
@@ -185,6 +197,7 @@
     },
     {
       "name": "apple-text-formatting-ref",
+      "category": "rich-text-modeling",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -199,7 +212,27 @@
       ]
     },
     {
+      "name": "apple-text-apple-docs",
+      "category": "entrypoints",
+      "kind": "ref",
+      "entrypoint_priority": 4,
+      "aliases": [
+        "xcode docs",
+        "apple docs",
+        "apple documentation access",
+        "apple-text-docs-search",
+        "apple docs search",
+        "additionaldocumentation"
+      ],
+      "related_skills": [
+        "apple-text-texteditor-26",
+        "apple-text-attributed-string",
+        "apple-text-writing-tools"
+      ]
+    },
+    {
       "name": "apple-text-colors",
+      "category": "rich-text-modeling",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -215,6 +248,7 @@
     },
     {
       "name": "apple-text-dynamic-type",
+      "category": "editor-features",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -230,6 +264,7 @@
     },
     {
       "name": "apple-text-appkit-vs-uikit",
+      "category": "platform-selection",
       "kind": "decision",
       "entrypoint_priority": 4,
       "aliases": [
@@ -245,6 +280,7 @@
     },
     {
       "name": "apple-text-foundation-ref",
+      "category": "text-model",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -260,6 +296,7 @@
     },
     {
       "name": "apple-text-parsing",
+      "category": "text-model",
       "kind": "decision",
       "entrypoint_priority": 4,
       "aliases": [
@@ -275,6 +312,7 @@
     },
     {
       "name": "apple-text-markdown",
+      "category": "rich-text-modeling",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -290,6 +328,7 @@
     },
     {
       "name": "apple-text-input-ref",
+      "category": "editor-features",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -305,6 +344,7 @@
     },
     {
       "name": "apple-text-attachments-ref",
+      "category": "rich-text-modeling",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -320,6 +360,7 @@
     },
     {
       "name": "apple-text-textkit1-ref",
+      "category": "textkit-runtime",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -335,6 +376,7 @@
     },
     {
       "name": "apple-text-textkit2-ref",
+      "category": "textkit-runtime",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -350,6 +392,7 @@
     },
     {
       "name": "apple-text-viewport-rendering",
+      "category": "textkit-runtime",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -365,6 +408,7 @@
     },
     {
       "name": "apple-text-undo",
+      "category": "editor-features",
       "kind": "workflow",
       "entrypoint_priority": 3,
       "aliases": [
@@ -382,6 +426,7 @@
     },
     {
       "name": "apple-text-find-replace",
+      "category": "editor-features",
       "kind": "workflow",
       "entrypoint_priority": 3,
       "aliases": [
@@ -399,6 +444,7 @@
     },
     {
       "name": "apple-text-pasteboard",
+      "category": "editor-features",
       "kind": "workflow",
       "entrypoint_priority": 3,
       "aliases": [
@@ -417,6 +463,7 @@
     },
     {
       "name": "apple-text-interaction",
+      "category": "editor-features",
       "kind": "workflow",
       "entrypoint_priority": 3,
       "aliases": [
@@ -435,6 +482,7 @@
     },
     {
       "name": "apple-text-accessibility",
+      "category": "editor-features",
       "kind": "workflow",
       "entrypoint_priority": 3,
       "aliases": [
@@ -452,6 +500,7 @@
     },
     {
       "name": "apple-text-texteditor-26",
+      "category": "swiftui-bridging",
       "kind": "ref",
       "entrypoint_priority": 2,
       "aliases": [
@@ -468,6 +517,7 @@
     },
     {
       "name": "apple-text-core-text",
+      "category": "text-model",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [
@@ -486,6 +536,7 @@
     },
     {
       "name": "apple-text-spell-autocorrect",
+      "category": "editor-features",
       "kind": "workflow",
       "entrypoint_priority": 3,
       "aliases": [
@@ -503,6 +554,7 @@
     },
     {
       "name": "apple-text-drag-drop",
+      "category": "editor-features",
       "kind": "workflow",
       "entrypoint_priority": 3,
       "aliases": [
@@ -521,6 +573,7 @@
     },
     {
       "name": "apple-text-bidi",
+      "category": "text-model",
       "kind": "ref",
       "entrypoint_priority": 4,
       "aliases": [

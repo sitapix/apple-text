@@ -1,0 +1,335 @@
+---
+title: "Writing Tools Integration"
+description: "Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging."
+---
+
+import { Code, Badge } from '@astrojs/starlight/components';
+import skillSource from './SKILL-source.txt?raw';
+
+<Badge text="Workflow Skills" variant="tip" />
+
+Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging.
+
+**Family:** Editor Features And Interaction
+
+Use this skill when the main question is how Writing Tools should integrate with a native or custom editor.
+
+## When to Use
+
+- You are integrating Writing Tools into `UITextView`, `NSTextView`, or a custom text engine.
+- You need protected ranges, activity lifecycle hooks, or coordinator APIs.
+- Writing Tools appears in the wrong mode or not at all.
+
+## Quick Decision
+
+- Native TextKit text view with standard behavior -> stay with native integration
+- Custom `UITextInput`-based editor -> use the custom view path
+- Fully custom text engine on current systems -> use `UIWritingToolsCoordinator`
+
+## Core Guidance
+
+## Native Text View Integration
+
+UITextView and NSTextView get Writing Tools automatically. Configure behavior:
+
+### Behavior Modes
+
+```swift
+// Full inline experience (default) — proofreading marks, inline rewrites
+textView.writingToolsBehavior = .default
+
+// Panel-only — results shown in popover, no inline marks
+textView.writingToolsBehavior = .limited
+
+// Disable completely
+textView.writingToolsBehavior = .none
+```
+
+### Allowed Input Options
+
+```swift
+// What content types Writing Tools can process
+textView.writingToolsAllowedInputOptions = [.plainText]           // Plain text only
+textView.writingToolsAllowedInputOptions = [.plainText, .richText] // Rich text
+textView.writingToolsAllowedInputOptions = [.plainText, .richText, .table] // Including tables
+```
+
+### TextKit 2 Requirement
+
+**Writing Tools requires TextKit 2 for the full inline experience.** TextKit 1 views only get the limited panel-based experience (no inline proofreading marks).
+
+```swift
+// ✅ Gets full inline Writing Tools
+let textView = UITextView(usingTextLayoutManager: true)
+
+// ❌ Only gets panel-based Writing Tools
+let textView = UITextView(usingTextLayoutManager: false)
+```
+
+**Check:** If Writing Tools appears only in a popover (no inline marks), verify the view is using TextKit 2.
+
+## Delegate Methods (UITextView)
+
+### Activity Notifications
+
+```swift
+func textViewWritingToolsWillBegin(_ textView: UITextView) {
+    // Pause operations that could conflict:
+    // - Undo coalescing
+    // - Syncing to server
+    // - Collaborative editing updates
+}
+
+func textViewWritingToolsDidEnd(_ textView: UITextView) {
+    // Resume normal operations
+}
+```
+
+### Checking Active State
+
+```swift
+if textView.isWritingToolsActive {
+    // Writing Tools is running — don't modify text
+} else {
+    // Safe to manipulate text
+}
+```
+
+### Protected Ranges
+
+Exclude ranges from Writing Tools rewriting (code blocks, quotes, citations):
+
+```swift
+func textView(_ textView: UITextView,
+              writingToolsIgnoredRangesIn enclosingRange: NSRange) -> [NSRange] {
+    // Return ranges that should NOT be rewritten
+    var protectedRanges: [NSRange] = []
+
+    // Find code blocks
+    let codePattern = try! NSRegularExpression(pattern: "```[\\s\\S]*?```")
+    let matches = codePattern.matches(in: textView.text, range: enclosingRange)
+    protectedRanges.append(contentsOf: matches.map(\.range))
+
+    return protectedRanges
+}
+```
+
+### NSTextView Equivalents (macOS)
+
+```swift
+func textViewWritingToolsWillBegin(_ notification: Notification)
+func textViewWritingToolsDidEnd(_ notification: Notification)
+
+// Protected ranges
+func textView(_ textView: NSTextView,
+              writingToolsIgnoredRangesIn range: NSRange) -> [NSRange]
+```
+
+## Custom Text View Integration (iOS 18)
+
+For views using `UITextInput` (not UITextView), Writing Tools is available through the callout bar if the view adopts `UITextInteraction`:
+
+```swift
+class CustomTextView: UIView, UITextInput {
+    let textInteraction = UITextInteraction(for: .editable)
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        textInteraction.textInput = self
+        addInteraction(textInteraction)
+        // Writing Tools appears in callout bar automatically
+    }
+}
+```
+
+**Alternative:** Adopt `UITextSelectionDisplayInteraction` + `UIEditMenuInteraction` separately.
+
+## UIWritingToolsCoordinator (iOS 26+)
+
+For fully custom text engines (not using UITextInput), the coordinator provides direct Writing Tools integration with animation support.
+
+### Setup
+
+```swift
+class CustomEditorView: UIView {
+    var coordinator: UIWritingToolsCoordinator!
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        coordinator = UIWritingToolsCoordinator(delegate: self)
+        addInteraction(coordinator)
+    }
+}
+```
+
+### Delegate Protocol
+
+All methods are **async**:
+
+```swift
+extension CustomEditorView: UIWritingToolsCoordinatorDelegate {
+    // Provide text content for Writing Tools to process
+    func writingToolsCoordinator(
+        _ coordinator: UIWritingToolsCoordinator,
+        requestsContextFor ranges: [UIWritingToolsCoordinator.TextRange]
+    ) async -> UIWritingToolsCoordinator.Context {
+        let attributedString = getAttributedString(for: ranges)
+        return UIWritingToolsCoordinator.Context(
+            attributedString: attributedString,
+            range: NSRange(location: 0, length: attributedString.length)
+        )
+    }
+
+    // Handle text replacement
+    func writingToolsCoordinator(
+        _ coordinator: UIWritingToolsCoordinator,
+        replaceRange range: UIWritingToolsCoordinator.TextRange,
+        with attributedString: NSAttributedString,
+        reason: UIWritingToolsCoordinator.TextReplacementReason
+    ) async {
+        applyReplacement(attributedString, in: range)
+    }
+
+    // State changes
+    func writingToolsCoordinator(
+        _ coordinator: UIWritingToolsCoordinator,
+        didChangeState newState: UIWritingToolsCoordinator.State
+    ) {
+        switch newState {
+        case .idle:
+            resumeNormalEditing()
+        case .nonInteractive:
+            pauseEditing()
+        case .interactiveStreaming:
+            showStreamingUI()
+        @unknown default:
+            break
+        }
+    }
+}
+```
+
+### Animation Support
+
+The coordinator supports animated text transitions:
+
+```swift
+// Provide preview for animation (text snapshot before change)
+func writingToolsCoordinator(
+    _ coordinator: UIWritingToolsCoordinator,
+    requestsPreviewFor range: UIWritingToolsCoordinator.TextRange
+) async -> UIWritingToolsCoordinator.TextPreview {
+    let rect = getRect(for: range)
+    return UIWritingToolsCoordinator.TextPreview(
+        textView: self,
+        rect: rect
+    )
+}
+
+// Provide proofreading mark paths (underline positions)
+func writingToolsCoordinator(
+    _ coordinator: UIWritingToolsCoordinator,
+    requestsUnderlinePathFor range: UIWritingToolsCoordinator.TextRange
+) async -> UIBezierPath {
+    return getUnderlinePath(for: range)
+}
+```
+
+### NSWritingToolsCoordinator (macOS 26+)
+
+macOS equivalent with the same delegate pattern:
+
+```swift
+let coordinator = NSWritingToolsCoordinator(delegate: self)
+view.addInteraction(coordinator)
+```
+
+## macOS Custom Views (Pre-Coordinator)
+
+For macOS views without UITextInput-equivalent, implement `NSServicesMenuRequestor`:
+
+```swift
+// In NSView or NSViewController
+override func validRequestor(forSendType sendType: NSPasteboard.PasteboardType?,
+                              returnType: NSPasteboard.PasteboardType?) -> Any? {
+    if sendType == .string || sendType == .rtf {
+        return self
+    }
+    return super.validRequestor(forSendType: sendType, returnType: returnType)
+}
+
+func writeSelection(to pboard: NSPasteboard, types: [NSPasteboard.PasteboardType]) -> Bool {
+    pboard.writeObjects([selectedText as NSString])
+    return true
+}
+
+func readSelection(from pboard: NSPasteboard) -> Bool {
+    guard let string = pboard.string(forType: .string) else { return false }
+    replaceSelection(with: string)
+    return true
+}
+```
+
+## PresentationIntent (iOS 26+)
+
+Mark text structure for better Writing Tools understanding:
+
+```swift
+var str = AttributedString("My Document")
+
+// Mark as heading
+str.presentationIntent = .header(level: 1)
+
+// Mark as code block (Writing Tools will protect this)
+codeBlock.presentationIntent = .codeBlock(languageHint: "swift")
+
+// Mark as block quote
+quote.presentationIntent = .blockQuote
+```
+
+## Writing Tools Decision Tree
+
+```
+Is your view UITextView or NSTextView?
+    YES → Set writingToolsBehavior + delegate methods. Done.
+    NO → Does it conform to UITextInput?
+        YES → Add UITextInteraction. Writing Tools in callout bar.
+        NO → iOS 26+?
+            YES → Use UIWritingToolsCoordinator
+            NO → Not directly supported. Consider wrapping in UITextView.
+```
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Writing Tools not in menu | `writingToolsBehavior = .none` or Apple Intelligence not enabled | Set `.default`; user must enable Apple Intelligence in Settings |
+| Only panel mode, no inline | TextKit 1 mode or fallback | Ensure TextKit 2; check for `layoutManager` access triggering fallback |
+| Writing Tools rewrites code | No protected ranges | Implement `writingToolsIgnoredRangesIn` delegate |
+| Inline marks not animating | Missing coordinator | Use UIWritingToolsCoordinator (iOS 26+) |
+| Text corrupted after rewrite | Editing during active session | Check `isWritingToolsActive` before modifications |
+
+## Common Pitfalls
+
+1. **TextKit 1 fallback kills inline Writing Tools** — Any access to `layoutManager` triggers fallback. Use TextKit 2.
+2. **Not pausing operations during Writing Tools** — Server syncs, undo coalescing, etc. can conflict. Use `willBegin`/`didEnd`.
+3. **Editing text while Writing Tools is active** — Check `isWritingToolsActive` before programmatic text changes.
+4. **Forgetting protected ranges** — Code blocks, quotes, and citations should be excluded from rewriting.
+5. **Assuming Writing Tools is always available** — It requires Apple Intelligence enabled. Check availability gracefully.
+
+## Documentation Scope
+
+This page documents the `apple-text-writing-tools` workflow skill. Use it when the job is a guided review, implementation flow, or integration pass instead of a single API lookup.
+
+## Related
+
+- [`apple-text`](/apple-text/skills/apple-text/): Use when the user clearly has an Apple text-system problem but the right specialist skill is not obvious yet, or when the request mixes TextKit, text views, storage, layout, parsing, and Writing Tools. Reach for this router when you need the next best Apple-text skill, not when the subsystem is already clear.
+- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when the user is already on TextKit 2 and needs exact NSTextLayoutManager, NSTextContentManager, NSTextContentStorage, viewport layout, fragment, rendering-attribute, or migration details. Reach for this when the stack choice is already made and the task is reference-level TextKit 2 mechanics, not stack selection or generic text-system debugging.
+- [`apple-text-fallback-triggers`](/apple-text/skills/apple-text-fallback-triggers/): Use when the user needs to know exactly what makes TextKit 2 fall back to TextKit 1, or wants to audit code for fallback risk before it ships. Reach for this when the question is specifically about compatibility-mode triggers, not general text-system debugging.
+
+<details>
+<summary>Full SKILL.md source</summary>
+
+<Code code={skillSource} lang={"md"} title={"SKILL.md"} />
+
+</details>

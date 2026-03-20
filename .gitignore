@@ -1,12 +1,9 @@
 # Generated local/build artifacts
 node_modules/
 .astro/
+.npm-cache/
 .uv-cache/
 dist/
 __pycache__/
-
-# Legacy docs system
-/docs/
-
-# Generated doc pages (created by scripts/generate_docs.py)
-src/content/docs/
+.pytest_cache/
+skills-ref.log

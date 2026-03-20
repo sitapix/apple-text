@@ -2,21 +2,32 @@
 
 set -euo pipefail
 
-export UV_CACHE_DIR="${UV_CACHE_DIR:-$PWD/.uv-cache}"
-mkdir -p "$UV_CACHE_DIR"
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$ROOT"
+
+export UV_CACHE_DIR="${UV_CACHE_DIR:-$ROOT/.uv-cache}"
+export npm_config_cache="${npm_config_cache:-$ROOT/.npm-cache}"
+
+mkdir -p "$UV_CACHE_DIR" "$npm_config_cache" "$HOME/.local/bin"
+export PATH="$HOME/.local/bin:$PATH"
+
+if command -v sudo >/dev/null 2>&1; then
+  sudo apt-get update
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    fd-find \
+    jq \
+    ripgrep \
+    shellcheck
+fi
+
+if ! command -v fd >/dev/null 2>&1 && command -v fdfind >/dev/null 2>&1; then
+  ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
+fi
 
 if ! command -v uv >/dev/null 2>&1; then
   python3 -m pip install --user uv
-  export PATH="$HOME/.local/bin:$PATH"
 fi
 
-if [ -f package.json ]; then
-  npm install
-fi
-
-uv run python scripts/generate_docs.py
-uv run python scripts/validate_plugin.py
-
-if git rev-parse --show-toplevel >/dev/null 2>&1; then
-  uv run python scripts/install_git_hooks.py
-fi
+npm run setup:all
+npm run mcp:build
+python3 tooling/scripts/quality/validate_plugin.py

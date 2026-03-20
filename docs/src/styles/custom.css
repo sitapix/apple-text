@@ -1,0 +1,298 @@
+:root {
+  --sl-content-width: 64rem;
+  --docs-radius-lg: 0.9rem;
+  --docs-radius-md: 0.75rem;
+  --docs-radius-sm: 0.45rem;
+  --docs-surface: color-mix(in srgb, var(--card) 88%, var(--background));
+  --docs-surface-strong: color-mix(in srgb, var(--card) 96%, var(--background));
+  --docs-border: var(--border);
+  --docs-border-strong: color-mix(in srgb, var(--border) 70%, var(--foreground) 12%);
+  --docs-accent: var(--foreground);
+  --docs-accent-soft: color-mix(in srgb, var(--accent) 52%, transparent);
+  --docs-shadow: 0 10px 24px rgba(0, 0, 0, 0.04);
+  --docs-text-soft: var(--muted-foreground);
+}
+
+[data-has-hero] .container-main {
+  padding-top: 0.35rem;
+}
+
+[data-has-hero] .markdown-wrapper {
+  padding-top: 0;
+}
+
+@media (min-width: 1024px) {
+  [data-has-hero] .container-main {
+    padding-top: 0.5rem;
+  }
+}
+
+[data-has-hero] .container-section:first-of-type,
+[data-has-hero] .container-section:first-of-type > .container-wrapper {
+  border: 0;
+}
+
+[data-has-hero] .container-section:first-of-type .container-padding {
+  padding-inline: clamp(1rem, 3vw, 2rem);
+}
+
+[data-has-hero] .hero {
+  padding-block: clamp(0.5rem, 1.8vw, 1.15rem);
+  margin-bottom: 0.9rem;
+}
+
+[data-has-hero] .hero .copy > * {
+  max-width: none;
+}
+
+[data-has-hero] .hero .tagline {
+  max-width: 36rem;
+}
+
+.retro-wordmark {
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+  white-space: nowrap;
+}
+
+.retro-letter,
+.retro-space {
+  display: inline;
+}
+
+[data-theme="dark"] .retro-wordmark {
+  text-shadow:
+    0.03em 0.03em 0 rgba(7, 11, 24, 0.55),
+    0 0.12em 0.24em rgba(7, 11, 24, 0.18);
+}
+
+[data-theme="light"] .retro-wordmark {
+  text-shadow: 0 0.08em 0.18em rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .retro-fill-1 {
+  color: #4d9f38;
+}
+
+[data-theme="light"] .retro-fill-2 {
+  color: #d99d1d;
+}
+
+[data-theme="light"] .retro-fill-3 {
+  color: #d97018;
+}
+
+[data-theme="light"] .retro-fill-4 {
+  color: #c63236;
+}
+
+[data-theme="light"] .retro-fill-5 {
+  color: #7f3480;
+}
+
+[data-theme="dark"] .retro-fill-1 {
+  color: #61bb46;
+}
+
+[data-theme="dark"] .retro-fill-2 {
+  color: #fdb827;
+}
+
+[data-theme="dark"] .retro-fill-3 {
+  color: #f5821f;
+}
+
+[data-theme="dark"] .retro-fill-4 {
+  color: #e03a3e;
+}
+
+[data-theme="dark"] .retro-fill-5 {
+  color: #963d97;
+}
+
+.site-title .retro-wordmark {
+  line-height: 1;
+}
+
+.sl-markdown-content > p,
+.sl-markdown-content > ul,
+.sl-markdown-content > ol,
+.sl-markdown-content > blockquote {
+  max-width: 72ch;
+}
+
+.sl-markdown-content h2 {
+  margin-top: 3.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--docs-border);
+}
+
+.sl-markdown-content h3 {
+  margin-top: 2rem;
+}
+
+.sl-markdown-content ul,
+.sl-markdown-content ol {
+  padding-inline-start: 1.35rem;
+}
+
+.sl-markdown-content li + li {
+  margin-top: 0.45rem;
+}
+
+.sl-markdown-content blockquote {
+  border-inline-start-width: 3px;
+  border-inline-start-color: var(--primary);
+  background: color-mix(in srgb, var(--accent) 42%, transparent);
+  border-radius: 0 var(--docs-radius-sm) var(--docs-radius-sm) 0;
+  padding: 1rem 1.1rem;
+}
+
+.docs-intro {
+  margin: 1rem 0 1.75rem;
+  padding: 0 0 0 1rem;
+  border: 0;
+  border-inline-start: 3px solid var(--docs-border-strong);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.docs-intro > :first-child {
+  margin-top: 0;
+}
+
+.docs-intro > :last-child {
+  margin-bottom: 0;
+}
+
+.docs-eyebrow {
+  margin: 0 0 0.6rem;
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.docs-lead {
+  margin: 0;
+  font-size: clamp(1.05rem, 1.7vw, 1.3rem);
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+  font-weight: 650;
+}
+
+.docs-intro p:not(.docs-eyebrow):not(.docs-lead) {
+  color: var(--docs-text-soft);
+}
+
+.docs-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.docs-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--docs-border-strong);
+  background: color-mix(in srgb, var(--secondary) 92%, transparent);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.docs-spec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.docs-spec-card {
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--docs-border);
+  border-radius: var(--docs-radius-md);
+  background: transparent;
+  box-shadow: none;
+}
+
+.docs-spec-card > :first-child {
+  margin-top: 0;
+}
+
+.docs-spec-card > :last-child {
+  margin-bottom: 0;
+}
+
+.docs-section-label {
+  margin-bottom: 0.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sl-markdown-content .card-grid {
+  margin: 1rem 0 1.5rem;
+}
+
+.sl-markdown-content .sl-link-card {
+  border-color: var(--docs-border);
+  border-radius: var(--docs-radius-md);
+  background: transparent;
+  box-shadow: none;
+  padding: 1rem 1.05rem;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.sl-markdown-content .sl-link-card:hover {
+  border-color: var(--docs-border-strong);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.sl-markdown-content .sl-link-card .description {
+  color: var(--docs-text-soft);
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.sl-markdown-content pre {
+  border: 1px solid var(--docs-border);
+  border-radius: var(--docs-radius-md);
+  background: var(--docs-surface-strong);
+  box-shadow: none;
+}
+
+.sl-markdown-content .expressive-code pre {
+  border: 0;
+  border-radius: 0;
+}
+
+.sl-markdown-content code:not(pre code) {
+  border-radius: 0.45rem;
+  border: 1px solid var(--docs-border);
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+  padding: 0.12rem 0.38rem;
+}
+
+@media (max-width: 50rem) {
+  .docs-intro {
+    padding-left: 0.85rem;
+  }
+
+  .sl-markdown-content h2 {
+    margin-top: 3rem;
+  }
+}

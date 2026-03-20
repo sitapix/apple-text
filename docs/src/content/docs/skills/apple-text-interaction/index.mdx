@@ -1,0 +1,352 @@
+---
+title: "Text Interaction Customization"
+description: "Use when customizing text-editor interactions in UIKit, such as selection behavior, edit menus, link taps, gestures, cursor appearance, or long-press actions. Reach for this when the problem is interaction behavior, not custom text input protocol plumbing."
+---
+
+import { Code, Badge } from '@astrojs/starlight/components';
+import skillSource from './SKILL-source.txt?raw';
+
+<Badge text="Workflow Skills" variant="tip" />
+
+Use when customizing text-editor interactions in UIKit, such as selection behavior, edit menus, link taps, gestures, cursor appearance, or long-press actions. Reach for this when the problem is interaction behavior, not custom text input protocol plumbing.
+
+**Family:** Editor Features And Interaction
+
+Use this skill when the main question is how to customize text interaction behavior beyond the default text view experience.
+
+## When to Use
+
+- Adding custom context menu actions to a text editor
+- Handling link taps in a custom way
+- Customizing text cursor appearance
+- Overriding default selection or editing gestures
+- Adding `UITextInteraction` to a custom view
+
+## Quick Decision
+
+- Need text view selection and wrapping -> `/skill apple-text-views`
+- Need text input protocol details -> `/skill apple-text-input-ref`
+- Need Writing Tools coordinator -> `/skill apple-text-writing-tools`
+- Need copy/paste behavior -> `/skill apple-text-pasteboard`
+
+## Core Guidance
+
+## UIEditMenuInteraction (iOS 16+)
+
+### Overview
+
+`UIEditMenuInteraction` replaces the deprecated `UIMenuController`. It provides the standard edit menu (copy, cut, paste, etc.) and supports custom actions.
+
+`UITextView` uses `UIEditMenuInteraction` automatically. To add custom items, override `canPerformAction` and implement selectors:
+
+```swift
+class CustomTextView: UITextView {
+    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        if action == #selector(defineWord(_:)) {
+            return selectedRange.length > 0
+        }
+        return super.canPerformAction(action, withSender: sender)
+    }
+
+    @objc func defineWord(_ sender: Any?) {
+        let word = (text as NSString).substring(with: selectedRange)
+        // Present definition
+    }
+}
+```
+
+### Adding Menu Items via UIEditMenuInteraction Delegate
+
+For richer control, add a `UIEditMenuInteraction` directly:
+
+```swift
+class EditorView: UIView {
+    override func viewDidLoad() {
+        let editMenu = UIEditMenuInteraction(delegate: self)
+        addInteraction(editMenu)
+    }
+}
+
+extension EditorView: UIEditMenuInteractionDelegate {
+    func editMenuInteraction(
+        _ interaction: UIEditMenuInteraction,
+        menuFor configuration: UIEditMenuConfiguration,
+        suggestedActions: [UIMenuElement]
+    ) -> UIMenu? {
+        let customAction = UIAction(title: "Format Bold", image: UIImage(systemName: "bold")) { _ in
+            self.toggleBold()
+        }
+        var actions = suggestedActions
+        actions.append(customAction)
+        return UIMenu(children: actions)
+    }
+}
+```
+
+## Link and Text Item Handling
+
+### UITextItem Interactions (iOS 17+) — Preferred
+
+The modern API for handling taps and long-presses on links, attachments, and custom tagged ranges:
+
+```swift
+// Customize tap action for any text item
+func textView(_ textView: UITextView,
+              primaryActionFor textItem: UITextItem,
+              defaultAction: UIAction) -> UIAction? {
+    switch textItem.content {
+    case .link(let url):
+        return UIAction { _ in self.handleLink(url) }
+    case .textAttachment(let attachment):
+        return UIAction { _ in self.handleAttachment(attachment) }
+    case .tag(let tag):
+        return UIAction { _ in self.handleTag(tag) }
+    @unknown default:
+        return defaultAction
+    }
+}
+
+// Customize long-press context menu for any text item
+func textView(_ textView: UITextView,
+              menuConfigurationFor textItem: UITextItem,
+              defaultMenu: UIMenu) -> UITextItem.MenuConfiguration? {
+    switch textItem.content {
+    case .tag(let tag):
+        let customAction = UIAction(title: "View Profile") { _ in
+            self.showProfile(for: tag)
+        }
+        let menu = UIMenu(children: [customAction] + defaultMenu.children)
+        return UITextItem.MenuConfiguration(menu: menu)
+    default:
+        return UITextItem.MenuConfiguration(menu: defaultMenu)
+    }
+}
+```
+
+### Tagging Custom Interactive Ranges
+
+Make arbitrary text ranges tappable without using `.link` (which forces link styling):
+
+```swift
+let attrString = NSMutableAttributedString(string: "@username is here")
+attrString.addAttribute(
+    .uiTextItemTag,
+    value: "user:123",
+    range: NSRange(location: 0, length: 9)
+)
+// The range is now interactive — tap/long-press triggers the delegate methods above
+// Unlike .link, it does NOT change the text color to tintColor
+```
+
+### Legacy Link Delegate (Pre-iOS 17)
+
+The older API only handles `.link`-attributed ranges. Deprecated in iOS 17:
+
+```swift
+func textView(_ textView: UITextView,
+              shouldInteractWith URL: URL,
+              in characterRange: NSRange,
+              interaction: UITextItemInteraction) -> Bool {
+    switch interaction {
+    case .invokeDefaultAction:
+        handleLinkTap(URL)
+        return false
+    case .presentActions:
+        return true
+    case .preview:
+        return true
+    @unknown default:
+        return true
+    }
+}
+```
+
+### Making Non-Link Text Tappable
+
+Apply `.link` attribute for simple cases (text gets tintColor styling):
+
+```swift
+let attrString = NSMutableAttributedString(string: "@username")
+attrString.addAttribute(.link, value: "myapp://user/123", range: NSRange(location: 0, length: 9))
+textStorage.append(attrString)
+```
+
+For custom styling without tintColor override, use `.uiTextItemTag` instead (iOS 17+).
+
+The text view renders link-attributed text in `tintColor` and makes it tappable. Customize link appearance:
+
+```swift
+textView.linkTextAttributes = [
+    .foregroundColor: UIColor.systemBlue,
+    .underlineStyle: NSUnderlineStyle.single.rawValue
+]
+```
+
+## UITextInteraction
+
+### Adding Text Interaction to a Custom View
+
+`UITextInteraction` provides selection handles, loupe, and cursor to any view that adopts `UITextInput`:
+
+```swift
+class CustomEditorView: UIView, UITextInput {
+    let textInteraction = UITextInteraction(for: .editable)
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        textInteraction.textInput = self
+        addInteraction(textInteraction)
+    }
+
+    // UITextInput protocol implementation required
+    // (see apple-text-input-ref for the full protocol)
+}
+```
+
+For read-only text, use `.nonEditable`:
+
+```swift
+let readOnlyInteraction = UITextInteraction(for: .nonEditable)
+```
+
+### Interaction Delegate
+
+```swift
+extension CustomEditorView: UITextInteractionDelegate {
+    func interactionShouldBegin(
+        _ interaction: UITextInteraction,
+        at point: CGPoint
+    ) -> Bool {
+        // Return false to block interaction at certain positions
+        // (e.g., over inline buttons or non-text elements)
+        return isTextLocation(point)
+    }
+
+    func interactionWillBegin(_ interaction: UITextInteraction) {
+        // Prepare for interaction (e.g., show cursor)
+    }
+
+    func interactionDidEnd(_ interaction: UITextInteraction) {
+        // Clean up after interaction
+    }
+}
+```
+
+## Text Cursor Customization
+
+### Cursor Color
+
+```swift
+textView.tintColor = .systemRed  // Changes cursor and selection color
+```
+
+### Cursor Width (iOS 17+)
+
+```swift
+// Use UITextSelectionDisplayInteraction for custom cursor rendering
+// The cursor is rendered by the text interaction system
+// Custom width requires subclassing or private API (not recommended)
+```
+
+### Hiding the Cursor
+
+For presentation-mode or non-editable states where you want text selection without a blinking cursor:
+
+```swift
+class NoCursorTextView: UITextView {
+    override var caretRect: CGRect {
+        // Override caretRect(for:) in UITextInput to return .zero
+        return .zero
+    }
+
+    override func caretRect(for position: UITextPosition) -> CGRect {
+        return .zero  // Hides cursor
+    }
+}
+```
+
+## Selection Customization
+
+### Disabling Selection of Certain Ranges
+
+```swift
+func textViewDidChangeSelection(_ textView: UITextView) {
+    let selected = textView.selectedRange
+    if let protectedRange = protectedRange, NSIntersectionRange(selected, protectedRange).length > 0 {
+        // Push selection outside protected range
+        textView.selectedRange = NSRange(location: NSMaxRange(protectedRange), length: 0)
+    }
+}
+```
+
+### Custom Selection Granularity
+
+Override selection gestures by intercepting touch handling in a `UITextView` subclass:
+
+```swift
+class WordSelectTextView: UITextView {
+    override func selectionRects(for range: UITextRange) -> [UITextSelectionRect] {
+        // Customize selection rect appearance
+        return super.selectionRects(for: range)
+    }
+}
+```
+
+## Gesture Handling
+
+### Intercepting Gestures on UITextView
+
+`UITextView` installs many gesture recognizers for selection, link taps, and editing. Override at the gesture level:
+
+```swift
+class CustomGestureTextView: UITextView {
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        // Block specific system gestures if needed
+        if gestureRecognizer is UILongPressGestureRecognizer {
+            let point = gestureRecognizer.location(in: self)
+            if isOverCustomElement(point) {
+                return false  // Let your custom handler take over
+            }
+        }
+        return super.gestureRecognizerShouldBegin(gestureRecognizer)
+    }
+}
+```
+
+### Adding Custom Tap Actions
+
+```swift
+let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+tap.delegate = self
+textView.addGestureRecognizer(tap)
+
+// In UIGestureRecognizerDelegate:
+func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                       shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+    return true  // Allow both your tap and text view's taps
+}
+```
+
+## Common Pitfalls
+
+1. **UIMenuController is deprecated.** Use `UIEditMenuInteraction` on iOS 16+. `UIMenuController` calls still work but will eventually stop.
+2. **Link delegate not called for non-editable text views.** `isEditable = false` and `isSelectable = true` is required for link taps to reach the delegate. If `isSelectable` is false, links do not work.
+3. **Gesture conflicts with text view.** Adding tap or long-press recognizers to a text view can conflict with the system's text interaction gestures. Use `shouldRecognizeSimultaneously` or check touch location to resolve.
+4. **tintColor affects both cursor and links.** There is no separate cursor color API. Both are driven by `tintColor`. To have different colors for cursor and links, customize `linkTextAttributes` separately.
+
+## Documentation Scope
+
+This page documents the `apple-text-interaction` workflow skill. Use it when the job is a guided review, implementation flow, or integration pass instead of a single API lookup.
+
+## Related
+
+- [`apple-text-input-ref`](/apple-text/skills/apple-text-input-ref/): Use when the user already knows the problem lives in the text input system and needs exact UITextInput, UIKeyInput, NSTextInputClient, marked-text, or selection-UI behavior. Reach for this when implementing or debugging custom text input plumbing, not high-level editor interactions alone.
+- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging.
+- [`apple-text-pasteboard`](/apple-text/skills/apple-text-pasteboard/): Use when handling copy, cut, and paste in Apple text editors, including stripping formatting, sanitizing rich text, custom pasteboard types, pasted attachments, or NSItemProvider bridging. Reach for this when the problem is pasteboard behavior, not general editor interaction.
+
+<details>
+<summary>Full SKILL.md source</summary>
+
+<Code code={skillSource} lang={"md"} title={"SKILL.md"} />
+
+</details>

@@ -12,13 +12,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            mcp-server/package-lock.json
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
-      - name: Generate docs
-        run: python3 scripts/generate_docs.py
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
 
-      - name: Validate manifests and skill links
-        run: python3 scripts/validate_plugin.py
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm --prefix mcp-server ci
+
+      - name: Install skills-ref
+        run: uv tool install --from git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref skills-ref
+
+      - name: Run checks
+        run: npm run check
