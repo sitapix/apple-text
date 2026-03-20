@@ -9,6 +9,12 @@ class PublishMcpWorkflowTests(unittest.TestCase):
     def test_publish_workflow_exists(self) -> None:
         self.assertTrue((ROOT / ".github" / "workflows" / "publish-mcp.yml").is_file())
 
+    def test_publish_workflow_publishes_from_mcp_server_directory(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "publish-mcp.yml").read_text(encoding="utf-8")
+        self.assertIn("working-directory: mcp-server", workflow)
+        self.assertIn("run: npm publish --provenance --access public", workflow)
+        self.assertNotIn("run: npm --prefix mcp-server publish", workflow)
+
     def test_root_package_exposes_publish_scripts(self) -> None:
         package_json = (ROOT / "package.json").read_text(encoding="utf-8")
         self.assertIn('"mcp:pack:check": "npm --prefix mcp-server run pack:check"', package_json)

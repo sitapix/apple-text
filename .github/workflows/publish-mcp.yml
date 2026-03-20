@@ -68,4 +68,5 @@ jobs:
         if: github.ref_type == 'tag' || github.event.inputs.publish == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm --prefix mcp-server publish --provenance --access public
+        working-directory: mcp-server
+        run: npm publish --provenance --access public
