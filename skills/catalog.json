@@ -590,6 +590,90 @@
         "apple-text-input-ref",
         "apple-text-interaction"
       ]
+    },
+    {
+      "name": "apple-text-measurement",
+      "category": "textkit-runtime",
+      "kind": "ref",
+      "entrypoint_priority": 3,
+      "aliases": [
+        "text measurement",
+        "bounding rect",
+        "size text",
+        "text sizing",
+        "intrinsic content size",
+        "sizeThatFits",
+        "line metrics"
+      ],
+      "related_skills": [
+        "apple-text-textkit1-ref",
+        "apple-text-textkit2-ref",
+        "apple-text-viewport-rendering"
+      ]
+    },
+    {
+      "name": "apple-text-exclusion-paths",
+      "category": "textkit-runtime",
+      "kind": "ref",
+      "entrypoint_priority": 3,
+      "aliases": [
+        "exclusion paths",
+        "text wrapping",
+        "multi-column",
+        "linked containers",
+        "nstexttable",
+        "nstextblock",
+        "nstextlist",
+        "text table",
+        "text list",
+        "non-rectangular"
+      ],
+      "related_skills": [
+        "apple-text-attachments-ref",
+        "apple-text-viewport-rendering",
+        "apple-text-formatting-ref"
+      ]
+    },
+    {
+      "name": "apple-text-line-breaking",
+      "category": "rich-text-modeling",
+      "kind": "ref",
+      "entrypoint_priority": 4,
+      "aliases": [
+        "line break",
+        "hyphenation",
+        "truncation",
+        "line height",
+        "paragraph spacing",
+        "tab stops",
+        "line break strategy",
+        "word wrap"
+      ],
+      "related_skills": [
+        "apple-text-formatting-ref",
+        "apple-text-measurement",
+        "apple-text-dynamic-type"
+      ]
+    },
+    {
+      "name": "apple-text-recipes",
+      "category": "entrypoints",
+      "kind": "workflow",
+      "entrypoint_priority": 2,
+      "aliases": [
+        "how do I",
+        "cookbook",
+        "recipes",
+        "quick answer",
+        "text examples",
+        "code snippets"
+      ],
+      "related_skills": [
+        "apple-text",
+        "apple-text-measurement",
+        "apple-text-exclusion-paths",
+        "apple-text-line-breaking"
+      ]
     }
   ]
 }

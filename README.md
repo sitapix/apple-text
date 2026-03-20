@@ -6,7 +6,7 @@ Deep text-system expertise for AI coding assistants. Covers TextKit 1 and 2, UIT
 
 Apple Text gives AI coding assistants focused guidance on Apple's text rendering and editing stack, including TextKit behavior, text view selection, attributed text, layout, and Writing Tools integration.
 
-- **35 focused text skills** covering TextKit, views, formatting, storage, input, layout, accessibility, and more
+- **39 focused text skills** covering TextKit, views, formatting, storage, input, layout, accessibility, and more
 - **1 agent** for autonomous code auditing (fallback triggers, editing lifecycle bugs, deprecated APIs)
 - **1 command** for plain-language text questions
 
@@ -97,6 +97,7 @@ cp -R skills/apple-text-views /path/to/your/project/.agents/skills/
 
 - **`/skill apple-text`** — Use when the user clearly has an Apple text-system problem but the right specialist skill is not obvious yet, or when the request mixes TextKit, text views, storage, layout, parsing, and Writing Tools. Reach for this router when you need the next best Apple-text skill, not when the subsystem is already clear.
 - **`/skill apple-text-audit`** — Use when the user wants a review-style scan of Apple text code for risks such as TextKit fallback, editing lifecycle bugs, deprecated APIs, performance traps, or Writing Tools breakage. Reach for this when the job is findings from real code, not a symptom-first debug answer or direct API lookup.
+- **`/skill apple-text-recipes`** — Use when the user has a "how do I..." question about text views and you need a quick working recipe, or when they want a copy-paste snippet for a common text task rather than architecture guidance. Covers the 25 most common text tasks - background colors per paragraph, line numbers, character limits, text wrapping around images, clickable links, syntax highlighting, placeholder text, auto-growing text views, and more.
 - **`/skill apple-text-texteditor-26`** — Use when building rich-text editing with SwiftUI TextEditor and AttributedString on iOS 26+, or deciding whether the new native APIs are enough versus a UITextView wrapper. Reach for this when the question is specifically about the iOS 26 TextEditor rich-text boundary, not generic SwiftUI wrapping.
 - **`/skill apple-text-textkit-diag`** — Use when the user starts with a broken Apple text symptom such as stale layout, fallback, crashes in editing, rendering artifacts, missing Writing Tools, or large-document slowness. Reach for this when debugging misbehavior, not when reviewing code systematically or looking up APIs.
 - **`/skill apple-text-views`** — Use when the main task is choosing the right Apple text view or deciding whether a problem belongs in SwiftUI text, UIKit/AppKit text views, or TextKit mode. Reach for this when comparing capabilities and tradeoffs, not when implementing a specific wrapper or low-level API.
@@ -106,12 +107,12 @@ cp -R skills/apple-text-views /path/to/your/project/.agents/skills/
 
 Choose the topic family first. The skill role (`router`, `workflow`, `diag`, `decision`, `ref`) is the second pass.
 
-- **Front Door Skills** — Start here when the request is broad, needs triage, or should route through the shortest high-signal entry point. Includes `/skill apple-text`, `/skill apple-text-audit`, `/skill apple-text-textkit-diag`, `/skill apple-text-apple-docs`.
+- **Front Door Skills** — Start here when the request is broad, needs triage, or should route through the shortest high-signal entry point. Includes `/skill apple-text`, `/skill apple-text-audit`, `/skill apple-text-recipes`, `/skill apple-text-textkit-diag`, `/skill apple-text-apple-docs`.
 - **View And Stack Decisions** — Use these when the main job is choosing the right text view, platform surface, or TextKit stack. Includes `/skill apple-text-views`, `/skill apple-text-layout-manager-selection`, `/skill apple-text-appkit-vs-uikit`.
 - **SwiftUI And Wrapper Boundaries** — Use these when the hard part is crossing between SwiftUI and UIKit or AppKit text systems. Includes `/skill apple-text-texteditor-26`, `/skill apple-text-representable`, `/skill apple-text-swiftui-bridging`.
-- **TextKit Runtime And Layout** — Use these for fallback behavior, layout invalidation, viewport rendering, and direct TextKit runtime mechanics. Includes `/skill apple-text-fallback-triggers`, `/skill apple-text-layout-invalidation`, `/skill apple-text-textkit1-ref`, `/skill apple-text-textkit2-ref`, `/skill apple-text-viewport-rendering`.
+- **TextKit Runtime And Layout** — Use these for fallback behavior, layout invalidation, viewport rendering, and direct TextKit runtime mechanics. Includes `/skill apple-text-exclusion-paths`, `/skill apple-text-fallback-triggers`, `/skill apple-text-layout-invalidation`, `/skill apple-text-measurement`, `/skill apple-text-textkit1-ref`, `/skill apple-text-textkit2-ref`, `/skill apple-text-viewport-rendering`.
 - **Editor Features And Interaction** — Use these for editing behaviors such as Writing Tools, undo, input, interaction, accessibility, and clipboard flows. Includes `/skill apple-text-accessibility`, `/skill apple-text-drag-drop`, `/skill apple-text-find-replace`, `/skill apple-text-interaction`, `/skill apple-text-pasteboard`, `/skill apple-text-spell-autocorrect`, `/skill apple-text-undo`, `/skill apple-text-writing-tools`, `/skill apple-text-dynamic-type`, `/skill apple-text-input-ref`.
-- **Rich Text And Formatting** — Use these when the work centers on attributed content, formatting attributes, attachments, colors, or Markdown semantics. Includes `/skill apple-text-attributed-string`, `/skill apple-text-attachments-ref`, `/skill apple-text-colors`, `/skill apple-text-formatting-ref`, `/skill apple-text-markdown`.
+- **Rich Text And Formatting** — Use these when the work centers on attributed content, formatting attributes, attachments, colors, or Markdown semantics. Includes `/skill apple-text-attributed-string`, `/skill apple-text-attachments-ref`, `/skill apple-text-colors`, `/skill apple-text-formatting-ref`, `/skill apple-text-line-breaking`, `/skill apple-text-markdown`.
 - **Text Model And Foundation Utilities** — Use these for storage, parsing, Core Text, bidirectional text, and Foundation or NaturalLanguage text utilities. Includes `/skill apple-text-storage`, `/skill apple-text-bidi`, `/skill apple-text-core-text`, `/skill apple-text-foundation-ref`, `/skill apple-text-parsing`.
 
 ## Documentation

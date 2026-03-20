@@ -242,6 +242,33 @@
       "apple-text-writing-tools"
     ]
   },
+  "apple-text-exclusion-paths": {
+    "category": "textkit-runtime",
+    "tags": [
+      "textkit",
+      "layout",
+      "runtime",
+      "exclusion",
+      "paths"
+    ],
+    "aliases": [
+      "exclusion paths",
+      "text wrapping",
+      "multi-column",
+      "linked containers",
+      "nstexttable",
+      "nstextblock",
+      "nstextlist",
+      "text table",
+      "text list",
+      "non-rectangular"
+    ],
+    "related": [
+      "apple-text-attachments-ref",
+      "apple-text-viewport-rendering",
+      "apple-text-formatting-ref"
+    ]
+  },
   "apple-text-fallback-triggers": {
     "category": "textkit-runtime",
     "tags": [
@@ -402,6 +429,31 @@
       "apple-text-fallback-triggers"
     ]
   },
+  "apple-text-line-breaking": {
+    "category": "rich-text-modeling",
+    "tags": [
+      "rich-text",
+      "attributes",
+      "formatting",
+      "line",
+      "breaking"
+    ],
+    "aliases": [
+      "line break",
+      "hyphenation",
+      "truncation",
+      "line height",
+      "paragraph spacing",
+      "tab stops",
+      "line break strategy",
+      "word wrap"
+    ],
+    "related": [
+      "apple-text-formatting-ref",
+      "apple-text-measurement",
+      "apple-text-dynamic-type"
+    ]
+  },
   "apple-text-markdown": {
     "category": "rich-text-modeling",
     "tags": [
@@ -419,6 +471,29 @@
       "apple-text-attributed-string",
       "apple-text-swiftui-bridging",
       "apple-text-writing-tools"
+    ]
+  },
+  "apple-text-measurement": {
+    "category": "textkit-runtime",
+    "tags": [
+      "textkit",
+      "layout",
+      "runtime",
+      "measurement"
+    ],
+    "aliases": [
+      "text measurement",
+      "bounding rect",
+      "size text",
+      "text sizing",
+      "intrinsic content size",
+      "sizeThatFits",
+      "line metrics"
+    ],
+    "related": [
+      "apple-text-textkit1-ref",
+      "apple-text-textkit2-ref",
+      "apple-text-viewport-rendering"
     ]
   },
   "apple-text-parsing": {
@@ -461,6 +536,29 @@
       "apple-text-attachments-ref",
       "apple-text-attributed-string",
       "apple-text-undo"
+    ]
+  },
+  "apple-text-recipes": {
+    "category": "entrypoints",
+    "tags": [
+      "routing",
+      "entrypoint",
+      "apple-text",
+      "recipes"
+    ],
+    "aliases": [
+      "how do I",
+      "cookbook",
+      "recipes",
+      "quick answer",
+      "text examples",
+      "code snippets"
+    ],
+    "related": [
+      "apple-text",
+      "apple-text-measurement",
+      "apple-text-exclusion-paths",
+      "apple-text-line-breaking"
     ]
   },
   "apple-text-representable": {

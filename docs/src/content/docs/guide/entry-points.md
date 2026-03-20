@@ -36,6 +36,14 @@ Best first move:
 
 - Best when the user wants a guided scan or implementation flow.
 
+### [`apple-text-recipes`](/apple-text/skills/apple-text-recipes/)
+
+Use when the user has a "how do I..." question about text views and you need a quick working recipe, or when they want a copy-paste snippet for a common text task rather than architecture guidance. Covers the 25 most common text tasks - background colors per paragraph, line numbers, character limits, text wrapping around images, clickable links, syntax highlighting, placeholder text, auto-growing text views, and more.
+
+Best first move:
+
+- Best when the user wants a guided scan or implementation flow.
+
 ### [`apple-text-texteditor-26`](/apple-text/skills/apple-text-texteditor-26/)
 
 Use when building rich-text editing with SwiftUI TextEditor and AttributedString on iOS 26+, or deciding whether the new native APIs are enough versus a UITextView wrapper. Reach for this when the question is specifically about the iOS 26 TextEditor rich-text boundary, not generic SwiftUI wrapping.
