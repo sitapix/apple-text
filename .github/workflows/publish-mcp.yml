@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+      packages: write
 
     steps:
       - name: Checkout
@@ -30,7 +30,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          registry-url: "https://registry.npmjs.org"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@sitapix"
           cache: "npm"
           cache-dependency-path: |
             package-lock.json
@@ -64,9 +65,9 @@ jobs:
       - name: Pack dry run
         run: npm --prefix mcp-server run pack:dry-run
 
-      - name: Publish to npm
+      - name: Publish to GitHub Packages
         if: github.ref_type == 'tag' || github.event.inputs.publish == 'true'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: mcp-server
-        run: npm publish --provenance --access public
+        run: npm publish --access public

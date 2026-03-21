@@ -6,11 +6,11 @@ It exposes:
 
 - Apple Text skills as MCP resources
 - repo commands as MCP prompts
-- read-only tools for routing, catalog lookup, search, skill reads, and agent inspection
+- read-only tools for ask-style routing, catalog lookup, search, skill reads, and agent inspection
 
 Apple Text MCP is a read-only knowledge server. If you also want build, test, and project actions from Xcode, run Apple's separate Xcode MCP bridge alongside it with `xcrun mcpbridge`.
 
-For generic MCP clients, the main front door is `apple_text_route`. Give it the user's Apple text question first, then follow its suggested `apple_text_read_skill` call.
+For generic MCP clients, the main front door is `apple_text_ask`. If you want the lower-level route-first flow, call `apple_text_route` and then follow its suggested `apple_text_read_skill` call.
 
 The repo also keeps a committed source bundle at `mcp-server/bundle.json` so hooks and CI can verify MCP data freshness without compiling TypeScript first.
 `mcp-server/skill-annotations.json` is generated from `skills/catalog.json` plus optional hand-tuned overrides in `mcp-server/skill-annotations.overrides.json`.
@@ -238,6 +238,7 @@ APPLE_TEXT_DEV_PATH = "/absolute/path/to/apple-text"
 
 ### Tools
 
+- `apple_text_ask`
 - `apple_text_route`
 - `apple_text_get_catalog`
 - `apple_text_search_skills`

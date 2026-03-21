@@ -1,5 +1,5 @@
 {
-  "name": "apple-text-mcp",
+  "name": "@sitapix/apple-text-mcp",
   "version": "1.2.0",
   "description": "MCP server for the Apple Text skills collection",
   "type": "module",
@@ -48,6 +48,7 @@
   },
   "homepage": "https://github.com/sitapix/apple-text/tree/main/mcp-server",
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "dependencies": {

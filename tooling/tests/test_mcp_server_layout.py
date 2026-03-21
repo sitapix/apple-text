@@ -15,7 +15,7 @@ class McpServerLayoutTests(unittest.TestCase):
     def test_package_exists_with_expected_entry_points(self) -> None:
         package = load_json(MCP_ROOT / "package.json")
 
-        self.assertEqual(package["name"], "apple-text-mcp")
+        self.assertEqual(package["name"], "@sitapix/apple-text-mcp")
         self.assertEqual(package["bin"]["apple-text-mcp"], "dist/index.js")
         self.assertIn("build:bundle", package["scripts"])
 

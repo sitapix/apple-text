@@ -1,7 +1,7 @@
 import type { CallToolResult, ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { orderedKinds } from "../catalog/index.js";
 import { Logger } from "../config.js";
-import { formatDisplayName, type Agent, type SkillKind } from "../loader/parser.js";
+import { formatDisplayName, type Agent, type Skill, type SkillKind } from "../loader/parser.js";
 import type { Loader } from "../loader/types.js";
 
 export interface McpTool {
@@ -24,6 +24,30 @@ export class DynamicToolsHandler {
   async listTools(): Promise<{ tools: McpTool[] }> {
     return {
       tools: [
+        {
+          name: "apple_text_ask",
+          description:
+            "Natural-language front door for Apple Text. Routes the question to the best skill and returns the relevant skill content directly. Use this when clients do not surface MCP prompts well.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              question: {
+                type: "string",
+                description: "User question to route and answer from Apple Text.",
+              },
+              includeSkillContent: {
+                type: "boolean",
+                description: "Include the routed skill content in the response. Default true.",
+              },
+              preferEntrypoints: {
+                type: "boolean",
+                description: "Prefer prominent entry-point skills when scores are close. Default true.",
+              },
+            },
+            required: ["question"],
+          },
+          annotations: readOnlyAnnotations("Ask Apple Text"),
+        },
         {
           name: "apple_text_route",
           description:
@@ -153,6 +177,8 @@ export class DynamicToolsHandler {
     this.logger.debug(`Handling tools/call for ${name}`);
 
     switch (name) {
+      case "apple_text_ask":
+        return this.handleAsk(args);
       case "apple_text_route":
         return this.handleRoute(args);
       case "apple_text_get_catalog":
@@ -176,23 +202,10 @@ export class DynamicToolsHandler {
     const question = args.question.trim();
     const limit = clampLimit(args.limit, 3, 1, 8);
     const preferEntrypoints = args.preferEntrypoints !== false;
-    const intent = inferRouteIntent(question);
-    const explicitCandidates = explicitRouteCandidates(question, intent.preferredKind);
-    const searchResults = await this.loader.searchSkills(question, {
-      limit: Math.max(limit * 4, 8),
-    });
-    const candidates = new Map<string, SearchResultLike>(
-      searchResults.map((result) => [result.name, result]),
-    );
+    const route = await this.routeSkills(question, limit, preferEntrypoints);
+    const { intent, routed } = route;
 
-    for (const skillName of explicitCandidates) {
-      if (candidates.has(skillName)) continue;
-      const skill = await this.loader.getSkill(skillName);
-      if (!skill) continue;
-      candidates.set(skillName, searchResultFromSkill(skill));
-    }
-
-    if (candidates.size === 0) {
+    if (routed.length === 0) {
       const catalog = await this.loader.getCatalog();
       const fallbackSkills = catalog.featured.slice(0, limit);
       const lines = [
@@ -214,26 +227,6 @@ export class DynamicToolsHandler {
 
       return { content: [{ type: "text", text: lines.join("\n") }] };
     }
-
-    const explicitOrder = new Map(explicitCandidates.map((name, index) => [name, index]));
-    const ranked = Array.from(candidates.values())
-      .map((result) => rankRouteResult(result, question, intent, preferEntrypoints))
-      .sort((left, right) => {
-        return (
-          compareExplicitCandidates(left.result.name, right.result.name, explicitOrder) ||
-          right.adjustedScore - left.adjustedScore ||
-          compareEntrypoints(left.result.entrypointPriority, right.result.entrypointPriority) ||
-          left.result.name.localeCompare(right.result.name)
-        );
-      })
-      .slice(0, limit);
-
-    const routed = await Promise.all(
-      ranked.map(async (candidate) => ({
-        ...candidate,
-        skill: await this.loader.getSkill(candidate.result.name),
-      })),
-    );
 
     const lines = [
       `# Route for "${question}"`,
@@ -274,6 +267,75 @@ export class DynamicToolsHandler {
 
       lines.push(`Read next: apple_text_read_skill ${readArgs}`, "");
     });
+
+    return { content: [{ type: "text", text: lines.join("\n") }] };
+  }
+
+  private async handleAsk(args: Record<string, unknown>): Promise<CallToolResult> {
+    if (typeof args.question !== "string" || args.question.trim() === "") {
+      throw new Error('Required parameter "question" must be a non-empty string');
+    }
+
+    const question = args.question.trim();
+    const preferEntrypoints = args.preferEntrypoints !== false;
+    const includeSkillContent = args.includeSkillContent !== false;
+    const route = await this.routeSkills(question, 1, preferEntrypoints);
+    const top = route.routed[0];
+
+    if (!top) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: [
+              `# Ask Apple Text`,
+              "",
+              `Question: ${question}`,
+              "",
+              "No routed skill was found. Try `apple_text_route` for broader options or `apple_text_search_skills` for manual lookup.",
+            ].join("\n"),
+          },
+        ],
+      };
+    }
+
+    const sectionNames =
+      top.result.matchingSections.length > 0 ? top.result.matchingSections.slice(0, 3) : undefined;
+    const sectionResult = await this.loader.getSkillSections(top.result.name, sectionNames);
+    const skillContent = sectionResult?.content || top.skill?.content || "";
+    const sectionList =
+      sectionResult && sectionResult.sections.length > 0
+        ? sectionResult.sections.map((section) => section.heading)
+        : [];
+
+    const lines = [
+      `# Ask Apple Text`,
+      "",
+      `Question: ${question}`,
+      `Start with: ${top.result.name}`,
+      `Intent: ${route.intent.label}`,
+      `Why: ${top.reasons.join("; ")}`,
+    ];
+
+    if (sectionList.length > 0) {
+      lines.push(`Sections: ${sectionList.join(", ")}`);
+    }
+
+    if (top.skill?.agent) {
+      lines.push(`Agent: ${top.skill.agent}`);
+    }
+
+    lines.push(`Read next: apple_text_read_skill ${JSON.stringify({
+      skills: [
+        sectionList.length > 0
+          ? { name: top.result.name, sections: sectionList }
+          : { name: top.result.name },
+      ],
+    })}`);
+
+    if (includeSkillContent && skillContent) {
+      lines.push("", "---", "", skillContent);
+    }
 
     return { content: [{ type: "text", text: lines.join("\n") }] };
   }
@@ -423,6 +485,57 @@ export class DynamicToolsHandler {
     }
 
     return { content: [{ type: "text", text: formatAgent(agent) }] };
+  }
+
+  private async routeSkills(
+    question: string,
+    limit: number,
+    preferEntrypoints: boolean,
+  ): Promise<{
+    intent: { label: string; preferredKind: SkillKind };
+    routed: RoutedCandidate[];
+  }> {
+    const intent = inferRouteIntent(question);
+    const explicitCandidates = explicitRouteCandidates(question, intent.preferredKind);
+    const searchResults = await this.loader.searchSkills(question, {
+      limit: Math.max(limit * 4, 8),
+    });
+    const candidates = new Map<string, SearchResultLike>(
+      searchResults.map((result) => [result.name, result]),
+    );
+
+    for (const skillName of explicitCandidates) {
+      if (candidates.has(skillName)) continue;
+      const skill = await this.loader.getSkill(skillName);
+      if (!skill) continue;
+      candidates.set(skillName, searchResultFromSkill(skill));
+    }
+
+    if (candidates.size === 0) {
+      return { intent, routed: [] };
+    }
+
+    const explicitOrder = new Map(explicitCandidates.map((name, index) => [name, index]));
+    const ranked = Array.from(candidates.values())
+      .map((result) => rankRouteResult(result, question, intent, preferEntrypoints))
+      .sort((left, right) => {
+        return (
+          compareExplicitCandidates(left.result.name, right.result.name, explicitOrder) ||
+          right.adjustedScore - left.adjustedScore ||
+          compareEntrypoints(left.result.entrypointPriority, right.result.entrypointPriority) ||
+          left.result.name.localeCompare(right.result.name)
+        );
+      })
+      .slice(0, limit);
+
+    const routed = await Promise.all(
+      ranked.map(async (candidate) => ({
+        ...candidate,
+        skill: await this.loader.getSkill(candidate.result.name),
+      })),
+    );
+
+    return { intent, routed };
   }
 }
 
@@ -608,6 +721,13 @@ interface SearchResultLike {
   score: number;
   matchingSections: string[];
   entrypointPriority?: number;
+}
+
+interface RoutedCandidate {
+  result: SearchResultLike;
+  adjustedScore: number;
+  reasons: string[];
+  skill?: Skill;
 }
 
 function explicitRouteCandidates(question: string, preferredKind: SkillKind): string[] {

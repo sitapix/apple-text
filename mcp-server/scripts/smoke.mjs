@@ -47,6 +47,7 @@ try {
 
   const toolNames = tools.tools.map((tool) => tool.name);
   const expectedTools = [
+    "apple_text_ask",
     "apple_text_route",
     "apple_text_get_catalog",
     "apple_text_search_skills",
@@ -72,6 +73,22 @@ try {
     throw new Error('Prompt "ask" returned no messages');
   }
 
+  const askTool = await client.callTool({
+    name: "apple_text_ask",
+    arguments: {
+      question: "How do I choose between UITextView and TextEditor?",
+      includeSkillContent: false,
+    },
+  });
+
+  const askText = askTool.content
+    .filter((item) => item.type === "text")
+    .map((item) => item.text)
+    .join("\n");
+  if (!askText.includes("Start with:")) {
+    throw new Error("apple_text_ask did not return a routed skill");
+  }
+
   console.log(
     JSON.stringify(
       {
@@ -80,6 +97,7 @@ try {
         toolCount: tools.tools.length,
         resourceCount: resources.resources.length,
         promptName: "ask",
+        askTool: "apple_text_ask",
       },
       null,
       2,
