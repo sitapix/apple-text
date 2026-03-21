@@ -484,11 +484,11 @@ def render_linkcard_grid_mdx(
         title, href = card[0], card[1]
         description = card[2] if len(card) > 2 else None
         props = [
-            f"title={json.dumps(title)}",
-            f"href={json.dumps(href)}",
+            f"title={{{json.dumps(title)}}}",
+            f"href={{{json.dumps(href)}}}",
         ]
         if description is not None:
-            props.append(f"description={json.dumps(description)}")
+            props.append(f"description={{{json.dumps(description)}}}")
         lines.append(f"  <LinkCard {' '.join(props)} />")
         lines.append("")
 
