@@ -619,11 +619,7 @@ function inferRouteIntent(question: string): { label: string; preferredKind: Ski
     };
   }
 
-  if (
-    /\b(crash|broken|stale|fallback|wrong|bug|issue|diagnos|debug|not working|fail|missing|slow)\b/.test(
-      normalized,
-    )
-  ) {
+  if (isLikelyDiagnosticQuestion(normalized)) {
     return {
       label: "Debugging or diagnosis",
       preferredKind: "diag",
@@ -659,6 +655,7 @@ function rankRouteResult(
   let adjustedScore = result.score;
   const reasons: string[] = [];
   const normalizedQuestion = question.toLowerCase();
+  const asksForDiagnosis = isLikelyDiagnosticQuestion(normalizedQuestion);
   const asksForTextViewChoice = /\b(text view|textview|which view|which text view)\b/.test(
     normalizedQuestion,
   );
@@ -684,10 +681,7 @@ function rankRouteResult(
     reasons.push("Explicit audit request");
   }
 
-  if (
-    /\b(fallback|crash|stale|rendering|debug|diagnos)\b/.test(normalizedQuestion) &&
-    result.name === "apple-text-textkit-diag"
-  ) {
+  if (asksForDiagnosis && result.name === "apple-text-textkit-diag") {
     adjustedScore += 5;
     reasons.push("Explicit debugging request");
   }
@@ -742,7 +736,7 @@ function explicitRouteCandidates(question: string, preferredKind: SkillKind): st
     candidates.push("apple-text-audit");
   }
 
-  if (/\b(fallback|crash|stale|rendering|debug|diagnos)\b/.test(normalized)) {
+  if (isLikelyDiagnosticQuestion(normalized)) {
     candidates.push("apple-text-textkit-diag");
   }
 
@@ -751,6 +745,31 @@ function explicitRouteCandidates(question: string, preferredKind: SkillKind): st
   }
 
   return candidates;
+}
+
+function isLikelyDiagnosticQuestion(normalizedQuestion: string): boolean {
+  if (
+    /\b(crash|broken|stale|fallback|wrong|bug|issue|diagnos|debug|not working|fail|missing|slow)\b/.test(
+      normalizedQuestion,
+    )
+  ) {
+    return true;
+  }
+
+  const asksForCauseOrChecks =
+    /\b(why does|why is|what(?: usually)? causes|what should be checked|what should i check|how do i debug|how to debug)\b/.test(
+      normalizedQuestion,
+    );
+  const hasTextSystemContext =
+    /\b(textkit|nstextview|uitextview|attributed string|text storage|textstorage|typing attributes?|inserttext|didchangetext|layout manager|storagecolor|typingcolor|expectedcolor)\b/.test(
+      normalizedQuestion,
+    );
+  const hasRuntimeSymptoms =
+    /\b(nil|black|white|dark mode|until|next keystroke|newly typed text|typed text|becomes|during|preflight|postedit|logs? show|snapshot)\b/.test(
+      normalizedQuestion,
+    );
+
+  return asksForCauseOrChecks && hasTextSystemContext && hasRuntimeSymptoms;
 }
 
 function searchResultFromSkill(skill: {
