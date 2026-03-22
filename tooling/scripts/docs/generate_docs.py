@@ -523,12 +523,24 @@ def project_status_note() -> List[str]:
     ]
 
 
+def _registered_skills(skills: List[Dict]) -> List[Dict]:
+    """Return only the skills registered in plugin.json (entry points)."""
+    registered_names = {
+        "apple-text",
+        "apple-text-audit",
+        "apple-text-views",
+        "apple-text-textkit-diag",
+        "apple-text-recipes",
+    }
+    return [s for s in skills if s["name"] in registered_names]
+
+
 def render_readme(plugin: Dict, marketplace: Dict, skills: List[Dict], commands: List[Dict], agents: List[Dict]) -> str:
     plugin_title = display_plugin_name(plugin["name"])
     owner = marketplace["owner"]["name"]
     command_name = commands[0]["name"] if commands else f"{plugin['name']}:ask"
-    docs_search_skill = find_skill(skills, "apple-text-apple-docs")
-    family_groups = grouped_skills_by_category(skills)
+    reference_agents = [a for a in agents if not _is_auditor_agent(a)]
+    auditor_agents = [a for a in agents if _is_auditor_agent(a)]
 
     lines = [
         f"# {plugin_title}",
@@ -540,7 +552,7 @@ def render_readme(plugin: Dict, marketplace: Dict, skills: List[Dict], commands:
         "Apple Text gives AI coding assistants focused guidance on Apple's text rendering and editing stack, including TextKit behavior, text view selection, attributed text, layout, and Writing Tools integration.",
         "",
         f"- **{len(skills)} focused text skills** covering TextKit, views, formatting, storage, input, layout, accessibility, and more",
-        f"- **{len(agents)} agent** for autonomous code auditing (fallback triggers, editing lifecycle bugs, deprecated APIs)",
+        f"- **{len(agents)} agent{'s' if len(agents) != 1 else ''}** for isolated reference lookups and autonomous code auditing",
         f"- **{len(commands)} command** for plain-language text questions",
         "",
     ]
@@ -549,103 +561,62 @@ def render_readme(plugin: Dict, marketplace: Dict, skills: List[Dict], commands:
         [
         "## Quick Start",
         "",
-        "Apple Text is one collection with three practical entry points:",
-        "",
-        f"- **Claude Code plugin** for the native `/plugin` and `/{command_name}` flow",
-        "- **MCP server** for VS Code, Cursor, Gemini CLI, Claude Desktop, and similar clients",
-        "- **Xcode via MCP** for Claude Agent or Codex inside Xcode",
-        "",
-        "### 1. Add the Marketplace",
+        "### Claude Code (native plugin)",
         "",
         "```bash",
+        "# Add marketplace",
         f"/plugin marketplace add {owner}/{plugin['name']}",
+        "",
+        "# Install plugin",
+        f"/plugin install {plugin['name']}@{plugin['name']}",
         "```",
         "",
-        "### 2. Install the Plugin",
+        "### MCP (VS Code, Cursor, Gemini CLI, and more)",
         "",
-        "Use `/plugin` to open the plugin menu, search for `apple-text`, then install it.",
+        "Add to your MCP config:",
         "",
-        "### 3. Verify Installation",
+        "```json",
+        "{",
+        '  "mcpServers": {',
+        f'    "{plugin["name"]}": ' + "{",
+        '      "command": "npx",',
+        f'      "args": ["-y", "@{owner}/{plugin["name"]}-mcp"]',
+        "    }",
+        "  }",
+        "}",
+        "```",
         "",
-        "Use `/plugin`, then open `Manage and install`. Apple Text should be listed there.",
+        f"Client-specific paths (VS Code, Cursor, Claude Desktop, Gemini CLI) are in the [MCP setup guide](https://{owner}.github.io/{plugin['name']}/guide/mcp-install).",
         "",
-        "### 4. Use Skills",
+        "### Xcode (Claude Agent / Codex)",
         "",
-        "Skills are suggested automatically in Claude Code based on your question and context. Start with prompts like these:",
+        f"See the [Xcode integration guide](https://{owner}.github.io/{plugin['name']}/guide/xcode-integration/).",
+        "",
+        "## Getting Started",
+        "",
+        "Skills activate automatically based on your questions. Just ask:",
         "",
         "```",
         *example_prompts(),
         "```",
         "",
-        f"The default starting point for broad questions is `/{command_name}`.",
+        "You can also use commands directly:",
         "",
         "```",
         f"/{command_name} your question here",
+        "/skill apple-text-audit           # scan code for TextKit anti-patterns",
+        "/skill apple-text-views           # choose the right text view",
+        "/skill apple-text-textkit-diag    # debug broken text behavior",
+        "/skill apple-text-recipes         # quick how-do-I snippets",
         "```",
         "",
-        "## Other Ways to Use Apple Text",
+        "## How It Works",
         "",
-        "### Xcode Via MCP",
-        "",
-        f"For Claude Agent or Codex inside Xcode, use the dedicated [Xcode integration guide](https://{owner}.github.io/{plugin['name']}/guide/xcode-integration/).",
-        "",
-        "Run Apple Text for text-system guidance and `xcrun mcpbridge` alongside it if you also want Xcode actions.",
-        "",
-        "### Repo Clone For Agent Skills Clients",
-        "",
-    ]
-    )
-    lines.extend(agent_skills_install_snippet(plugin, owner, command_name))
-    lines.extend(
-        [
-        "### Standalone MCP Server",
-        "",
-        "If your coding tool supports Model Context Protocol, use the standalone MCP package in `mcp-server/`.",
-        "",
-        f"Setup and client configuration examples for Claude Desktop, Cursor, VS Code, and Gemini CLI are in [`mcp-server/README.md`](https://github.com/{owner}/{plugin['name']}/blob/main/mcp-server/README.md).",
-        "",
-        "### Copy Specific Skills Elsewhere",
-        "",
-        ]
-    )
-    lines.extend(selective_skill_install_snippet("apple-text-views"))
-    lines.extend(
-        [
-        "",
-        "## Troubleshooting",
-        "",
-        "- If Apple Text does not appear after install, use `/plugin` and check `Manage and install` first.",
-        f"- If `/{command_name}` is unavailable, confirm the plugin is installed from the marketplace flow above.",
-        "",
-        "## Start Here",
-        "",
-    ]
-    )
-
-    featured = front_door_skills(skills)
-    for skill in featured:
-        lines.append(f"- **`/skill {skill['name']}`** — {entrypoint_summary(skill)}")
-    if docs_search_skill is not None and docs_search_skill not in featured:
-        lines.append(f"- **`/skill {docs_search_skill['name']}`** — {entrypoint_summary(docs_search_skill)}")
-
-    lines.extend([
-        "",
-        "## Skill Families",
-        "",
-        "Choose the topic family first. The skill role (`router`, `workflow`, `diag`, `decision`, `ref`) is the second pass.",
-        "",
-    ])
-    for category, members in family_groups:
-        skill_names = ", ".join(f"`/skill {skill['name']}`" for skill in members)
-        lines.append(
-            f"- **{CATEGORY_TITLES[category]}** — {CATEGORY_DESCRIPTIONS[category]} Includes {skill_names}."
-        )
-
-    lines.extend([
+        f"{len(skills)} skills organized into 5 lightweight entry points and {len(reference_agents)} domain agents. Entry-point skills load inline for routing and quick answers. Domain agents handle deep API lookups in isolated context — the full reference runs in a separate agent and only the focused answer comes back.",
         "",
         "## Documentation",
         "",
-        f"Full documentation, skill catalog, MCP setup, and Xcode integration guides are at [{owner}.github.io/{plugin['name']}](https://{owner}.github.io/{plugin['name']}/).",
+        f"Full documentation, skill catalog, MCP setup, and Xcode integration guides at **[{owner}.github.io/{plugin['name']}](https://{owner}.github.io/{plugin['name']}/)**.",
         "",
         "## Acknowledgments",
         "",
@@ -841,7 +812,7 @@ def render_setup_page(marketplace: Dict, plugin: Dict, commands: List[Dict], age
         "## What You Get",
         "",
         f"- **{len(commands)} command{'s' if len(commands) != 1 else ''}**: `/{command_name}` for plain-language questions.",
-        f"- **{len(agents)} agent{'s' if len(agents) != 1 else ''}**: `{agent_note}` runs focused TextKit audits.",
+        f"- **{len(agents)} agent{'s' if len(agents) != 1 else ''}**: domain reference lookups in isolated context, plus `{agent_note}` for code audits.",
         f"- **Skills**: browse the [full catalog]({docs_page_link('skills', 'root')}) or start from [problem routing]({docs_page_link('guide/problem-routing', 'root')}).",
         "",
         "## Troubleshooting",
@@ -1046,66 +1017,121 @@ def render_commands_page(root: Path, commands: List[Dict], skills: List[Dict]) -
     return "\n".join(lines)
 
 
+def _is_auditor_agent(agent: Dict) -> bool:
+    return "auditor" in agent["name"]
+
+
+def _render_auditor_agent_card(agent: Dict) -> List[str]:
+    return [
+        f"## `{agent['name']}`",
+        "",
+        agent["description"],
+        "",
+        '<div class="docs-spec-grid">',
+        "",
+        '<div class="docs-spec-card">',
+        '<p class="docs-section-label">Best for</p>',
+        "<ul>",
+        "<li>findings-first reviews of editor code</li>",
+        "<li>scanning a codebase for TextKit anti-patterns</li>",
+        "<li>focused audits where file references and fix directions matter</li>",
+        "</ul>",
+        "",
+        "</div>",
+        "",
+        '<div class="docs-spec-card">',
+        '<p class="docs-section-label">You get</p>',
+        "",
+        "<ul>",
+        "<li>findings grouped by severity</li>",
+        "<li>file references for each issue</li>",
+        "<li>one concrete fix direction per finding</li>",
+        "</ul>",
+        "",
+        "</div>",
+        "",
+        "</div>",
+        "",
+        '<p class="docs-section-label">Audit focus</p>',
+        "",
+        "- TextKit 1 fallback triggers",
+        "- deprecated glyph and layout APIs",
+        "- missing editing lifecycle calls",
+        "- unsafe text storage patterns",
+        "- Writing Tools compatibility problems",
+        "",
+    ]
+
+
+def _render_reference_agent_card(agent: Dict) -> List[str]:
+    return [
+        f"## `{agent['name']}`",
+        "",
+        agent["description"],
+        "",
+        '<div class="docs-spec-grid">',
+        "",
+        '<div class="docs-spec-card">',
+        '<p class="docs-section-label">Best for</p>',
+        "<ul>",
+        "<li>specific API lookups and reference questions</li>",
+        "<li>implementation guidance for a known subsystem</li>",
+        "<li>getting a focused answer without flooding the main conversation</li>",
+        "</ul>",
+        "",
+        "</div>",
+        "",
+        '<div class="docs-spec-card">',
+        '<p class="docs-section-label">You get</p>',
+        "",
+        "<ul>",
+        "<li>a focused answer extracted from the full reference</li>",
+        "<li>exact API signatures and code examples</li>",
+        "<li>isolated context that keeps the main conversation clean</li>",
+        "</ul>",
+        "",
+        "</div>",
+        "",
+        "</div>",
+        "",
+    ]
+
+
 def render_agents_page(root: Path, agents: List[Dict], skills: List[Dict]) -> str:
     audit_skill = find_skill(skills, "apple-text-audit")
+    auditor_agents = [a for a in agents if _is_auditor_agent(a)]
+    reference_agents = [a for a in agents if not _is_auditor_agent(a)]
 
     lines = [
         'import { CardGrid, LinkCard } from "@astrojs/starlight/components";',
         "",
         '<div class="docs-intro">',
         "",
-        '<p class="docs-eyebrow">Code review and audit agents</p>',
+        '<p class="docs-eyebrow">Reference and audit agents</p>',
         "",
-        "<p class=\"docs-lead\">Use an agent when you want findings, file references, and fix directions instead of a general explanation.</p>",
+        '<p class="docs-lead">Agents run in isolated context. Use reference agents for focused API lookups and the auditor for code review findings.</p>',
         "",
-        f"<p>Apple Text currently ships {len(agents)} agent{'s' if len(agents) != 1 else ''}. Use this page when you want the agent surface directly.</p>",
+        f"<p>Apple Text ships {len(agents)} agent{'s' if len(agents) != 1 else ''}: {len(reference_agents)} domain reference agent{'s' if len(reference_agents) != 1 else ''} and {len(auditor_agents)} code auditor{'s' if len(auditor_agents) != 1 else ''}.</p>",
         "",
         "</div>",
         "",
     ]
 
-    for agent in agents:
-        lines.extend(
-            [
-                f"## `{agent['name']}`",
-                "",
-                agent["description"],
-                "",
-                '<div class="docs-spec-grid">',
-                "",
-                '<div class="docs-spec-card">',
-                '<p class="docs-section-label">Best for</p>',
-                "<ul>",
-                "<li>findings-first reviews of editor code</li>",
-                "<li>scanning a codebase for TextKit anti-patterns</li>",
-                "<li>focused audits where file references and fix directions matter</li>",
-                "</ul>",
-                "",
-                "</div>",
-                "",
-                '<div class="docs-spec-card">',
-                '<p class="docs-section-label">You get</p>',
-                "",
-                "<ul>",
-                "<li>findings grouped by severity</li>",
-                "<li>file references for each issue</li>",
-                "<li>one concrete fix direction per finding</li>",
-                "</ul>",
-                "",
-                "</div>",
-                "",
-                "</div>",
-                "",
-                '<p class="docs-section-label">Audit focus</p>',
-                "",
-                "- TextKit 1 fallback triggers",
-                "- deprecated glyph and layout APIs",
-                "- missing editing lifecycle calls",
-                "- unsafe text storage patterns",
-                "- Writing Tools compatibility problems",
-                "",
-            ]
-        )
+    if reference_agents:
+        lines.extend(["## Domain Reference Agents", ""])
+        lines.extend([
+            "Domain reference agents bundle related skills and answer specific questions in isolated context. "
+            "The router skill and `/apple-text:ask` command launch these automatically when a reference lookup is needed.",
+            "",
+        ])
+        for agent in reference_agents:
+            lines.extend(_render_reference_agent_card(agent))
+
+    if auditor_agents:
+        lines.extend(["## Code Audit Agents", ""])
+        for agent in auditor_agents:
+            lines.extend(_render_auditor_agent_card(agent))
+
     if audit_skill is not None:
         lines.extend(
             [
@@ -1524,9 +1550,9 @@ def render_problem_routing(skills: List[Dict]) -> str:
 
 def render_commands_and_agents(root: Path, commands: List[Dict], agents: List[Dict]) -> str:
     lines = [
-        f"{len(commands)} command and {len(agents)} agent.",
+        f"{len(commands)} command and {len(agents)} agent{'s' if len(agents) != 1 else ''}.",
         "",
-        "Use commands for broad questions. Use agents for specialist scans over real code.",
+        "Use commands for broad questions. Use reference agents for focused API lookups in isolated context. Use the auditor agent for code review scans.",
         "",
         "## Commands",
         "",

@@ -491,11 +491,9 @@ func currentLineNumber(in textView: UITextView) -> Int {
 }
 ```
 
-## Related Skills
+## Related Skills and Agents
 
-- For measurement details -> `/skill apple-text-measurement`
-- For paragraph style reference -> `/skill apple-text-line-breaking`
-- For text wrapping / exclusion paths -> `/skill apple-text-exclusion-paths`
-- For attachment views (tables, custom views) -> `/skill apple-text-attachments-ref`
-- For find/replace highlighting -> `/skill apple-text-find-replace`
-- For formatting attribute reference -> `/skill apple-text-formatting-ref`
+- For measurement, exclusion paths, or layout details -> launch **textkit-reference** agent
+- For paragraph style, line breaking, or formatting attributes -> launch **rich-text-reference** agent
+- For attachment views (tables, custom views) -> launch **rich-text-reference** agent
+- For find/replace or editor interaction details -> launch **editor-reference** agent

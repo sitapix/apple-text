@@ -11,6 +11,7 @@ VALIDATE_SCRIPT = PLUGIN_ROOT / "tooling" / "scripts" / "quality" / "validate_pl
 DESCRIPTION_SCRIPT = PLUGIN_ROOT / "tooling" / "scripts" / "quality" / "evaluate_skill_descriptions.py"
 MCP_ANNOTATIONS_SCRIPT = PLUGIN_ROOT / "tooling" / "scripts" / "mcp" / "generate_mcp_annotations.py"
 MCP_BUNDLE_SCRIPT = PLUGIN_ROOT / "tooling" / "scripts" / "mcp" / "generate_mcp_bundle.py"
+BUILD_AGENTS_SCRIPT = PLUGIN_ROOT / "scripts" / "build-agents.mjs"
 
 WATCHED_PATHS = {
     "README.md",
@@ -88,6 +89,7 @@ def main() -> int:
         return 0
 
     commands = [
+        ["node", str(BUILD_AGENTS_SCRIPT), "--check"],
         [sys.executable, str(VALIDATE_SCRIPT)],
         [sys.executable, str(MCP_ANNOTATIONS_SCRIPT), "--check"],
         [sys.executable, str(MCP_BUNDLE_SCRIPT), "--check"],

@@ -42,7 +42,15 @@ class PackagingLayoutTests(unittest.TestCase):
         plugin = load_json(ROOT / ".claude-plugin" / "plugin.json")
 
         self.assertTrue((ROOT / plugin["commands"]).is_dir())
-        self.assertTrue((ROOT / plugin["skills"]).is_dir())
+
+        # skills can be a directory string or an array of directory paths
+        skills = plugin["skills"]
+        if isinstance(skills, str):
+            self.assertTrue((ROOT / skills).is_dir())
+        else:
+            for skill_path in skills:
+                self.assertTrue((ROOT / skill_path).is_dir(), msg=f"Missing skill directory: {skill_path}")
+
         for agent_path in plugin["agents"]:
             self.assertTrue((ROOT / agent_path).is_file(), msg=f"Missing agent manifest target: {agent_path}")
 

@@ -10,9 +10,19 @@
   "license": "MIT",
   "commands": "./commands/",
   "agents": [
-    "./agents/textkit-auditor.md"
+    "./agents/textkit-auditor.md",
+    "./agents/textkit-reference.md",
+    "./agents/editor-reference.md",
+    "./agents/rich-text-reference.md",
+    "./agents/platform-reference.md"
   ],
-  "skills": "./skills/",
+  "skills": [
+    "./skills/apple-text",
+    "./skills/apple-text-audit",
+    "./skills/apple-text-views",
+    "./skills/apple-text-textkit-diag",
+    "./skills/apple-text-recipes"
+  ],
   "keywords": [
     "apple",
     "textkit",

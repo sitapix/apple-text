@@ -78,7 +78,7 @@ Stay on TextKit 1 when you explicitly need:
 - Legacy code that depends on `NSLayoutManager`
 - AppKit features still tied to older APIs
 
-For the actual TextKit 1 vs 2 choice, jump to `/skill apple-text-layout-manager-selection`.
+For the actual TextKit 1 vs 2 choice, launch the **platform-reference** agent.
 
 ## Common Decisions
 
@@ -94,11 +94,11 @@ For the actual TextKit 1 vs 2 choice, jump to `/skill apple-text-layout-manager-
 
 **Need AppKit-only document editor features** -> `NSTextView`.
 
-## Related Skills
+## Related Skills and Agents
 
 - For the full catalog, capabilities tables, and platform-by-platform reference, see [reference.md](reference.md).
 - For usage-oriented examples, see [examples.md](examples.md).
-- For wrapping `UITextView` or `NSTextView` in SwiftUI, use `/skill apple-text-representable`.
-- For TextKit 1 vs 2 architecture, use `/skill apple-text-textkit1-ref` or `/skill apple-text-textkit2-ref`.
-- For a migration or performance decision, use `/skill apple-text-layout-manager-selection`.
+- For wrapping `UITextView` or `NSTextView` in SwiftUI, launch the **platform-reference** agent.
+- For TextKit 1 vs 2 architecture, launch the **textkit-reference** agent.
+- For a migration or performance decision, launch the **platform-reference** agent.
 - For debugging weird editor behavior, use `/skill apple-text-textkit-diag`.

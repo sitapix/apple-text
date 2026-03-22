@@ -1,17 +1,21 @@
 {
   "name": "apple-text",
   "version": "1.3.0",
-  "description": "Comprehensive reference for Apple text systems \u2014 especially TextKit, UITextView, NSTextView, layout managers, text storage, attributed strings, text input, and other non-SwiftUI text work",
+  "description": "Comprehensive reference for Apple text systems — especially TextKit, UITextView, NSTextView, layout managers, text storage, attributed strings, text input, and other non-SwiftUI text work",
   "author": "sitapix",
   "license": "MIT",
   "skills": [
     {
       "name": "apple-text",
-      "description": "Use when working with ANY non-SwiftUI text rendering, editing, or display \u2014 TextKit 1/2 architecture, UITextView, NSTextView, NSLayoutManager, NSTextLayoutManager, text storage, attributed strings, text input, layout invalidation, Writing Tools. Routes to specialized text system skills."
+      "description": "Use when working with ANY non-SwiftUI text rendering, editing, or display — TextKit 1/2 architecture, UITextView, NSTextView, NSLayoutManager, NSTextLayoutManager, text storage, attributed strings, text input, layout invalidation, Writing Tools. Routes to specialized skills and agents."
     },
     {
       "name": "apple-text-audit",
       "description": "Use when auditing Apple text system code for TextKit fallback triggers, editing lifecycle bugs, deprecated APIs, performance risks, or Writing Tools compatibility problems."
+    },
+    {
+      "name": "apple-text-views",
+      "description": "Use when choosing between SwiftUI Text, TextField, TextEditor, UITextView, and NSTextView — capability tradeoffs and decision guide."
     }
   ]
 }

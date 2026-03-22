@@ -7,62 +7,56 @@ argument-hint: [question]
 
 Use this command when the user has an Apple text problem but not a skill name.
 
-## When to Use
-
-Use this front door for broad Apple text questions, routing-heavy prompts, or requests that mention symptoms instead of APIs.
-
 ## Quick Decision
 
 - Broad Apple text question -> `/skill apple-text`
 - Code review, anti-pattern scan, or risk audit -> `/skill apple-text-audit`
 - Debugging stale layout, crashes, fallback, or rendering -> `/skill apple-text-textkit-diag`
 - Choosing between text views -> `/skill apple-text-views`
+- "How do I..." cookbook -> `/skill apple-text-recipes`
+- TextKit 1/2 API details, layout, storage -> launch **textkit-reference** agent
+- Editor features (Writing Tools, input, undo, paste, etc.) -> launch **editor-reference** agent
+- Formatting, attributed strings, colors, Markdown -> launch **rich-text-reference** agent
+- SwiftUI bridging, platform comparison, Core Text -> launch **platform-reference** agent
 
 ## Core Guidance
 
 Treat `$ARGUMENTS` as the user's Apple text problem statement.
 
-Use the shared routing taxonomy from `skills/catalog.json`:
-
-- `router`: broad intake and redirection
-- `workflow`: guided scan or integration flow
-- `diag`: symptom-first troubleshooting
-- `decision`: choosing between competing approaches
-- `ref`: direct API and behavior reference
-
-Prefer these prominent entry points:
-
-- `/skill apple-text` for broad non-SwiftUI Apple text questions
-- `/skill apple-text-audit` for code review, anti-pattern scans, fallback risk, or editor audits
-- `/skill apple-text-views` for "which view should I use?" questions
-- `/skill apple-text-textkit-diag` for debugging behavior, crashes, stale layout, or rendering failures
-
-Jump directly to specialist skills when the request is already narrow:
-
-- `/skill apple-text-texteditor-26` for SwiftUI TextEditor with AttributedString (iOS 26+)
-- `/skill apple-text-representable` for SwiftUI wrappers around `UITextView` / `NSTextView`
-- `/skill apple-text-writing-tools` for Writing Tools integration
-- `/skill apple-text-layout-manager-selection` for TextKit 1 vs 2 choice or migration
-- `/skill apple-text-fallback-triggers` for compatibility-mode investigation
-- `/skill apple-text-attributed-string` for AttributedString vs NSAttributedString decisions
-
-## Routing rules
+### Routing rules
 
 1. If the request is clearly about code audit or scanning, use `/skill apple-text-audit`.
 2. If the request is clearly about choosing a text view, use `/skill apple-text-views`.
-3. If the request is clearly about a specific specialist area, jump directly to that skill instead of stopping at `apple-text`.
+3. If the request needs specific API details or reference content, launch the appropriate domain agent using the Agent tool with the `subagent_type` shown below.
 4. If the request is broad or ambiguous but still obviously Apple text work, use `/skill apple-text`.
 5. If the request is too ambiguous to route safely, ask exactly one concise clarification question.
+
+### How to launch domain agents
+
+Use the Agent tool with `subagent_type` set to one of these registered agents. Pass the user's question as the prompt. The agent runs in isolated context and returns a focused answer.
+
+| Agent | subagent_type | Covers |
+|-------|--------------|--------|
+| textkit-reference | `apple-text:textkit-reference` | TextKit 1/2 APIs, layout, viewport, measurement, exclusion paths, storage, fallback |
+| editor-reference | `apple-text:editor-reference` | Writing Tools, interaction, input, undo, find/replace, pasteboard, spelling, drag-drop, accessibility, Dynamic Type |
+| rich-text-reference | `apple-text:rich-text-reference` | AttributedString, formatting, colors, Markdown, attachments, line breaking, bidi |
+| platform-reference | `apple-text:platform-reference` | UIViewRepresentable, SwiftUI bridging, TextEditor 26+, AppKit vs UIKit, TextKit 1 vs 2 choice, Core Text, Foundation, parsing |
+| textkit-auditor | `apple-text:textkit-auditor` | Automated code scan for TextKit anti-patterns |
+
+Example: if the user asks "how do I measure text bounding rects", launch the agent like this:
+
+```
+Agent tool:
+  subagent_type: "apple-text:textkit-reference"
+  prompt: "How do I measure text bounding rects?"
+```
+
+### Why agents for reference
+
+Domain agents run in isolated context. They have the full reference material as their instructions, answer the specific question, and return a focused response. This keeps the main conversation clean and avoids dumping hundreds of lines of API tables into context.
 
 ## Response style
 
 - Do not explain the full plugin taxonomy unless the user asks.
 - Do not drift into generic SwiftUI advice when the problem is really TextKit, UIKit, or AppKit text.
 - Prefer acting over describing which route you might take.
-
-## Related Skills
-
-- `/skill apple-text` is the broad router when the right specialist is not obvious yet.
-- `/skill apple-text-audit` wraps the stricter `textkit-auditor` agent for review-style scans.
-- `/skill apple-text-textkit-diag` is the symptom-first debugger.
-- `/skill apple-text-views` is the decision skill for view selection and platform tradeoffs.

@@ -286,8 +286,7 @@ textLayoutManager.enumerateTextLayoutFragments(from: nil, options: []) { fragmen
 - **Allocations** — Detect leaked text storage or layout managers
 - **Core Animation** — Find text view redraw performance issues
 
-## Related Skills
+## Related Skills and Agents
 
-- Use `/skill apple-text-fallback-triggers` for the exact compatibility-mode catalog.
-- Use `/skill apple-text-layout-invalidation` when the issue centers on what should have re-rendered.
+- Launch **textkit-reference** agent for the exact compatibility-mode catalog or layout invalidation details.
 - Use `/skill apple-text-audit` when you want repository findings ordered by severity.

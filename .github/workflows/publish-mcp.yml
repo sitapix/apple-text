@@ -14,6 +14,7 @@ on:
   push:
     tags:
       - "mcp-v*"
+      - "v*"
 
 jobs:
   publish-mcp:

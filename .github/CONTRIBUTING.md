@@ -4,12 +4,24 @@ This repository is packaged for skill consumers first. Keep user-facing entry po
 
 ## Repo Layout
 
-- `skills/` contains installable skills
-- `agents/` contains optional specialist agents
-- `.agents/` mirrors the collection for Agent Skills discovery
+- `skills/` contains all 39 skill source files (SKILL.md per directory)
+- `agents/` contains the textkit-auditor agent and 4 generated domain agents
+- `scripts/build-agents.mjs` combines skill content into domain agent files
+- `.agents/` mirrors skills/ and agents/ via symlinks for Agent Skills discovery
 - `.claude-plugin/` contains marketplace metadata
 - `mcp-server/` contains the standalone MCP package
-- `tooling/scripts/` contains validation, generation, and packaging helpers
+- `tooling/` contains validation, generation, and packaging helpers
+
+## Architecture
+
+Apple Text uses a two-tier architecture to keep AI context clean:
+
+- **5 registered skills** load inline in Claude Code (apple-text, apple-text-audit, apple-text-views, apple-text-textkit-diag, apple-text-recipes)
+- **4 domain agents** bundle the other 34 skills into isolated-context reference lookups (textkit-reference, editor-reference, rich-text-reference, platform-reference)
+- **1 audit agent** (textkit-auditor) scans code for anti-patterns
+- **MCP server** serves all 39 skills directly for non-Claude clients
+
+The domain agents are **generated files** — do not edit them directly. Edit the source skill in `skills/*/SKILL.md` and run `node scripts/build-agents.mjs` to rebuild.
 
 ## Local Setup
 
@@ -44,57 +56,53 @@ git commit
 git push
 ```
 
-You should not need to run extra validation commands before every push unless you want a manual check.
+You should not need to run extra commands. The Git hooks handle everything:
 
-The Git hooks already do it:
+- **pre-commit** (~2s): regenerates agents, docs, MCP artifacts, stages them, runs lint + agents staleness check
+- **pre-push** (~12s): runs full `npm run check` — routing tests, smoke tests, Python suite, packaging validation
 
-- pre-commit regenerates docs and MCP artifacts, restages generated files, and runs `npm run check`
-- pre-push runs `npm run check`
-
-Both of those paths run Python scripts as part of validation, so Python is a normal part of the repo workflow.
-
-If you want to run the main validation manually before committing:
+If you want to run validation manually:
 
 ```bash
-npm run check
-```
-
-For a faster style and hygiene pass:
-
-```bash
-npm run lint
+npm run check          # full validation
+npm run lint           # fast style check only
+npm run agents:check   # verify generated agents match source skills
 ```
 
 ## Common Commands
 
 ```bash
-npm run lint
-npm run check
-npm run docs:generate
-npm run mcp:generate
-npm run mcp:build
-npm run mcp:smoke
+npm run lint              # repo hygiene + skill descriptions
+npm run agents:build      # rebuild domain agents from skills
+npm run agents:check      # fail if agents are stale vs source skills
+npm run check             # full validation pipeline (~12s)
+npm run docs:generate     # refresh README and docs pages
+npm run mcp:generate      # refresh MCP annotations and bundle
+npm run mcp:build         # compile standalone MCP server
+npm run mcp:smoke         # routing + content tests against MCP server
 ```
-
-- `lint` runs the repo hygiene checks and skill-description linting
-- `check` runs docs checks, plugin validation, MCP generation checks, MCP build and smoke tests, description checks, and the Python test suite
-- `docs:generate` refreshes `README.md` and docs pages
-- `mcp:generate` refreshes MCP annotations and the committed bundle
-- `mcp:build` compiles the standalone MCP server
-- `mcp:smoke` verifies a full MCP client handshake against the built server
 
 ## Editing Rules
 
-- Do not hand-edit generated `README.md`; update `tooling/scripts/docs/generate_docs.py` and regenerate docs instead
-- Keep versions aligned across `claude-code.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `mcp-server/package.json`
-- If skills, agents, commands, or MCP metadata change, regenerate docs and MCP artifacts before committing
+- Do not hand-edit generated files: `README.md`, `agents/*-reference.md`, `mcp-server/bundle.json`, `mcp-server/skill-annotations.json`, `docs/src/content/docs/`
+- Edit the source (`skills/*/SKILL.md`, `generate_docs.py`, `build-agents.mjs`) and regenerate
+- Keep versions aligned — use `npm run version:set -- X.Y.Z` or `npm run release -- X.Y.Z`
 - Prefer focused skills and clear routing over large catch-all documents
+
+## Adding a Skill
+
+1. Create `skills/<skill-name>/SKILL.md` with Agent Skills front matter.
+2. Add it to the appropriate domain agent in `scripts/build-agents.mjs`.
+3. Add a catalog entry in `skills/catalog.json`.
+4. Run `node scripts/build-agents.mjs` to regenerate agent files.
+5. If the skill should be a registered entry point (rare — only 5 today), add it to `plugin.json` and update the router.
+6. Run `npm run setup` then `npm run check`.
 
 ## MCP Package
 
-The standalone package lives in `mcp-server/`.
+The standalone package lives in `mcp-server/`. It serves all 39 skills to MCP clients.
 
-Typical validation flow:
+Typical validation:
 
 ```bash
 npm run mcp:generate
@@ -111,10 +119,18 @@ npm run mcp:publish:dry-run
 
 ## Releases
 
-Use:
+One command:
+
+```bash
+npm run release -- X.Y.Z
+```
+
+This bumps version across all manifests, rebuilds all derived files, runs full validation, commits, tags (`vX.Y.Z` + `mcp-vX.Y.Z`), and pushes.
+
+CI then automatically deploys docs and publishes the MCP package to npm.
+
+To bump the version without releasing:
 
 ```bash
 npm run version:set -- X.Y.Z
 ```
-
-That updates the consumer-facing manifests and the MCP package version together.

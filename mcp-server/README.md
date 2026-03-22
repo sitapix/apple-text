@@ -88,7 +88,17 @@ The repo hook and main `npm run check` path both run this validation now.
 
 ## Publish Workflow
 
-### Local Dry Run
+The MCP package is published automatically by CI when a release tag is pushed.
+
+From the repo root:
+
+```bash
+npm run release -- X.Y.Z
+```
+
+This bumps all versions, rebuilds the bundle, runs full validation, commits, tags (`vX.Y.Z` + `mcp-vX.Y.Z`), and pushes. CI then publishes to npm.
+
+### Manual Dry Run
 
 ```bash
 npm run setup:all
@@ -98,17 +108,7 @@ npm run mcp:pack:check
 npm run mcp:pack:dry-run
 ```
 
-If the packed contents look correct, you can also run:
-
-```bash
-npm run mcp:publish:dry-run
-```
-
-### Actual Publish
-
-The repo includes a GitHub Actions workflow that can dry-run the MCP package on manual dispatch and publish `apple-text-mcp` to npm on a version tag like `mcp-v1.0.1`.
-
-Set the `NPM_TOKEN` repository secret before using the publish path.
+Set the `NPM_TOKEN` (or `GITHUB_TOKEN` for GitHub Packages) repository secret before using the CI publish path.
 
 ## Example MCP Config
 

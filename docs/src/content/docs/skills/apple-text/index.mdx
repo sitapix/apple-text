@@ -22,36 +22,56 @@ Use this router when the request is clearly about Apple text systems but not yet
 
 ## Quick Decision
 
-Choose the topic family first, then the skill role:
+Choose the topic family first, then the right destination:
 
-- Broad intake, audits, debugging triage, or Apple-authored docs -> `/skill apple-text`, `/skill apple-text-audit`, `/skill apple-text-textkit-diag`, `/skill apple-text-apple-docs`
-- View choice, platform comparison, or TextKit 1 vs 2 choice -> `/skill apple-text-views`, `/skill apple-text-appkit-vs-uikit`, `/skill apple-text-layout-manager-selection`
-- SwiftUI wrappers or `TextEditor` boundaries -> `/skill apple-text-representable`, `/skill apple-text-swiftui-bridging`, `/skill apple-text-texteditor-26`
-- Fallback, layout invalidation, viewport rendering, or direct TextKit mechanics -> `/skill apple-text-fallback-triggers`, `/skill apple-text-layout-invalidation`, `/skill apple-text-textkit1-ref`, `/skill apple-text-textkit2-ref`, `/skill apple-text-viewport-rendering`
-- Writing Tools, input, interaction, accessibility, undo, paste, search, spelling, or drag and drop -> `/skill apple-text-writing-tools`, `/skill apple-text-input-ref`, `/skill apple-text-interaction`, `/skill apple-text-accessibility`, `/skill apple-text-undo`, `/skill apple-text-find-replace`, `/skill apple-text-pasteboard`, `/skill apple-text-spell-autocorrect`, `/skill apple-text-drag-drop`
-- Attributed content, formatting, Markdown, colors, or attachments -> `/skill apple-text-attributed-string`, `/skill apple-text-formatting-ref`, `/skill apple-text-markdown`, `/skill apple-text-colors`, `/skill apple-text-attachments-ref`
-- Storage, parsing, Core Text, or bidi/Foundation utilities -> `/skill apple-text-storage`, `/skill apple-text-parsing`, `/skill apple-text-foundation-ref`, `/skill apple-text-core-text`, `/skill apple-text-bidi`
+- Broad intake, audits, or debugging triage -> `/skill apple-text-audit`, `/skill apple-text-textkit-diag`
+- View choice -> `/skill apple-text-views`
+- "How do I..." cookbook -> `/skill apple-text-recipes`
+- TextKit runtime, layout, storage, measurement, fallback, exclusion paths -> launch **textkit-reference** agent
+- Writing Tools, input, interaction, undo, paste, search, spelling, drag-drop, accessibility -> launch **editor-reference** agent
+- Attributed content, formatting, Markdown, colors, attachments, line breaking, bidi -> launch **rich-text-reference** agent
+- SwiftUI wrappers, TextEditor, platform comparison, Core Text, Foundation text, parsing -> launch **platform-reference** agent
+
+## How to Route
+
+**Registered skills** (invoke via `/skill`):
+
+| Skill | Use for |
+|-------|---------|
+| `apple-text-audit` | Code review, anti-pattern scans, fallback risk |
+| `apple-text-views` | "Which text view should I use?" |
+| `apple-text-textkit-diag` | Debugging symptoms, crashes, stale layout |
+| `apple-text-recipes` | Quick "how do I..." answers and snippets |
+
+**Domain agents** (launch via Agent tool with the given `subagent_type`):
+
+| Agent | subagent_type | Use for |
+|-------|--------------|---------|
+| textkit-reference | `apple-text:textkit-reference` | TextKit 1/2 APIs, layout mechanics, viewport rendering, measurement, exclusion paths, storage, fallback triggers |
+| editor-reference | `apple-text:editor-reference` | Writing Tools, text interaction, input, undo, find/replace, pasteboard, spelling, drag-drop, accessibility, Dynamic Type |
+| rich-text-reference | `apple-text:rich-text-reference` | AttributedString, formatting attributes, colors, Markdown, attachments, line breaking, bidirectional text |
+| platform-reference | `apple-text:platform-reference` | UIViewRepresentable wrappers, SwiftUI bridging, TextEditor iOS 26+, AppKit vs UIKit, TextKit 1 vs 2 choice, Core Text, Foundation text, parsing |
+| textkit-auditor | `apple-text:textkit-auditor` | Automated code scan for TextKit anti-patterns |
+
+To launch an agent, pass the user's question as the prompt. The agent runs in isolated context and returns a focused answer without polluting the main conversation.
 
 ## Core Guidance
 
-Do not let topic grouping and role grouping fight each other:
-
 - Use the **topic family** to pick the subsystem.
-- Use the **role** to pick the answer shape inside that subsystem.
-- `workflow` means guided implementation or review steps.
-- `diag` means broken behavior and symptom-first debugging.
-- `decision` means tradeoffs or stack choice.
-- `ref` means direct API or mechanics once the subsystem is already known.
+- Use the **role** to pick the answer shape:
+  - `workflow` means guided implementation or review steps.
+  - `diag` means broken behavior and symptom-first debugging.
+  - `decision` means tradeoffs or stack choice.
+  - `ref` means direct API or mechanics once the subsystem is already known.
+- For **reference lookups**, prefer launching the domain agent over loading skill content inline. Agents run in isolated context and return focused answers.
 
-## Topic Families
+## Related Skills and Agents
 
-- Front doors: `/skill apple-text`, `/skill apple-text-audit`, `/skill apple-text-textkit-diag`, `/skill apple-text-apple-docs`
-- View and stack decisions: `/skill apple-text-views`, `/skill apple-text-appkit-vs-uikit`, `/skill apple-text-layout-manager-selection`
-- SwiftUI and wrapper boundaries: `/skill apple-text-representable`, `/skill apple-text-swiftui-bridging`, `/skill apple-text-texteditor-26`
-- TextKit runtime and layout: `/skill apple-text-fallback-triggers`, `/skill apple-text-layout-invalidation`, `/skill apple-text-textkit1-ref`, `/skill apple-text-textkit2-ref`, `/skill apple-text-viewport-rendering`
-- Editor features and interaction: `/skill apple-text-writing-tools`, `/skill apple-text-input-ref`, `/skill apple-text-undo`, `/skill apple-text-find-replace`, `/skill apple-text-pasteboard`, `/skill apple-text-interaction`, `/skill apple-text-accessibility`, `/skill apple-text-dynamic-type`, `/skill apple-text-spell-autocorrect`, `/skill apple-text-drag-drop`
-- Rich text and formatting: `/skill apple-text-attributed-string`, `/skill apple-text-formatting-ref`, `/skill apple-text-colors`, `/skill apple-text-markdown`, `/skill apple-text-attachments-ref`
-- Text model and utilities: `/skill apple-text-storage`, `/skill apple-text-foundation-ref`, `/skill apple-text-parsing`, `/skill apple-text-core-text`, `/skill apple-text-bidi`
+- Use `/skill apple-text-audit` for code-review style scans and risk ranking.
+- Use `/skill apple-text-textkit-diag` for debugging symptoms before drilling into APIs.
+- Use `/skill apple-text-views` for text-view selection and capability tradeoffs.
+- Launch **textkit-reference** agent for TextKit 1/2 API details.
+- Launch **platform-reference** agent for TextKit 1 vs 2 choice or SwiftUI bridging.
 
 ## Documentation Scope
 

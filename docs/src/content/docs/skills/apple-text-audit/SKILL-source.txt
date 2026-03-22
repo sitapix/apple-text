@@ -22,7 +22,7 @@ Use this skill when the user wants a review-style scan instead of a reference an
 
 - Need concrete findings from code -> stay here
 - Need symptom-first debugging without a code scan -> `/skill apple-text-textkit-diag`
-- Need API explanation instead of review findings -> jump to the relevant `*-ref` skill
+- Need API explanation instead of review findings -> launch the relevant domain agent (textkit-reference, editor-reference, rich-text-reference, or platform-reference)
 
 ## Core Guidance
 
@@ -89,9 +89,8 @@ Return findings ordered by severity with file references and concrete fixes.
 
 If no issues are found, say so explicitly and note any residual blind spots (e.g., "no Objective-C files scanned", "no Writing Tools configuration found").
 
-## Related Skills
+## Related Skills and Agents
 
 - Use `/skill apple-text-textkit-diag` for symptom-first troubleshooting.
-- Use `/skill apple-text-fallback-triggers` for the full fallback trigger catalog.
+- Launch **textkit-reference** agent for the full fallback trigger catalog or deeper storage/editing lifecycle context.
 - Use `/skill apple-text` when the prompt is too broad to treat as a code review yet.
-- Use `/skill apple-text-storage` for deeper editing lifecycle context behind P0 items 2-5.

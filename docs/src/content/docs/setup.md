@@ -75,7 +75,7 @@ Pick this path when you already know the subsystem and want a smaller local surf
 ## What You Get
 
 - **1 command**: `/apple-text:ask` for plain-language questions.
-- **1 agent**: `textkit-auditor` runs focused TextKit audits.
+- **5 agents**: domain reference lookups in isolated context, plus `editor-reference` for code audits.
 - **Skills**: browse the [full catalog](/apple-text/skills/) or start from [problem routing](/apple-text/guide/problem-routing/).
 
 ## Troubleshooting
