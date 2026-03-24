@@ -65,6 +65,20 @@ To launch an agent, pass the user's question as the prompt. The agent runs in is
   - `ref` means direct API or mechanics once the subsystem is already known.
 - For **reference lookups**, prefer launching the domain agent over loading skill content inline. Agents run in isolated context and return focused answers.
 
+## Multi-Domain Questions
+
+When a question spans two domains, route to the **diagnostic skill first** to isolate the root cause, then to the appropriate reference agent. Don't launch two agents simultaneously for the same question.
+
+| Symptom | Route |
+|---------|-------|
+| "TextKit 2 but Writing Tools not appearing" | `/skill apple-text-textkit-diag` first (may be fallback), then **editor-reference** if Writing Tools API is the issue |
+| "UIViewRepresentable text view has stale layout" | `/skill apple-text-textkit-diag` first (layout invalidation), then **platform-reference** if bridging lifecycle is the issue |
+| "Attributed string renders differently in SwiftUI vs UIKit" | **platform-reference** agent (SwiftUI bridging covers this), then **rich-text-reference** if attribute compatibility is the issue |
+
+## Context Management
+
+When handling multiple text questions in one session, prefer launching **domain agents** over inline skills for reference lookups. Agents run in isolated context and keep the main conversation window clean. Reserve inline skills (`apple-text-recipes`, `apple-text-textkit-diag`) for quick answers that directly resolve the question.
+
 ## Related Skills and Agents
 
 - Use `/skill apple-text-audit` for code-review style scans and risk ranking.

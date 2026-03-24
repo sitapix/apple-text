@@ -213,8 +213,26 @@ def display_plugin_name(plugin_name: str) -> str:
     return plugin_name.replace("-", " ").title()
 
 
+def default_command_name(plugin: Dict, commands: List[Dict]) -> str:
+    return commands[0]["name"] if commands else f"{plugin['name']}:ask"
+
+
+def mcp_package_name(owner: str, plugin_name: str) -> str:
+    return f"@{owner}/{plugin_name}-mcp"
+
+
 def source_repo_url(plugin: Dict, owner: str) -> str:
     return plugin.get("repository") or plugin.get("homepage") or f"https://github.com/{owner}/{plugin['name']}"
+
+
+def plugin_install_lines(owner: str, plugin: Dict) -> List[str]:
+    """The standard 2-command Claude Code plugin install block."""
+    return [
+        "```bash",
+        f"/plugin marketplace add {owner}/{plugin['name']}",
+        f"/plugin install {plugin['name']}@{plugin['name']}",
+        "```",
+    ]
 
 
 def agent_skills_install_snippet(plugin: Dict, owner: str, command_name: str) -> List[str]:
@@ -343,11 +361,13 @@ def prominent_skills(skills: List[Dict]) -> List[Dict]:
     )
 
 
-def front_door_skills(skills: List[Dict]) -> List[Dict]:
+def front_door_skills(skills: List[Dict], plugin_name: str = "") -> List[Dict]:
     featured = prominent_skills(skills)
-    docs_search_skill = find_skill(skills, "apple-text-apple-docs")
-    if docs_search_skill is not None and docs_search_skill not in featured:
-        featured = [*featured, docs_search_skill]
+    docs_skill_name = f"{plugin_name}-apple-docs" if plugin_name else None
+    if docs_skill_name:
+        docs_search_skill = find_skill(skills, docs_skill_name)
+        if docs_search_skill is not None and docs_search_skill not in featured:
+            featured = [*featured, docs_search_skill]
     return featured
 
 
@@ -523,22 +543,12 @@ def project_status_note() -> List[str]:
     ]
 
 
-def _registered_skills(skills: List[Dict]) -> List[Dict]:
-    """Return only the skills registered in plugin.json (entry points)."""
-    registered_names = {
-        "apple-text",
-        "apple-text-audit",
-        "apple-text-views",
-        "apple-text-textkit-diag",
-        "apple-text-recipes",
-    }
-    return [s for s in skills if s["name"] in registered_names]
 
 
 def render_readme(plugin: Dict, marketplace: Dict, skills: List[Dict], commands: List[Dict], agents: List[Dict]) -> str:
     plugin_title = display_plugin_name(plugin["name"])
     owner = marketplace["owner"]["name"]
-    command_name = commands[0]["name"] if commands else f"{plugin['name']}:ask"
+    command_name = default_command_name(plugin, commands)
     reference_agents = [a for a in agents if not _is_auditor_agent(a)]
     auditor_agents = [a for a in agents if _is_auditor_agent(a)]
 
@@ -580,7 +590,7 @@ def render_readme(plugin: Dict, marketplace: Dict, skills: List[Dict], commands:
         '  "mcpServers": {',
         f'    "{plugin["name"]}": ' + "{",
         '      "command": "npx",',
-        f'      "args": ["-y", "@{owner}/{plugin["name"]}-mcp"]',
+        f'      "args": ["-y", "{mcp_package_name(owner, plugin["name"])}"]',
         "    }",
         "  }",
         "}",
@@ -633,9 +643,8 @@ def render_readme(plugin: Dict, marketplace: Dict, skills: List[Dict], commands:
 def render_home(plugin: Dict, marketplace: Dict, skills: List[Dict], commands: List[Dict], agents: List[Dict]) -> str:
     plugin_title = display_plugin_name(plugin["name"])
     owner = marketplace["owner"]["name"]
-    marketplace_name = marketplace["name"]
-    command_name = commands[0]["name"] if commands else f"{plugin['name']}:ask"
-    featured = front_door_skills(skills)
+    command_name = default_command_name(plugin, commands)
+    featured = front_door_skills(skills, plugin["name"])
     audit_skill = top_skill_of_kind(skills, "workflow")
 
     lines = [
@@ -707,13 +716,7 @@ def render_home(plugin: Dict, marketplace: Dict, skills: List[Dict], commands: L
             "",
             "Claude Code plugin install is the default path:",
             "",
-            "```bash",
-            f"/plugin marketplace add {owner}/{plugin['name']}",
-            "```",
-            "",
-            "Use `/plugin` to open the plugin menu, search for `apple-text`, and install it.",
-            "",
-            "Use `/plugin`, then open `Manage and install`, to verify that Apple Text is installed.",
+            *plugin_install_lines(owner, plugin),
             "",
             "Clone the repo only when you want to load Apple Text through a local checkout:",
             "",
@@ -724,16 +727,14 @@ def render_home(plugin: Dict, marketplace: Dict, skills: List[Dict], commands: L
         [
             "Marketplace install is also supported:",
             "",
-            "```bash",
-            f"/plugin marketplace add {owner}/{plugin['name']}",
-            f"/plugin install {plugin['name']}@{marketplace_name}",
-            "```",
+            *plugin_install_lines(owner, plugin),
             "",
             "If you only want a subset in another workspace, copy a focused skill instead of the whole collection:",
             "",
         ]
     )
-    lines.extend(selective_skill_install_snippet("apple-text-views"))
+    example_skill = top_skill_of_kind(skills, "decision")
+    lines.extend(selective_skill_install_snippet(example_skill["name"] if example_skill else f"{plugin['name']}-views"))
     lines.extend(
         [
             "## Why This Exists",
@@ -745,10 +746,9 @@ def render_home(plugin: Dict, marketplace: Dict, skills: List[Dict], commands: L
     return "\n".join(lines)
 
 
-def render_setup_page(marketplace: Dict, plugin: Dict, commands: List[Dict], agents: List[Dict]) -> str:
+def render_setup_page(marketplace: Dict, plugin: Dict, skills: List[Dict], commands: List[Dict], agents: List[Dict]) -> str:
     owner = marketplace["owner"]["name"]
-    marketplace_name = marketplace["name"]
-    command_name = commands[0]["name"] if commands else f"{plugin['name']}:ask"
+    command_name = default_command_name(plugin, commands)
     agent_note = agents[0]["name"] if agents else "the bundled specialist agent"
 
     lines = [
@@ -770,13 +770,11 @@ def render_setup_page(marketplace: Dict, plugin: Dict, commands: List[Dict], age
         "",
         "### 2. Install the Plugin",
         "",
-        "Use `/plugin` to open the plugin menu, search for `apple-text`, then install it.",
+        "```bash",
+        f"/plugin install {plugin['name']}@{plugin['name']}",
+        "```",
         "",
-        "### 3. Verify Installation",
-        "",
-        "Use `/plugin`, then open `Manage and install`. Apple Text should be listed there.",
-        "",
-        "### 4. Start Using It",
+        "### 3. Start Using It",
         "",
         f"Use `/{command_name}` for broad Apple text intake, or browse [Skills]({docs_page_link('skills', 'root')}) when the subsystem is already clear.",
         "",
@@ -804,7 +802,8 @@ def render_setup_page(marketplace: Dict, plugin: Dict, commands: List[Dict], age
         "",
         ]
     )
-    lines.extend(selective_skill_install_snippet("apple-text-views"))
+    example_skill = top_skill_of_kind(skills, "decision")
+    lines.extend(selective_skill_install_snippet(example_skill["name"] if example_skill else f"{plugin['name']}-views"))
     lines.extend(
         [
         "Pick this path when you already know the subsystem and want a smaller local surface in another workspace.",
@@ -833,10 +832,10 @@ def render_setup_page(marketplace: Dict, plugin: Dict, commands: List[Dict], age
     return "\n".join(lines)
 
 
-def render_skills_overview(skills: List[Dict], commands: List[Dict]) -> str:
+def render_skills_overview(plugin: Dict, skills: List[Dict], commands: List[Dict]) -> str:
     featured = prominent_skills(skills)
     families = grouped_skills_by_category(skills)
-    command_name = commands[0]["name"] if commands else "apple-text:ask"
+    command_name = default_command_name(plugin, commands)
 
     lines = [
         'import { CardGrid, LinkCard } from "@astrojs/starlight/components";',
@@ -1248,8 +1247,8 @@ def render_guide_index(skills: List[Dict]) -> str:
 
 def render_quick_start(marketplace: Dict, plugin: Dict, skills: List[Dict], commands: List[Dict]) -> str:
     owner = marketplace["owner"]["name"]
-    command_name = commands[0]["name"] if commands else f"{plugin['name']}:ask"
-    featured = front_door_skills(skills)
+    command_name = default_command_name(plugin, commands)
+    featured = front_door_skills(skills, plugin["name"])
     router_skill = top_skill_of_kind(skills, "router")
     workflow_skill = top_skill_of_kind(skills, "workflow")
     diagnostic_skill = top_skill_of_kind(skills, "diag")
@@ -1278,13 +1277,11 @@ def render_quick_start(marketplace: Dict, plugin: Dict, skills: List[Dict], comm
         "",
         "2. **Install the plugin**",
         "",
-        "    Use `/plugin` to open the plugin menu, search for `apple-text`, then install it.",
+        "    ```bash",
+        f"    /plugin install {plugin['name']}@{plugin['name']}",
+        "    ```",
         "",
-        "3. **Verify installation**",
-        "",
-        "    Use `/plugin`, then open `Manage and install`. Apple Text should be listed there.",
-        "",
-        "4. **Ask one plain-language question**",
+        "3. **Ask one plain-language question**",
         "",
         f"    Start with `/{command_name}`.",
         "",
@@ -1347,8 +1344,8 @@ def render_quick_start(marketplace: Dict, plugin: Dict, skills: List[Dict], comm
     return "\n".join(lines)
 
 
-def render_routing_model(skills: List[Dict], commands: List[Dict]) -> str:
-    command_name = commands[0]["name"] if commands else "apple-text:ask"
+def render_routing_model(plugin: Dict, skills: List[Dict], commands: List[Dict]) -> str:
+    command_name = default_command_name(plugin, commands)
     skill_names = {skill["name"] for skill in skills}
     routers = [skill for skill in skills if skill["kind"] == "router"]
     workflows = [skill for skill in skills if skill["kind"] == "workflow"]
@@ -1450,8 +1447,8 @@ def render_routing_model(skills: List[Dict], commands: List[Dict]) -> str:
     return "\n".join(lines)
 
 
-def render_entry_points(skills: List[Dict], commands: List[Dict]) -> str:
-    featured = front_door_skills(skills)
+def render_entry_points(plugin: Dict, skills: List[Dict], commands: List[Dict]) -> str:
+    featured = front_door_skills(skills, plugin["name"])
     specialists = specialist_entry_skills(skills)
     command = commands[0] if commands else None
     router_skill = top_skill_of_kind(skills, "router")
@@ -1582,9 +1579,9 @@ def render_commands_and_agents(root: Path, commands: List[Dict], agents: List[Di
     return "\n".join(lines)
 
 
-def render_install(marketplace: Dict, plugin: Dict, agents: List[Dict]) -> str:
+def render_install(marketplace: Dict, plugin: Dict, commands: List[Dict], agents: List[Dict]) -> str:
     owner = marketplace["owner"]["name"]
-    command_name = f"{plugin['name']}:ask"
+    command_name = default_command_name(plugin, commands)
 
     lines = [
         "This guide covers the default Claude Code install flow.",
@@ -1599,13 +1596,11 @@ def render_install(marketplace: Dict, plugin: Dict, agents: List[Dict]) -> str:
         "",
         "### 2. Install the plugin",
         "",
-        "Use `/plugin` to open the plugin menu, search for `apple-text`, then install it.",
+        "```bash",
+        f"/plugin install {plugin['name']}@{plugin['name']}",
+        "```",
         "",
-        "### 3. Verify installation",
-        "",
-        "Use `/plugin`, then open `Manage and install`. Apple Text should be listed there.",
-        "",
-        "### 4. Start using it",
+        "### 3. Start using it",
         "",
         f"Use `/{command_name}` for broad Apple text intake.",
         "",
@@ -1614,13 +1609,14 @@ def render_install(marketplace: Dict, plugin: Dict, agents: List[Dict]) -> str:
     return "\n".join(lines)
 
 
-def documentation_scope_text(skill: Dict) -> str:
+def documentation_scope_text(skill: Dict, plugin_name: str = "") -> str:
     name = skill["name"]
     kind = skill["kind"]
 
-    if name == "apple-text-apple-docs":
+    docs_skill_name = f"{plugin_name}-apple-docs" if plugin_name else ""
+    if name == docs_skill_name:
         return (
-            "This page documents the `apple-text-apple-docs` router skill. The router maps text-system "
+            f"This page documents the `{name}` router skill. The router maps text-system "
             "questions to Apple-authored Xcode doc files and the checked-in fallback sidecars."
         )
 
@@ -1650,10 +1646,11 @@ def documentation_scope_text(skill: Dict) -> str:
     )
 
 
-def render_mcp_server(plugin: Dict, skills: List[Dict], commands: List[Dict], agents: List[Dict]) -> str:
+def render_mcp_server(marketplace: Dict, plugin: Dict, skills: List[Dict], commands: List[Dict], agents: List[Dict]) -> str:
     plugin_name = plugin["name"]
-    package_name = "apple-text-mcp"
-    command_name = commands[0]["name"] if commands else f"{plugin_name}:ask"
+    owner = marketplace["owner"]["name"]
+    package_name = mcp_package_name(owner, plugin_name)
+    command_name = default_command_name(plugin, commands)
     root_path = f"/absolute/path/to/{plugin_name}"
     dist_path = f"{root_path}/mcp-server/dist/index.js"
 
@@ -2119,7 +2116,7 @@ def render_skill_page(skill: Dict, skills: List[Dict], owner: str, plugin_name: 
         [
             "## Documentation Scope",
             "",
-            documentation_scope_text(skill),
+            documentation_scope_text(skill, plugin_name),
             "",
         ]
     )
@@ -2182,12 +2179,12 @@ def generated_docs(root: Path) -> Dict[Path, str]:
         ),
         output_root / "setup.md": with_doc_frontmatter(
             "Setup",
-            render_setup_page(marketplace, plugin, commands, agents),
+            render_setup_page(marketplace, plugin, skills, commands, agents),
             "Install the Apple Text plugin or individual skills.",
         ),
         output_root / "skills" / "index.mdx": with_doc_frontmatter(
             "Skills",
-            render_skills_overview(skills, commands),
+            render_skills_overview(plugin, skills, commands),
             "Browse Apple Text skills by topic family and routing role.",
             [
                 "sidebar:",
@@ -2223,7 +2220,7 @@ def generated_docs(root: Path) -> Dict[Path, str]:
         ),
         output_root / "guide" / "mcp-server.mdx": with_doc_frontmatter(
             "MCP Server",
-            render_mcp_server(plugin, skills, commands, agents),
+            render_mcp_server(marketplace, plugin, skills, commands, agents),
             extra_frontmatter=[
                 "sidebar:",
                 "  order: 3",
@@ -2239,7 +2236,7 @@ def generated_docs(root: Path) -> Dict[Path, str]:
         ),
         output_root / "guide" / "install.md": with_doc_frontmatter(
             "Install",
-            render_install(marketplace, plugin, agents),
+            render_install(marketplace, plugin, commands, agents),
             extra_frontmatter=[
                 "sidebar:",
                 "  order: 5",
@@ -2247,7 +2244,7 @@ def generated_docs(root: Path) -> Dict[Path, str]:
         ),
         output_root / "guide" / "entry-points.md": with_doc_frontmatter(
             "Entry Points",
-            render_entry_points(skills, commands),
+            render_entry_points(plugin, skills, commands),
             extra_frontmatter=[
                 "sidebar:",
                 "  order: 6",
@@ -2255,7 +2252,7 @@ def generated_docs(root: Path) -> Dict[Path, str]:
         ),
         output_root / "guide" / "routing-model.md": with_doc_frontmatter(
             "Routing Model",
-            render_routing_model(skills, commands),
+            render_routing_model(plugin, skills, commands),
             extra_frontmatter=[
                 "sidebar:",
                 "  order: 7",

@@ -33,7 +33,7 @@ For normal natural-language questions, start with `apple_text_route`, then follo
 For the published package, that is enough:
 
 ```bash
-npx -y apple-text-mcp
+npx -y @sitapix/apple-text-mcp
 ```
 
 If you are contributing or want development mode, build from a local checkout:
@@ -60,7 +60,7 @@ Add to your VS Code `settings.json`:
   "github.copilot.chat.mcp.servers": {
     "apple-text": {
       "command": "npx",
-      "args": ["-y", "apple-text-mcp"]
+      "args": ["-y", "@sitapix/apple-text-mcp"]
     }
   }
 }
@@ -75,7 +75,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "apple-text": {
       "command": "npx",
-      "args": ["-y", "apple-text-mcp"]
+      "args": ["-y", "@sitapix/apple-text-mcp"]
     }
   }
 }
@@ -90,7 +90,7 @@ Add to `.cursor/mcp.json` in your workspace:
   "mcpServers": {
     "apple-text": {
       "command": "npx",
-      "args": ["-y", "apple-text-mcp"]
+      "args": ["-y", "@sitapix/apple-text-mcp"]
     }
   }
 }
@@ -104,7 +104,7 @@ Add to `~/.gemini/config.toml`:
 [[mcp_servers]]
 name = "apple-text"
 command = "npx"
-args = ["-y", "apple-text-mcp"]
+args = ["-y", "@sitapix/apple-text-mcp"]
 ```
 
 ### OpenCode
@@ -116,7 +116,7 @@ Add to `opencode.jsonc` in your project root, or `~/.config/opencode/opencode.js
   "mcp": {
     "apple-text": {
       "type": "local",
-      "command": ["npx", "-y", "apple-text-mcp"]
+      "command": ["npx", "-y", "@sitapix/apple-text-mcp"]
     }
   }
 }
@@ -168,7 +168,7 @@ Changes to skill files are reflected immediately. When Xcode is installed, this 
 The default after `npm run mcp:bundle` or when launched through the published npm package. The server reads from the bundled snapshot and does not need live repo reads after initialization.
 
 ```bash
-npx -y apple-text-mcp
+npx -y @sitapix/apple-text-mcp
 ```
 
 ## Verify It Works
@@ -178,7 +178,7 @@ npx -y apple-text-mcp
 Run the server directly to confirm it launches without errors:
 
 ```bash
-npx -y apple-text-mcp
+npx -y @sitapix/apple-text-mcp
 ```
 
 The server should start and wait for stdin input. Press `Ctrl+C` to stop.
@@ -198,7 +198,7 @@ That uses the official MCP SDK client to verify initialization, resources, tools
 For interactive testing:
 
 ```bash
-npx @modelcontextprotocol/inspector npx -y apple-text-mcp
+npx @modelcontextprotocol/inspector npx -y @sitapix/apple-text-mcp
 ```
 
 ### In Your Tool
@@ -232,14 +232,14 @@ node --version
 Enable debug logging to see what the server loads:
 
 ```bash
-APPLE_TEXT_MCP_LOG_LEVEL=debug npx -y apple-text-mcp 2>&1 | head -20
+APPLE_TEXT_MCP_LOG_LEVEL=debug npx -y @sitapix/apple-text-mcp 2>&1 | head -20
 ```
 
 ### Client Can't Connect
 
 MCP uses stdin/stdout for communication. Common issues:
 
-- Wrong config — make sure your config points to `npx -y apple-text-mcp` or an absolute local `dist/index.js` path
+- Wrong config — make sure your config points to `npx -y @sitapix/apple-text-mcp` or an absolute local `dist/index.js` path
 - Other stdout writers — make sure nothing else writes to stdout; logs should go to stderr
 
 If you want live skills, make sure `APPLE_TEXT_MCP_MODE=development` and `APPLE_TEXT_DEV_PATH` points at the repo root.

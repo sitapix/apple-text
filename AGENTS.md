@@ -64,6 +64,15 @@ npm run release -- X.Y.Z
 
 One command: bumps version across all manifests, rebuilds all derived files, runs full validation, commits, tags (`vX.Y.Z` + `mcp-vX.Y.Z`), and pushes. CI then deploys docs and publishes the MCP package.
 
+## Model Selection
+
+All 5 agents use `model: sonnet`. This is a deliberate choice:
+
+- **4 reference agents** pattern-match against loaded skill content to extract focused answers — Sonnet handles this well.
+- **textkit-auditor** scans code for known anti-patterns using Glob/Grep/Read — pattern recognition, not multi-step reasoning.
+- Agent tasks are bounded (max 40 lines output, focused scope) which plays to Sonnet's strengths.
+- If complex multi-step debugging questions are routed to agents and quality degrades, consider upgrading the auditor agent only.
+
 ## Review Standard
 
 Public-facing packaging quality matters here:

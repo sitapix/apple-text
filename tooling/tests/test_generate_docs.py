@@ -77,6 +77,7 @@ license: MIT
     def test_render_mcp_server_includes_tool_install_sections(self) -> None:
         generate_docs._BASE = "/apple-text"
         page = generate_docs.render_mcp_server(
+            {"owner": {"name": "sitapix"}},
             {"name": "apple-text"},
             [{"name": "apple-text"} for _ in range(35)],
             [{"name": "apple-text:ask"}],
@@ -90,7 +91,7 @@ license: MIT
         self.assertIn("### VS Code + GitHub Copilot", page)
         self.assertIn("### OpenCode", page)
         self.assertIn("npm run mcp:smoke", page)
-        self.assertIn('npx -y apple-text-mcp', page)
+        self.assertIn('npx -y @sitapix/apple-text-mcp', page)
         self.assertIn("xcrun mcpbridge", page)
 
     def test_render_xcode_integration_includes_claude_and_codex_setup(self) -> None:
@@ -145,6 +146,7 @@ license: MIT
     def test_render_skills_overview_groups_by_family(self) -> None:
         generate_docs._BASE = "/apple-text"
         page = generate_docs.render_skills_overview(
+            {"name": "apple-text"},
             [
                 {
                     "name": "apple-text",

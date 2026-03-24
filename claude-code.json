@@ -16,6 +16,14 @@
     {
       "name": "apple-text-views",
       "description": "Use when choosing between SwiftUI Text, TextField, TextEditor, UITextView, and NSTextView \u2014 capability tradeoffs and decision guide."
+    },
+    {
+      "name": "apple-text-textkit-diag",
+      "description": "Use when the user starts with a broken Apple text symptom such as stale layout, fallback, crashes in editing, rendering artifacts, missing Writing Tools, or large-document slowness."
+    },
+    {
+      "name": "apple-text-recipes",
+      "description": "Use when the user has a \"how do I...\" question about text views and needs a quick working recipe or copy-paste snippet for a common text task."
     }
   ]
 }

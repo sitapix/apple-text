@@ -21,13 +21,11 @@ Apple Text is one collection with multiple entry points. This page helps you pic
 
 ### 2. Install the Plugin
 
-Use `/plugin` to open the plugin menu, search for `apple-text`, then install it.
+```bash
+/plugin install apple-text@apple-text
+```
 
-### 3. Verify Installation
-
-Use `/plugin`, then open `Manage and install`. Apple Text should be listed there.
-
-### 4. Start Using It
+### 3. Start Using It
 
 Use `/apple-text:ask` for broad Apple text intake, or browse [Skills](/apple-text/skills/) when the subsystem is already clear.
 

@@ -16,12 +16,10 @@ This guide covers the default Claude Code install flow.
 
 ### 2. Install the plugin
 
-Use `/plugin` to open the plugin menu, search for `apple-text`, then install it.
+```bash
+/plugin install apple-text@apple-text
+```
 
-### 3. Verify installation
-
-Use `/plugin`, then open `Manage and install`. Apple Text should be listed there.
-
-### 4. Start using it
+### 3. Start using it
 
 Use `/apple-text:ask` for broad Apple text intake.
