@@ -215,7 +215,7 @@ try {
     { name: "apple-text-audit", mustContain: "P0" },
     { name: "apple-text-views", mustContain: "UITextView" },
     { name: "apple-text-textkit-diag", mustContain: "Symptom" },
-    { name: "apple-text-recipes", mustContain: "func" },
+    { name: "apple-text-recipes", mustContain: "Recipe" },
   ];
 
   for (const { name, mustContain } of entrySkills) {

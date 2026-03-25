@@ -1,14 +1,14 @@
 ---
 title: "Text Layout Invalidation"
-description: "Use when text layout stays stale, metrics do not refresh, or the user needs the exact invalidation model in TextKit 1 or TextKit 2. Reach for this when the problem is layout recalculation and ensureLayout-style mechanics, not broader rendering or storage architecture."
+description: "Use when debugging stale layout or working with ensureLayout, invalidateLayout, or the invalidation model in TextKit 1 and 2."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
 import skillSource from './SKILL-source.txt?raw';
 
-<Badge text="Router Skills" variant="note" />
+<Badge text="Reference Skills" variant="note" />
 
-Use when text layout stays stale, metrics do not refresh, or the user needs the exact invalidation model in TextKit 1 or TextKit 2. Reach for this when the problem is layout recalculation and ensureLayout-style mechanics, not broader rendering or storage architecture.
+Use when debugging stale layout or working with ensureLayout, invalidateLayout, or the invalidation model in TextKit 1 and 2.
 
 **Family:** TextKit Runtime And Layout
 
@@ -293,13 +293,13 @@ Read `debugging-patterns.md` in this skill directory for:
 
 ## Documentation Scope
 
-This page documents the `apple-text-layout-invalidation` router skill. The router maps broad Apple text questions to narrower specialist skills when the right subsystem is not obvious yet.
+This page documents the `apple-text-layout-invalidation` reference skill. Use it when the subsystem is already known and you need mechanics, behavior, or API detail.
 
 ## Related
 
-- [`apple-text-textkit-diag`](/apple-text/skills/apple-text-textkit-diag/): Use when the user starts with a broken Apple text symptom such as stale layout, fallback, crashes in editing, rendering artifacts, missing Writing Tools, or large-document slowness. Reach for this when debugging misbehavior, not when reviewing code systematically or looking up APIs.
-- [`apple-text-storage`](/apple-text/skills/apple-text-storage/): Use when the user is working on NSTextStorage, NSTextContentStorage, or NSTextContentManager and needs the text-model architecture, subclassing rules, delegate hooks, or processEditing lifecycle. Reach for this when the storage layer is the focus, not general TextKit choice or symptom-first debugging.
-- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when the user is already on TextKit 2 and needs exact NSTextLayoutManager, NSTextContentManager, NSTextContentStorage, viewport layout, fragment, rendering-attribute, or migration details. Reach for this when the stack choice is already made and the task is reference-level TextKit 2 mechanics, not stack selection or generic text-system debugging.
+- [`apple-text-textkit-diag`](/apple-text/skills/apple-text-textkit-diag/): Use when debugging broken text — stale layout, editing crashes, fallback, Writing Tools issues, or rendering artifacts.
+- [`apple-text-storage`](/apple-text/skills/apple-text-storage/): Use when working with NSTextStorage, NSTextContentStorage, or NSTextContentManager — subclassing, processEditing, or delegate hooks.
+- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when working with TextKit 2 and you need NSTextLayoutManager or NSTextContentManager APIs — viewport layout, fragments, rendering attributes.
 
 ## Sidecar Files
 

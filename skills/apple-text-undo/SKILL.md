@@ -1,6 +1,6 @@
 ---
 name: apple-text-undo
-description: Use when implementing or debugging undo and redo in text editors, especially grouping, coalescing, programmatic edits, or integration with NSTextStorage, NSTextContentManager, or NSUndoManager. Reach for this when the problem is undo behavior, not generic editing lifecycle.
+description: Use when implementing or debugging undo/redo in text editors — grouping, coalescing, or NSUndoManager integration
 license: MIT
 ---
 

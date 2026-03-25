@@ -1,11 +1,6 @@
 ---
 name: apple-text-foundation-ref
-description: >
-  Use when the user already knows they need Foundation or
-  NaturalLanguage text utilities such as NSRegularExpression,
-  NSDataDetector, NLTagger, NLTokenizer, NSString bridging, text
-  measurement, or embeddings. Reach for this when the job is applying a
-  utility API directly, not choosing a parsing strategy at a high level.
+description: Use when using Foundation or NaturalLanguage text utilities — NSRegularExpression, NSDataDetector, NLTagger, NLTokenizer, or NSString bridging
 license: MIT
 ---
 

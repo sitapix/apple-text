@@ -7,8 +7,8 @@ Deep text-system expertise for AI coding assistants. Covers TextKit 1 and 2, UIT
 Apple Text gives AI coding assistants focused guidance on Apple's text rendering and editing stack, including TextKit behavior, text view selection, attributed text, layout, and Writing Tools integration.
 
 - **39 focused text skills** covering TextKit, views, formatting, storage, input, layout, accessibility, and more
-- **5 agents** for isolated reference lookups and autonomous code auditing
-- **1 command** for plain-language text questions
+- **6 agents** for isolated reference lookups and autonomous code auditing
+- **3 command** for plain-language text questions
 
 > Status: Apple Text is still in an early phase. Some routes, docs, or packaging paths may still be incomplete or wrong. If you hit a bug or something looks off, please open an issue. Feedback is welcome too.
 
@@ -70,7 +70,7 @@ You can also use commands directly:
 
 ## How It Works
 
-39 skills organized into 5 lightweight entry points and 4 domain agents. Entry-point skills load inline for routing and quick answers. Domain agents handle deep API lookups in isolated context — the full reference runs in a separate agent and only the focused answer comes back.
+39 skills organized into 5 lightweight entry points and 5 domain agents. Entry-point skills load inline for routing and quick answers. Domain agents handle deep API lookups in isolated context — the full reference runs in a separate agent and only the focused answer comes back.
 
 ## Documentation
 

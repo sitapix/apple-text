@@ -1,6 +1,6 @@
 ---
 title: "UIViewRepresentable / NSViewRepresentable for Text Views"
-description: "Use when embedding UITextView or NSTextView inside SwiftUI and the hard part is wrapper behavior: two-way binding, focus, sizing, cursor preservation, update loops, toolbars, or environment bridging. Reach for this when native SwiftUI text views are not enough, not when choosing between text stacks at a high level."
+description: "Use when wrapping UITextView or NSTextView in SwiftUI \u2014 binding, focus, sizing, cursor preservation, or update loops."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Workflow Skills" variant="tip" />
 
-Use when embedding UITextView or NSTextView inside SwiftUI and the hard part is wrapper behavior: two-way binding, focus, sizing, cursor preservation, update loops, toolbars, or environment bridging. Reach for this when native SwiftUI text views are not enough, not when choosing between text stacks at a high level.
+Use when wrapping UITextView or NSTextView in SwiftUI — binding, focus, sizing, cursor preservation, or update loops.
 
 **Family:** SwiftUI And Wrapper Boundaries
 
@@ -408,9 +408,9 @@ This page documents the `apple-text-representable` workflow skill. Use it when t
 
 ## Related
 
-- [`apple-text-views`](/apple-text/skills/apple-text-views/): Use when the main task is choosing the right Apple text view or deciding whether a problem belongs in SwiftUI text, UIKit/AppKit text views, or TextKit mode. Reach for this when comparing capabilities and tradeoffs, not when implementing a specific wrapper or low-level API.
-- [`apple-text-swiftui-bridging`](/apple-text/skills/apple-text-swiftui-bridging/): Use when deciding whether a text type or attribute model crosses the SwiftUI and TextKit boundary cleanly, such as AttributedString, NSAttributedString, UITextView, or SwiftUI Text. Reach for this when the main question is interoperability and support boundaries, not wrapper mechanics.
-- [`apple-text-layout-manager-selection`](/apple-text/skills/apple-text-layout-manager-selection/): Use when the main task is choosing between TextKit 1 and TextKit 2, especially NSLayoutManager versus NSTextLayoutManager for performance, migration risk, large documents, or feature fit. Reach for this when the stack choice is still open, not when the user already needs API-level mechanics.
+- [`apple-text-views`](/apple-text/skills/apple-text-views/): Use when choosing between SwiftUI Text/TextField/TextEditor, UITextView, or NSTextView — capabilities and tradeoffs.
+- [`apple-text-swiftui-bridging`](/apple-text/skills/apple-text-swiftui-bridging/): Use when deciding whether a text type or attribute crosses the SwiftUI/TextKit boundary cleanly, or checking interoperability rules.
+- [`apple-text-layout-manager-selection`](/apple-text/skills/apple-text-layout-manager-selection/): Use when choosing between TextKit 1 and TextKit 2, evaluating migration risk, or comparing NSLayoutManager vs NSTextLayoutManager.
 
 <details>
 <summary>Full SKILL.md source</summary>

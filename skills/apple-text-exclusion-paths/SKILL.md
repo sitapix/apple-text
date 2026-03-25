@@ -1,11 +1,6 @@
 ---
 name: apple-text-exclusion-paths
-description: >
-  Use when wrapping text around images or shapes, creating multi-column text layout,
-  linking text containers for magazine/book layout, configuring NSTextContainer
-  exclusion paths, or building non-rectangular text regions. Covers exclusionPaths,
-  linked containers, multi-container layout in TextKit 1 and 2, and NSTextBlock/NSTextTable
-  for in-text tables.
+description: Use when text needs to wrap around images or shapes, building multi-column text layout, or using exclusion paths, linked containers, and NSTextTable
 license: MIT
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: apple-text-storage
-description: Use when the user is working on NSTextStorage, NSTextContentStorage, or NSTextContentManager and needs the text-model architecture, subclassing rules, delegate hooks, or processEditing lifecycle. Reach for this when the storage layer is the focus, not general TextKit choice or symptom-first debugging.
+description: Use when working with NSTextStorage, NSTextContentStorage, or NSTextContentManager — subclassing, processEditing, or delegate hooks
 license: MIT
 ---
 

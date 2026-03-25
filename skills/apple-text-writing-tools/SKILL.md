@@ -1,6 +1,6 @@
 ---
 name: apple-text-writing-tools
-description: Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging.
+description: Use when integrating Writing Tools — writingToolsBehavior, UIWritingToolsCoordinator, protected ranges, or inline vs panel mode
 license: MIT
 ---
 

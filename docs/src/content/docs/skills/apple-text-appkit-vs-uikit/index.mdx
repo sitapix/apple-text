@@ -1,6 +1,6 @@
 ---
 title: "AppKit vs UIKit Text Capabilities"
-description: "Use when comparing NSTextView and UITextView capabilities, porting editor behavior between macOS and iOS, or deciding whether an AppKit-only text feature has a UIKit equivalent. Reach for this when the main task is platform capability tradeoffs, not TextKit 1 vs TextKit 2 choice."
+description: "Use when comparing NSTextView and UITextView capabilities or porting editor behavior between macOS and iOS."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Decision Skills" variant="default" />
 
-Use when comparing NSTextView and UITextView capabilities, porting editor behavior between macOS and iOS, or deciding whether an AppKit-only text feature has a UIKit equivalent. Reach for this when the main task is platform capability tradeoffs, not TextKit 1 vs TextKit 2 choice.
+Use when comparing NSTextView and UITextView capabilities or porting editor behavior between macOS and iOS.
 
 **Family:** View And Stack Decisions
 
@@ -320,13 +320,30 @@ NSTextViewDelegate is significantly richer than UITextViewDelegate:
 
 UITextViewDelegate is minimal, though iOS 17 text item interactions narrowed the gap.
 
-### Writing Tools (Equivalent)
+### Writing Tools (Mostly Equivalent, Key Differences)
 
-Both platforms have identical Writing Tools support as of iOS 18 / macOS 15:
-- `writingToolsBehavior` / `writingToolsAllowedInputOptions`
-- `isWritingToolsActive`
-- Matching delegate methods
-- Both require TextKit 2 for full inline experience
+Both platforms support Writing Tools as of iOS 18 / macOS 15. The system view API is parallel (`writingToolsBehavior`, `writingToolsAllowedInputOptions`, `isWritingToolsActive`, matching delegate methods). Both require TextKit 2 for full inline experience.
+
+**Differences for custom text engines:**
+
+| Aspect | UIKit | AppKit |
+|--------|-------|--------|
+| Coordinator class | `UIWritingToolsCoordinator` | `NSWritingToolsCoordinator` |
+| Attachment | `view.addInteraction(coordinator)` | `view.writingToolsCoordinator = coordinator` |
+| Preview type | `UITargetedPreview` | `NSTextPreview` |
+| Path type | `[UIBezierPath]` | `[NSBezierPath]` |
+| Menu integration | Automatic via `UITextInteraction` | Requires `NSServicesMenuRequestor` (`validRequestor(forSendType:returnType:)`, `writeSelection(to:types:)`, `readSelection(from:)`) |
+
+**macOS 26 additions:** `automaticallyInsertsWritingToolsItems` (default: true), `.writingToolsItems` for standard menu items, stock `NSToolbarItem` for toolbar integration.
+
+### Fallback Detection (Different Per Platform)
+
+| Aspect | UIKit | AppKit |
+|--------|-------|--------|
+| Detection | Check `textView.textLayoutManager == nil` | Same check + notifications |
+| Breakpoint | `_UITextViewEnablingCompatibilityMode` | Not available |
+| Notifications | None | `NSTextView.willSwitchToNSLayoutManagerNotification`, `NSTextView.didSwitchToNSLayoutManagerNotification` |
+| Console log | Yes (system logs the switch) | Yes |
 
 ## Quick Decision Guide
 
@@ -352,9 +369,9 @@ This page documents the `apple-text-appkit-vs-uikit` decision skill. Use it when
 
 ## Related
 
-- [`apple-text-views`](/apple-text/skills/apple-text-views/): Use when the main task is choosing the right Apple text view or deciding whether a problem belongs in SwiftUI text, UIKit/AppKit text views, or TextKit mode. Reach for this when comparing capabilities and tradeoffs, not when implementing a specific wrapper or low-level API.
-- [`apple-text-representable`](/apple-text/skills/apple-text-representable/): Use when embedding UITextView or NSTextView inside SwiftUI and the hard part is wrapper behavior: two-way binding, focus, sizing, cursor preservation, update loops, toolbars, or environment bridging. Reach for this when native SwiftUI text views are not enough, not when choosing between text stacks at a high level.
-- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging.
+- [`apple-text-views`](/apple-text/skills/apple-text-views/): Use when choosing between SwiftUI Text/TextField/TextEditor, UITextView, or NSTextView — capabilities and tradeoffs.
+- [`apple-text-representable`](/apple-text/skills/apple-text-representable/): Use when wrapping UITextView or NSTextView in SwiftUI — binding, focus, sizing, cursor preservation, or update loops.
+- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools — writingToolsBehavior, UIWritingToolsCoordinator, protected ranges, or inline vs panel mode.
 
 <details>
 <summary>Full SKILL.md source</summary>

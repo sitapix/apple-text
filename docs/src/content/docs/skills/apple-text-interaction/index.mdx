@@ -1,6 +1,6 @@
 ---
 title: "Text Interaction Customization"
-description: "Use when customizing text-editor interactions in UIKit, such as selection behavior, edit menus, link taps, gestures, cursor appearance, or long-press actions. Reach for this when the problem is interaction behavior, not custom text input protocol plumbing."
+description: "Use when customizing selection, edit menus, link taps, gestures, cursor appearance, or long-press actions in text editors."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Workflow Skills" variant="tip" />
 
-Use when customizing text-editor interactions in UIKit, such as selection behavior, edit menus, link taps, gestures, cursor appearance, or long-press actions. Reach for this when the problem is interaction behavior, not custom text input protocol plumbing.
+Use when customizing selection, edit menus, link taps, gestures, cursor appearance, or long-press actions in text editors.
 
 **Family:** Editor Features And Interaction
 
@@ -340,9 +340,9 @@ This page documents the `apple-text-interaction` workflow skill. Use it when the
 
 ## Related
 
-- [`apple-text-input-ref`](/apple-text/skills/apple-text-input-ref/): Use when the user already knows the problem lives in the text input system and needs exact UITextInput, UIKeyInput, NSTextInputClient, marked-text, or selection-UI behavior. Reach for this when implementing or debugging custom text input plumbing, not high-level editor interactions alone.
-- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging.
-- [`apple-text-pasteboard`](/apple-text/skills/apple-text-pasteboard/): Use when handling copy, cut, and paste in Apple text editors, including stripping formatting, sanitizing rich text, custom pasteboard types, pasted attachments, or NSItemProvider bridging. Reach for this when the problem is pasteboard behavior, not general editor interaction.
+- [`apple-text-input-ref`](/apple-text/skills/apple-text-input-ref/): Use when implementing or debugging UITextInput, UIKeyInput, or NSTextInputClient — marked text, selection UI, custom input.
+- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools — writingToolsBehavior, UIWritingToolsCoordinator, protected ranges, or inline vs panel mode.
+- [`apple-text-pasteboard`](/apple-text/skills/apple-text-pasteboard/): Use when handling copy, cut, or paste in text editors — format stripping, rich text sanitization, custom pasteboard types.
 
 <details>
 <summary>Full SKILL.md source</summary>

@@ -1,6 +1,6 @@
 ---
 title: "Spell Checking & Autocorrect"
-description: "Use when implementing spell checking, autocorrect, or text completion in Apple text editors, including UITextChecker, NSSpellChecker, UITextInputTraits, or custom correction UI. Reach for this when the problem is spelling or correction behavior, not generic text interaction."
+description: "Use when implementing spell checking, autocorrect, or text completion \u2014 UITextChecker, NSSpellChecker, UITextInputTraits."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Workflow Skills" variant="tip" />
 
-Use when implementing spell checking, autocorrect, or text completion in Apple text editors, including UITextChecker, NSSpellChecker, UITextInputTraits, or custom correction UI. Reach for this when the problem is spelling or correction behavior, not generic text interaction.
+Use when implementing spell checking, autocorrect, or text completion — UITextChecker, NSSpellChecker, UITextInputTraits.
 
 **Family:** Editor Features And Interaction
 
@@ -315,9 +315,9 @@ This page documents the `apple-text-spell-autocorrect` workflow skill. Use it wh
 
 ## Related
 
-- [`apple-text-input-ref`](/apple-text/skills/apple-text-input-ref/): Use when the user already knows the problem lives in the text input system and needs exact UITextInput, UIKeyInput, NSTextInputClient, marked-text, or selection-UI behavior. Reach for this when implementing or debugging custom text input plumbing, not high-level editor interactions alone.
-- [`apple-text-interaction`](/apple-text/skills/apple-text-interaction/): Use when customizing text-editor interactions in UIKit, such as selection behavior, edit menus, link taps, gestures, cursor appearance, or long-press actions. Reach for this when the problem is interaction behavior, not custom text input protocol plumbing.
-- [`apple-text-appkit-vs-uikit`](/apple-text/skills/apple-text-appkit-vs-uikit/): Use when comparing NSTextView and UITextView capabilities, porting editor behavior between macOS and iOS, or deciding whether an AppKit-only text feature has a UIKit equivalent. Reach for this when the main task is platform capability tradeoffs, not TextKit 1 vs TextKit 2 choice.
+- [`apple-text-input-ref`](/apple-text/skills/apple-text-input-ref/): Use when implementing or debugging UITextInput, UIKeyInput, or NSTextInputClient — marked text, selection UI, custom input.
+- [`apple-text-interaction`](/apple-text/skills/apple-text-interaction/): Use when customizing selection, edit menus, link taps, gestures, cursor appearance, or long-press actions in text editors.
+- [`apple-text-appkit-vs-uikit`](/apple-text/skills/apple-text-appkit-vs-uikit/): Use when comparing NSTextView and UITextView capabilities or porting editor behavior between macOS and iOS.
 
 <details>
 <summary>Full SKILL.md source</summary>

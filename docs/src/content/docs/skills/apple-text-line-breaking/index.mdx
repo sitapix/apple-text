@@ -1,6 +1,6 @@
 ---
 title: "Line Breaking, Hyphenation & Truncation"
-description: "Use when configuring line break behavior, hyphenation, truncation, line height, paragraph spacing, or tab stops. Covers NSParagraphStyle line properties, NSLineBreakStrategy, truncation tokens, maximumNumberOfLines, line height calculation, and common mistakes with line height multipliers."
+description: "Use when configuring line break mode, hyphenation, truncation, line height, paragraph spacing, or tab stops via NSParagraphStyle."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when configuring line break behavior, hyphenation, truncation, line height, paragraph spacing, or tab stops. Covers NSParagraphStyle line properties, NSLineBreakStrategy, truncation tokens, maximumNumberOfLines, line height calculation, and common mistakes with line height multipliers.
+Use when configuring line break mode, hyphenation, truncation, line height, paragraph spacing, or tab stops via NSParagraphStyle.
 
 **Family:** Rich Text And Formatting
 
@@ -298,9 +298,9 @@ This page documents the `apple-text-line-breaking` reference skill. Use it when 
 
 ## Related
 
-- [`apple-text-formatting-ref`](/apple-text/skills/apple-text-formatting-ref/): Use when the user already knows the formatting problem and needs exact text-formatting attributes such as NSAttributedString.Key values, underline styles, shadows, lists, tables, or view-compatibility rules. Reach for this when the job is verifying concrete formatting APIs, not choosing the text model.
-- [`apple-text-measurement`](/apple-text/skills/apple-text-measurement/): Use when measuring text size, calculating bounding rects, sizing text views to fit content, or getting line-level metrics. Covers NSString/NSAttributedString measurement, NSStringDrawingOptions, NSStringDrawingContext, TextKit 1 glyph-range measurement, TextKit 2 layout fragment measurement, and common sizing mistakes.
-- [`apple-text-dynamic-type`](/apple-text/skills/apple-text-dynamic-type/): Use when implementing Dynamic Type for text views, scaling custom fonts, handling accessibility sizes, responding to content size category changes, or diagnosing what breaks at large sizes. Reach for this when the problem is text scaling and accessibility sizing, not VoiceOver or general accessibility.
+- [`apple-text-formatting-ref`](/apple-text/skills/apple-text-formatting-ref/): Use when looking up NSAttributedString.Key values, underline styles, shadows, lists, tables, or view-compatibility rules.
+- [`apple-text-measurement`](/apple-text/skills/apple-text-measurement/): Use when text is clipping, truncating unexpectedly, or when measuring text size, calculating boundingRect, or sizing views to fit text content.
+- [`apple-text-dynamic-type`](/apple-text/skills/apple-text-dynamic-type/): Use when implementing Dynamic Type scaling, custom font metrics, accessibility sizes, or content size category changes.
 
 <details>
 <summary>Full SKILL.md source</summary>

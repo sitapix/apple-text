@@ -1,11 +1,6 @@
 ---
 name: apple-text-texteditor-26
-description: >
-  Use when building rich-text editing with SwiftUI TextEditor and
-  AttributedString on iOS 26+, or deciding whether the new native APIs
-  are enough versus a UITextView wrapper. Reach for this when the
-  question is specifically about the iOS 26 TextEditor rich-text
-  boundary, not generic SwiftUI wrapping.
+description: Use when building rich-text editing with SwiftUI TextEditor on iOS 26+ or evaluating whether it replaces a UITextView wrapper
 license: MIT
 ---
 

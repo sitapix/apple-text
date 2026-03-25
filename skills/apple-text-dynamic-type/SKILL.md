@@ -1,6 +1,6 @@
 ---
 name: apple-text-dynamic-type
-description: Use when implementing Dynamic Type for text views, scaling custom fonts, handling accessibility sizes, responding to content size category changes, or diagnosing what breaks at large sizes. Reach for this when the problem is text scaling and accessibility sizing, not VoiceOver or general accessibility.
+description: Use when implementing Dynamic Type scaling, custom font metrics, accessibility sizes, or content size category changes
 license: MIT
 ---
 

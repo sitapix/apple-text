@@ -11,7 +11,7 @@ import { CardGrid, LinkCard } from "@astrojs/starlight/components";
 
 <p class="docs-lead">Agents run in isolated context. Use reference agents for focused API lookups and the auditor for code review findings.</p>
 
-<p>Apple Text ships 5 agents: 4 domain reference agents and 1 code auditor.</p>
+<p>Apple Text ships 6 agents: 5 domain reference agents and 1 code auditor.</p>
 
 </div>
 
@@ -80,6 +80,35 @@ Look up SwiftUI bridging, UIViewRepresentable wrappers, TextEditor iOS 26+, AppK
 ## `rich-text-reference`
 
 Look up attributed string APIs, text formatting attributes, colors, Markdown rendering, text attachments, line breaking, and bidirectional text.
+
+<div class="docs-spec-grid">
+
+<div class="docs-spec-card">
+<p class="docs-section-label">Best for</p>
+<ul>
+<li>specific API lookups and reference questions</li>
+<li>implementation guidance for a known subsystem</li>
+<li>getting a focused answer without flooding the main conversation</li>
+</ul>
+
+</div>
+
+<div class="docs-spec-card">
+<p class="docs-section-label">You get</p>
+
+<ul>
+<li>a focused answer extracted from the full reference</li>
+<li>exact API signatures and code examples</li>
+<li>isolated context that keeps the main conversation clean</li>
+</ul>
+
+</div>
+
+</div>
+
+## `textkit-diagnostics`
+
+Use this agent when the user describes a broken text symptom — stale layout, editing crashes, TextKit 1 fallback, Writing Tools not working, rendering artifacts, typing lag, or text content loss. Autonomously reads the user's code, follows a diagnostic decision tree, and returns root cause + fix.
 
 <div class="docs-spec-grid">
 

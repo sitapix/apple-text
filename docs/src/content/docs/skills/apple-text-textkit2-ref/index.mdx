@@ -1,6 +1,6 @@
 ---
 title: "TextKit 2 Reference"
-description: "Use when the user is already on TextKit 2 and needs exact NSTextLayoutManager, NSTextContentManager, NSTextContentStorage, viewport layout, fragment, rendering-attribute, or migration details. Reach for this when the stack choice is already made and the task is reference-level TextKit 2 mechanics, not stack selection or generic text-system debugging."
+description: "Use when working with TextKit 2 and you need NSTextLayoutManager or NSTextContentManager APIs \u2014 viewport layout, fragments, rendering attributes."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when the user is already on TextKit 2 and needs exact NSTextLayoutManager, NSTextContentManager, NSTextContentStorage, viewport layout, fragment, rendering-attribute, or migration details. Reach for this when the stack choice is already made and the task is reference-level TextKit 2 mechanics, not stack selection or generic text-system debugging.
+Use when working with TextKit 2 and you need NSTextLayoutManager or NSTextContentManager APIs — viewport layout, fragments, rendering attributes.
 
 **Family:** TextKit Runtime And Layout
 
@@ -47,7 +47,7 @@ NSTextParagraph             (viewport management)
 
 ### Design Principles
 
-1. **Correctness** — No glyph APIs. International text (Arabic, Devanagari, CJK) handled correctly without character-glyph mapping assumptions.
+1. **Abstraction** — No glyph APIs. International text (Arabic, Devanagari, CJK) handled correctly without character-glyph mapping assumptions. Trade-off: glyph-level work requires TextKit 1 or Core Text.
 2. **Safety** — Immutable value semantics for elements and fragments. Thread-safe reads.
 3. **Performance** — Always non-contiguous. Only viewport text is laid out. O(viewport) not O(document).
 
@@ -280,9 +280,9 @@ This page documents the `apple-text-textkit2-ref` reference skill. Use it when t
 
 ## Related
 
-- [`apple-text-layout-manager-selection`](/apple-text/skills/apple-text-layout-manager-selection/): Use when the main task is choosing between TextKit 1 and TextKit 2, especially NSLayoutManager versus NSTextLayoutManager for performance, migration risk, large documents, or feature fit. Reach for this when the stack choice is still open, not when the user already needs API-level mechanics.
-- [`apple-text-storage`](/apple-text/skills/apple-text-storage/): Use when the user is working on NSTextStorage, NSTextContentStorage, or NSTextContentManager and needs the text-model architecture, subclassing rules, delegate hooks, or processEditing lifecycle. Reach for this when the storage layer is the focus, not general TextKit choice or symptom-first debugging.
-- [`apple-text-viewport-rendering`](/apple-text/skills/apple-text-viewport-rendering/): Use when the user needs to understand how Apple text actually renders on screen: viewport layout, line-fragment geometry, rendering attributes, font substitution, fixAttributes, scroll-driven layout, or TextKit versus Core Text drawing differences. Reach for this when the issue is rendering mechanics, not generic layout invalidation.
+- [`apple-text-layout-manager-selection`](/apple-text/skills/apple-text-layout-manager-selection/): Use when choosing between TextKit 1 and TextKit 2, evaluating migration risk, or comparing NSLayoutManager vs NSTextLayoutManager.
+- [`apple-text-storage`](/apple-text/skills/apple-text-storage/): Use when working with NSTextStorage, NSTextContentStorage, or NSTextContentManager — subclassing, processEditing, or delegate hooks.
+- [`apple-text-viewport-rendering`](/apple-text/skills/apple-text-viewport-rendering/): Use when working with viewport layout, line-fragment geometry, rendering attributes, font substitution, or scroll-driven layout.
 
 ## Sidecar Files
 

@@ -1,6 +1,6 @@
 ---
 name: apple-text-colors
-description: Use when choosing text colors, semantic colors, dark-mode behavior, wide-color or HDR text, or making attributed-text colors adapt correctly across UIKit, AppKit, and SwiftUI. Reach for this when the problem is specifically text color behavior, not broader formatting or typography.
+description: Use when choosing text colors, semantic colors, dark mode adaptation, or wide-color/HDR text across UIKit, AppKit, and SwiftUI
 license: MIT
 ---
 

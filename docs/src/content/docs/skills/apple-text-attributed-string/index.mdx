@@ -1,6 +1,6 @@
 ---
 title: "Attributed String Reference"
-description: "Use when choosing between AttributedString and NSAttributedString, defining custom attributes, converting between them, or deciding which model should own rich text in a feature. Reach for this when the main task is the attributed-string model decision, not low-level formatting catalog lookup."
+description: "Use when choosing between AttributedString and NSAttributedString, defining custom attributes, or converting between them."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Decision Skills" variant="default" />
 
-Use when choosing between AttributedString and NSAttributedString, defining custom attributes, converting between them, or deciding which model should own rich text in a feature. Reach for this when the main task is the attributed-string model decision, not low-level formatting catalog lookup.
+Use when choosing between AttributedString and NSAttributedString, defining custom attributes, or converting between them.
 
 **Family:** Rich Text And Formatting
 
@@ -277,9 +277,9 @@ This page documents the `apple-text-attributed-string` decision skill. Use it wh
 
 ## Related
 
-- [`apple-text-formatting-ref`](/apple-text/skills/apple-text-formatting-ref/): Use when the user already knows the formatting problem and needs exact text-formatting attributes such as NSAttributedString.Key values, underline styles, shadows, lists, tables, or view-compatibility rules. Reach for this when the job is verifying concrete formatting APIs, not choosing the text model.
-- [`apple-text-swiftui-bridging`](/apple-text/skills/apple-text-swiftui-bridging/): Use when deciding whether a text type or attribute model crosses the SwiftUI and TextKit boundary cleanly, such as AttributedString, NSAttributedString, UITextView, or SwiftUI Text. Reach for this when the main question is interoperability and support boundaries, not wrapper mechanics.
-- [`apple-text-markdown`](/apple-text/skills/apple-text-markdown/): Use when the user is working with Markdown in SwiftUI Text or AttributedString and needs to know what renders, what is ignored, how PresentationIntent behaves, or when native Markdown stops being enough. Reach for this when the problem is Markdown semantics, not general attributed-string choice.
+- [`apple-text-formatting-ref`](/apple-text/skills/apple-text-formatting-ref/): Use when looking up NSAttributedString.Key values, underline styles, shadows, lists, tables, or view-compatibility rules.
+- [`apple-text-swiftui-bridging`](/apple-text/skills/apple-text-swiftui-bridging/): Use when deciding whether a text type or attribute crosses the SwiftUI/TextKit boundary cleanly, or checking interoperability rules.
+- [`apple-text-markdown`](/apple-text/skills/apple-text-markdown/): Use when working with Markdown in SwiftUI Text or AttributedString — what renders, PresentationIntent, or rendering gaps.
 
 ## Sidecar Files
 

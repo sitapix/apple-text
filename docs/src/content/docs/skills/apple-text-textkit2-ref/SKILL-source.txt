@@ -1,12 +1,6 @@
 ---
 name: apple-text-textkit2-ref
-description: >
-  Use when the user is already on TextKit 2 and needs exact
-  NSTextLayoutManager, NSTextContentManager, NSTextContentStorage,
-  viewport layout, fragment, rendering-attribute, or migration details.
-  Reach for this when the stack choice is already made and the task is
-  reference-level TextKit 2 mechanics, not stack selection or generic
-  text-system debugging.
+description: Use when working with TextKit 2 and you need NSTextLayoutManager or NSTextContentManager APIs — viewport layout, fragments, rendering attributes
 license: MIT
 ---
 
@@ -47,7 +41,7 @@ NSTextParagraph             (viewport management)
 
 ### Design Principles
 
-1. **Correctness** — No glyph APIs. International text (Arabic, Devanagari, CJK) handled correctly without character-glyph mapping assumptions.
+1. **Abstraction** — No glyph APIs. International text (Arabic, Devanagari, CJK) handled correctly without character-glyph mapping assumptions. Trade-off: glyph-level work requires TextKit 1 or Core Text.
 2. **Safety** — Immutable value semantics for elements and fragments. Thread-safe reads.
 3. **Performance** — Always non-contiguous. Only viewport text is laid out. O(viewport) not O(document).
 

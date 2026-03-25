@@ -1,12 +1,12 @@
 ---
 name: apple-text-core-text
-description: Use when dropping below TextKit to Core Text for glyph-level access, custom typesetting, hit testing, font table access, or performance-critical text rendering. Reach for this when TextKit is no longer the right abstraction, not when the user just needs normal TextKit reference APIs.
+description: Use when working with Core Text for glyph-level access, custom typesetting, hit testing, font tables, or when TextKit 2 lacks the glyph APIs you need
 license: MIT
 ---
 
 # Core Text for TextKit Developers
 
-Use this skill when TextKit cannot do what you need and you must drop to Core Text for glyph-level control.
+Use this skill when you need glyph-level control — either because TextKit 2 has no glyph APIs, or because your use case (custom typesetting, font tables, per-glyph rendering) requires the Core Text layer directly.
 
 ## When to Use
 

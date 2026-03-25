@@ -1,6 +1,6 @@
 ---
 title: "Core Text for TextKit Developers"
-description: "Use when dropping below TextKit to Core Text for glyph-level access, custom typesetting, hit testing, font table access, or performance-critical text rendering. Reach for this when TextKit is no longer the right abstraction, not when the user just needs normal TextKit reference APIs."
+description: "Use when working with Core Text for glyph-level access, custom typesetting, hit testing, font tables, or when TextKit 2 lacks the glyph APIs you need."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,11 +8,11 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when dropping below TextKit to Core Text for glyph-level access, custom typesetting, hit testing, font table access, or performance-critical text rendering. Reach for this when TextKit is no longer the right abstraction, not when the user just needs normal TextKit reference APIs.
+Use when working with Core Text for glyph-level access, custom typesetting, hit testing, font tables, or when TextKit 2 lacks the glyph APIs you need.
 
 **Family:** Text Model And Foundation Utilities
 
-Use this skill when TextKit cannot do what you need and you must drop to Core Text for glyph-level control.
+Use this skill when you need glyph-level control — either because TextKit 2 has no glyph APIs, or because your use case (custom typesetting, font tables, per-glyph rendering) requires the Core Text layer directly.
 
 ## When to Use
 
@@ -333,9 +333,9 @@ This page documents the `apple-text-core-text` reference skill. Use it when the 
 
 ## Related
 
-- [`apple-text-textkit1-ref`](/apple-text/skills/apple-text-textkit1-ref/): Use when the user is already on TextKit 1 and needs exact NSLayoutManager, NSTextStorage, or NSTextContainer APIs, glyph and layout lifecycle details, temporary attributes, exclusion paths, or multi-container behavior. Reach for this when the stack choice is already made and the task is reference-level TextKit 1 mechanics, not stack selection or symptom-first debugging.
-- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when the user is already on TextKit 2 and needs exact NSTextLayoutManager, NSTextContentManager, NSTextContentStorage, viewport layout, fragment, rendering-attribute, or migration details. Reach for this when the stack choice is already made and the task is reference-level TextKit 2 mechanics, not stack selection or generic text-system debugging.
-- [`apple-text-viewport-rendering`](/apple-text/skills/apple-text-viewport-rendering/): Use when the user needs to understand how Apple text actually renders on screen: viewport layout, line-fragment geometry, rendering attributes, font substitution, fixAttributes, scroll-driven layout, or TextKit versus Core Text drawing differences. Reach for this when the issue is rendering mechanics, not generic layout invalidation.
+- [`apple-text-textkit1-ref`](/apple-text/skills/apple-text-textkit1-ref/): Use when working with TextKit 1 and you need NSLayoutManager, NSTextStorage, or NSTextContainer APIs — glyphs, temporary attributes, multi-container.
+- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when working with TextKit 2 and you need NSTextLayoutManager or NSTextContentManager APIs — viewport layout, fragments, rendering attributes.
+- [`apple-text-viewport-rendering`](/apple-text/skills/apple-text-viewport-rendering/): Use when working with viewport layout, line-fragment geometry, rendering attributes, font substitution, or scroll-driven layout.
 
 <details>
 <summary>Full SKILL.md source</summary>

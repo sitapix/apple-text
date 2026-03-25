@@ -1,6 +1,6 @@
 ---
 title: "Viewport Layout, Line Fragments, Fonts & Rendering"
-description: "Use when the user needs to understand how Apple text actually renders on screen: viewport layout, line-fragment geometry, rendering attributes, font substitution, fixAttributes, scroll-driven layout, or TextKit versus Core Text drawing differences. Reach for this when the issue is rendering mechanics, not generic layout invalidation."
+description: "Use when working with viewport layout, line-fragment geometry, rendering attributes, font substitution, or scroll-driven layout."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when the user needs to understand how Apple text actually renders on screen: viewport layout, line-fragment geometry, rendering attributes, font substitution, fixAttributes, scroll-driven layout, or TextKit versus Core Text drawing differences. Reach for this when the issue is rendering mechanics, not generic layout invalidation.
+Use when working with viewport layout, line-fragment geometry, rendering attributes, font substitution, or scroll-driven layout.
 
 **Family:** TextKit Runtime And Layout
 
@@ -23,8 +23,8 @@ Use this skill when the main question is how TextKit 2 viewport layout, fragment
 ## Quick Decision
 
 - Need full TextKit 2 object reference -> `/skill apple-text-textkit2-ref`
-- Need rendering and viewport behavior -> stay here
-- Need invalidation semantics rather than rendering pipeline details -> `/skill apple-text-layout-invalidation`
+- Need to know **how** viewport layout, fragments, and rendering work -> stay here
+- Need to know **what triggers** layout recalculation (when to call `invalidateLayout`) -> `/skill apple-text-layout-invalidation`
 
 ## Core Guidance
 
@@ -222,9 +222,9 @@ This page documents the `apple-text-viewport-rendering` reference skill. Use it 
 
 ## Related
 
-- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when the user is already on TextKit 2 and needs exact NSTextLayoutManager, NSTextContentManager, NSTextContentStorage, viewport layout, fragment, rendering-attribute, or migration details. Reach for this when the stack choice is already made and the task is reference-level TextKit 2 mechanics, not stack selection or generic text-system debugging.
-- [`apple-text-layout-invalidation`](/apple-text/skills/apple-text-layout-invalidation/): Use when text layout stays stale, metrics do not refresh, or the user needs the exact invalidation model in TextKit 1 or TextKit 2. Reach for this when the problem is layout recalculation and ensureLayout-style mechanics, not broader rendering or storage architecture.
-- [`apple-text-attachments-ref`](/apple-text/skills/apple-text-attachments-ref/): Use when embedding inline non-text content such as images, custom views, Genmoji, or attachment-backed runs inside Apple text systems. Reach for this when the problem is attachment APIs, layout, bounds, baseline alignment, or lifecycle, not broader rich-text architecture.
+- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when working with TextKit 2 and you need NSTextLayoutManager or NSTextContentManager APIs — viewport layout, fragments, rendering attributes.
+- [`apple-text-layout-invalidation`](/apple-text/skills/apple-text-layout-invalidation/): Use when debugging stale layout or working with ensureLayout, invalidateLayout, or the invalidation model in TextKit 1 and 2.
+- [`apple-text-attachments-ref`](/apple-text/skills/apple-text-attachments-ref/): Use when embedding images, custom views, Genmoji, or other non-text content inline — NSTextAttachment, view providers, bounds, baseline.
 
 ## Sidecar Files
 

@@ -1,6 +1,6 @@
 ---
 name: apple-text-attributed-string
-description: Use when choosing between AttributedString and NSAttributedString, defining custom attributes, converting between them, or deciding which model should own rich text in a feature. Reach for this when the main task is the attributed-string model decision, not low-level formatting catalog lookup.
+description: Use when choosing between AttributedString and NSAttributedString, defining custom attributes, or converting between them
 license: MIT
 ---
 

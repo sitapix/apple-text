@@ -1,6 +1,6 @@
 ---
 name: apple-text-attachments-ref
-description: Use when embedding inline non-text content such as images, custom views, Genmoji, or attachment-backed runs inside Apple text systems. Reach for this when the problem is attachment APIs, layout, bounds, baseline alignment, or lifecycle, not broader rich-text architecture.
+description: Use when embedding images, custom views, Genmoji, or other non-text content inline — NSTextAttachment, view providers, bounds, baseline
 license: MIT
 ---
 

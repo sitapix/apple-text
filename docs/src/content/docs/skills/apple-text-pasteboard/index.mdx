@@ -1,6 +1,6 @@
 ---
 title: "Copy, Cut, and Paste in Text Editors"
-description: "Use when handling copy, cut, and paste in Apple text editors, including stripping formatting, sanitizing rich text, custom pasteboard types, pasted attachments, or NSItemProvider bridging. Reach for this when the problem is pasteboard behavior, not general editor interaction."
+description: "Use when handling copy, cut, or paste in text editors \u2014 format stripping, rich text sanitization, custom pasteboard types."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Workflow Skills" variant="tip" />
 
-Use when handling copy, cut, and paste in Apple text editors, including stripping formatting, sanitizing rich text, custom pasteboard types, pasted attachments, or NSItemProvider bridging. Reach for this when the problem is pasteboard behavior, not general editor interaction.
+Use when handling copy, cut, or paste in text editors — format stripping, rich text sanitization, custom pasteboard types.
 
 **Family:** Editor Features And Interaction
 
@@ -246,9 +246,9 @@ This page documents the `apple-text-pasteboard` workflow skill. Use it when the 
 
 ## Related
 
-- [`apple-text-attachments-ref`](/apple-text/skills/apple-text-attachments-ref/): Use when embedding inline non-text content such as images, custom views, Genmoji, or attachment-backed runs inside Apple text systems. Reach for this when the problem is attachment APIs, layout, bounds, baseline alignment, or lifecycle, not broader rich-text architecture.
-- [`apple-text-attributed-string`](/apple-text/skills/apple-text-attributed-string/): Use when choosing between AttributedString and NSAttributedString, defining custom attributes, converting between them, or deciding which model should own rich text in a feature. Reach for this when the main task is the attributed-string model decision, not low-level formatting catalog lookup.
-- [`apple-text-undo`](/apple-text/skills/apple-text-undo/): Use when implementing or debugging undo and redo in text editors, especially grouping, coalescing, programmatic edits, or integration with NSTextStorage, NSTextContentManager, or NSUndoManager. Reach for this when the problem is undo behavior, not generic editing lifecycle.
+- [`apple-text-attachments-ref`](/apple-text/skills/apple-text-attachments-ref/): Use when embedding images, custom views, Genmoji, or other non-text content inline — NSTextAttachment, view providers, bounds, baseline.
+- [`apple-text-attributed-string`](/apple-text/skills/apple-text-attributed-string/): Use when choosing between AttributedString and NSAttributedString, defining custom attributes, or converting between them.
+- [`apple-text-undo`](/apple-text/skills/apple-text-undo/): Use when implementing or debugging undo/redo in text editors — grouping, coalescing, or NSUndoManager integration.
 
 <details>
 <summary>Full SKILL.md source</summary>

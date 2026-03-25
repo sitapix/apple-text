@@ -1,11 +1,6 @@
 ---
 name: apple-text-formatting-ref
-description: >
-  Use when the user already knows the formatting problem and needs exact
-  text-formatting attributes such as NSAttributedString.Key values,
-  underline styles, shadows, lists, tables, or view-compatibility
-  rules. Reach for this when the job is verifying concrete formatting
-  APIs, not choosing the text model.
+description: Use when looking up NSAttributedString.Key values, underline styles, shadows, lists, tables, or view-compatibility rules
 license: MIT
 ---
 

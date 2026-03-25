@@ -1,6 +1,6 @@
 ---
 name: apple-text-appkit-vs-uikit
-description: Use when comparing NSTextView and UITextView capabilities, porting editor behavior between macOS and iOS, or deciding whether an AppKit-only text feature has a UIKit equivalent. Reach for this when the main task is platform capability tradeoffs, not TextKit 1 vs TextKit 2 choice.
+description: Use when comparing NSTextView and UITextView capabilities or porting editor behavior between macOS and iOS
 license: MIT
 ---
 
@@ -314,13 +314,30 @@ NSTextViewDelegate is significantly richer than UITextViewDelegate:
 
 UITextViewDelegate is minimal, though iOS 17 text item interactions narrowed the gap.
 
-### Writing Tools (Equivalent)
+### Writing Tools (Mostly Equivalent, Key Differences)
 
-Both platforms have identical Writing Tools support as of iOS 18 / macOS 15:
-- `writingToolsBehavior` / `writingToolsAllowedInputOptions`
-- `isWritingToolsActive`
-- Matching delegate methods
-- Both require TextKit 2 for full inline experience
+Both platforms support Writing Tools as of iOS 18 / macOS 15. The system view API is parallel (`writingToolsBehavior`, `writingToolsAllowedInputOptions`, `isWritingToolsActive`, matching delegate methods). Both require TextKit 2 for full inline experience.
+
+**Differences for custom text engines:**
+
+| Aspect | UIKit | AppKit |
+|--------|-------|--------|
+| Coordinator class | `UIWritingToolsCoordinator` | `NSWritingToolsCoordinator` |
+| Attachment | `view.addInteraction(coordinator)` | `view.writingToolsCoordinator = coordinator` |
+| Preview type | `UITargetedPreview` | `NSTextPreview` |
+| Path type | `[UIBezierPath]` | `[NSBezierPath]` |
+| Menu integration | Automatic via `UITextInteraction` | Requires `NSServicesMenuRequestor` (`validRequestor(forSendType:returnType:)`, `writeSelection(to:types:)`, `readSelection(from:)`) |
+
+**macOS 26 additions:** `automaticallyInsertsWritingToolsItems` (default: true), `.writingToolsItems` for standard menu items, stock `NSToolbarItem` for toolbar integration.
+
+### Fallback Detection (Different Per Platform)
+
+| Aspect | UIKit | AppKit |
+|--------|-------|--------|
+| Detection | Check `textView.textLayoutManager == nil` | Same check + notifications |
+| Breakpoint | `_UITextViewEnablingCompatibilityMode` | Not available |
+| Notifications | None | `NSTextView.willSwitchToNSLayoutManagerNotification`, `NSTextView.didSwitchToNSLayoutManagerNotification` |
+| Console log | Yes (system logs the switch) | Yes |
 
 ## Quick Decision Guide
 

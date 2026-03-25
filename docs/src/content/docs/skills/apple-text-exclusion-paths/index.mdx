@@ -1,6 +1,6 @@
 ---
 title: "Exclusion Paths, Multi-Container & Text Tables"
-description: "Use when wrapping text around images or shapes, creating multi-column text layout, linking text containers for magazine/book layout, configuring NSTextContainer exclusion paths, or building non-rectangular text regions. Covers exclusionPaths, linked containers, multi-container layout in TextKit 1 and 2, and NSTextBlock/NSTextTable for in-text tables."
+description: "Use when text needs to wrap around images or shapes, building multi-column text layout, or using exclusion paths, linked containers, and NSTextTable."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when wrapping text around images or shapes, creating multi-column text layout, linking text containers for magazine/book layout, configuring NSTextContainer exclusion paths, or building non-rectangular text regions. Covers exclusionPaths, linked containers, multi-container layout in TextKit 1 and 2, and NSTextBlock/NSTextTable for in-text tables.
+Use when text needs to wrap around images or shapes, building multi-column text layout, or using exclusion paths, linked containers, and NSTextTable.
 
 **Family:** TextKit Runtime And Layout
 
@@ -449,9 +449,9 @@ This page documents the `apple-text-exclusion-paths` reference skill. Use it whe
 
 ## Related
 
-- [`apple-text-attachments-ref`](/apple-text/skills/apple-text-attachments-ref/): Use when embedding inline non-text content such as images, custom views, Genmoji, or attachment-backed runs inside Apple text systems. Reach for this when the problem is attachment APIs, layout, bounds, baseline alignment, or lifecycle, not broader rich-text architecture.
-- [`apple-text-viewport-rendering`](/apple-text/skills/apple-text-viewport-rendering/): Use when the user needs to understand how Apple text actually renders on screen: viewport layout, line-fragment geometry, rendering attributes, font substitution, fixAttributes, scroll-driven layout, or TextKit versus Core Text drawing differences. Reach for this when the issue is rendering mechanics, not generic layout invalidation.
-- [`apple-text-formatting-ref`](/apple-text/skills/apple-text-formatting-ref/): Use when the user already knows the formatting problem and needs exact text-formatting attributes such as NSAttributedString.Key values, underline styles, shadows, lists, tables, or view-compatibility rules. Reach for this when the job is verifying concrete formatting APIs, not choosing the text model.
+- [`apple-text-attachments-ref`](/apple-text/skills/apple-text-attachments-ref/): Use when embedding images, custom views, Genmoji, or other non-text content inline — NSTextAttachment, view providers, bounds, baseline.
+- [`apple-text-viewport-rendering`](/apple-text/skills/apple-text-viewport-rendering/): Use when working with viewport layout, line-fragment geometry, rendering attributes, font substitution, or scroll-driven layout.
+- [`apple-text-formatting-ref`](/apple-text/skills/apple-text-formatting-ref/): Use when looking up NSAttributedString.Key values, underline styles, shadows, lists, tables, or view-compatibility rules.
 
 <details>
 <summary>Full SKILL.md source</summary>

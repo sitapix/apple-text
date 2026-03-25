@@ -4,7 +4,7 @@ sidebar:
   order: 9
 ---
 
-1 command and 5 agents.
+3 command and 6 agents.
 
 Use commands for broad questions. Use reference agents for focused API lookups in isolated context. Use the auditor agent for code review scans.
 
@@ -13,6 +13,14 @@ Use commands for broad questions. Use reference agents for focused API lookups i
 ### `apple-text:ask`
 
 Natural-language entry point for Apple Text. Use when the user has an Apple text question but does not know which skill or agent to invoke.
+
+### `apple-text:release-preflight`
+
+Pre-release validation with guided fixes — checks versions, regenerates derived files, runs full validation, and reports blockers.
+
+### `apple-text:skill-quality`
+
+Audit all skills for quality gaps — freshness, descriptions, routing, lint — and produce a prioritized fix list.
 
 ## Agents
 
@@ -31,6 +39,10 @@ Look up attributed string APIs, text formatting attributes, colors, Markdown ren
 ### `textkit-auditor`
 
 Use this agent when the user mentions TextKit review, text view code review, or asks to scan for TextKit anti-patterns. Automatically scans Swift/Objective-C code for TextKit issues — detects TextKit 1 fallback triggers, deprecated glyph APIs, missing editing lifecycle calls, unsafe text storage patterns, and Writing Tools compatibility problems.
+
+### `textkit-diagnostics`
+
+Use this agent when the user describes a broken text symptom — stale layout, editing crashes, TextKit 1 fallback, Writing Tools not working, rendering artifacts, typing lag, or text content loss. Autonomously reads the user's code, follows a diagnostic decision tree, and returns root cause + fix.
 
 ### `textkit-reference`
 

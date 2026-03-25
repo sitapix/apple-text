@@ -1,6 +1,6 @@
 ---
 name: apple-text-spell-autocorrect
-description: Use when implementing spell checking, autocorrect, or text completion in Apple text editors, including UITextChecker, NSSpellChecker, UITextInputTraits, or custom correction UI. Reach for this when the problem is spelling or correction behavior, not generic text interaction.
+description: Use when implementing spell checking, autocorrect, or text completion — UITextChecker, NSSpellChecker, UITextInputTraits
 license: MIT
 ---
 

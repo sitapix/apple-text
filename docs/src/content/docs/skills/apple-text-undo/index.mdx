@@ -1,6 +1,6 @@
 ---
 title: "Text Editor Undo/Redo"
-description: "Use when implementing or debugging undo and redo in text editors, especially grouping, coalescing, programmatic edits, or integration with NSTextStorage, NSTextContentManager, or NSUndoManager. Reach for this when the problem is undo behavior, not generic editing lifecycle."
+description: "Use when implementing or debugging undo/redo in text editors \u2014 grouping, coalescing, or NSUndoManager integration."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Workflow Skills" variant="tip" />
 
-Use when implementing or debugging undo and redo in text editors, especially grouping, coalescing, programmatic edits, or integration with NSTextStorage, NSTextContentManager, or NSUndoManager. Reach for this when the problem is undo behavior, not generic editing lifecycle.
+Use when implementing or debugging undo/redo in text editors — grouping, coalescing, or NSUndoManager integration.
 
 **Family:** Editor Features And Interaction
 
@@ -217,9 +217,9 @@ This page documents the `apple-text-undo` workflow skill. Use it when the job is
 
 ## Related
 
-- [`apple-text-storage`](/apple-text/skills/apple-text-storage/): Use when the user is working on NSTextStorage, NSTextContentStorage, or NSTextContentManager and needs the text-model architecture, subclassing rules, delegate hooks, or processEditing lifecycle. Reach for this when the storage layer is the focus, not general TextKit choice or symptom-first debugging.
-- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging.
-- [`apple-text-textkit-diag`](/apple-text/skills/apple-text-textkit-diag/): Use when the user starts with a broken Apple text symptom such as stale layout, fallback, crashes in editing, rendering artifacts, missing Writing Tools, or large-document slowness. Reach for this when debugging misbehavior, not when reviewing code systematically or looking up APIs.
+- [`apple-text-storage`](/apple-text/skills/apple-text-storage/): Use when working with NSTextStorage, NSTextContentStorage, or NSTextContentManager — subclassing, processEditing, or delegate hooks.
+- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools — writingToolsBehavior, UIWritingToolsCoordinator, protected ranges, or inline vs panel mode.
+- [`apple-text-textkit-diag`](/apple-text/skills/apple-text-textkit-diag/): Use when debugging broken text — stale layout, editing crashes, fallback, Writing Tools issues, or rendering artifacts.
 
 <details>
 <summary>Full SKILL.md source</summary>

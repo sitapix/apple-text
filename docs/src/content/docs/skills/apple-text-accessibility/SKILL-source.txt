@@ -1,6 +1,6 @@
 ---
 name: apple-text-accessibility
-description: Use when making custom Apple text editors accessible, including VoiceOver behavior, Dynamic Type support in wrapped text views, accessibility value updates during editing, or text-specific accessibility traits and context. Reach for this when the problem is editor accessibility, not general color or sizing guidance alone.
+description: Use when implementing VoiceOver, Dynamic Type, or accessibility traits in custom Apple text editors
 license: MIT
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: apple-text-views
-description: Use when the main task is choosing the right Apple text view or deciding whether a problem belongs in SwiftUI text, UIKit/AppKit text views, or TextKit mode. Reach for this when comparing capabilities and tradeoffs, not when implementing a specific wrapper or low-level API.
+description: Use when choosing between SwiftUI Text/TextField/TextEditor, UITextView, or NSTextView — capabilities and tradeoffs
 license: MIT
 ---
 
@@ -64,19 +64,22 @@ Use `UITextView` / `NSTextView` when you need:
 
 ### 4. Do you need TextKit 2 specifically?
 
-Prefer TextKit 2 when you need:
+**Use TextKit 1** (`NSLayoutManager`) when you need:
 
-- Viewport-based layout
-- `NSTextLayoutManager`
-- Writing Tools inline behavior
+- Glyph-level access (custom glyph drawing, glyph metrics, `shouldGenerateGlyphs`)
+- Multi-page or multi-column layout (multiple text containers)
+- Syntax highlighting via temporary attributes (proven, reliable)
+- Text tables (`NSTextTable`, macOS)
+- Printing with full pagination control
+
+**Use TextKit 2** (`NSTextLayoutManager`) when you need:
+
+- Viewport-based layout for large documents
+- Writing Tools full inline experience
+- Correct complex-script rendering by default (Arabic, Devanagari, CJK)
 - Modern rendering and layout APIs
 
-Stay on TextKit 1 when you explicitly need:
-
-- Glyph APIs
-- Mature multi-container patterns
-- Legacy code that depends on `NSLayoutManager`
-- AppKit features still tied to older APIs
+Neither is "legacy" or "modern" — they solve different problems. TextKit 1 is the right choice for glyph-level work even in a brand-new app.
 
 For the actual TextKit 1 vs 2 choice, launch the **platform-reference** agent.
 
@@ -86,7 +89,7 @@ For the actual TextKit 1 vs 2 choice, launch the **platform-reference** agent.
 
 **Notes editor with rich text** -> `UITextView` on iOS, `NSTextView` on macOS.
 
-**Syntax-highlighted code editor** -> `UITextView` / `NSTextView`, usually with TextKit 2 if your feature set allows it.
+**Syntax-highlighted code editor** -> `UITextView` / `NSTextView`. TextKit 1 if you need temporary attributes (proven) or glyph metrics; TextKit 2 if you need viewport performance on very large files.
 
 **Simple settings field** -> `TextField`, `UITextField`, or `NSTextField`.
 
@@ -99,6 +102,7 @@ For the actual TextKit 1 vs 2 choice, launch the **platform-reference** agent.
 - For the full catalog, capabilities tables, and platform-by-platform reference, see [reference.md](reference.md).
 - For usage-oriented examples, see [examples.md](examples.md).
 - For wrapping `UITextView` or `NSTextView` in SwiftUI, launch the **platform-reference** agent.
+- For the TextKit 1 vs 2 decision specifically, use `/skill apple-text-layout-manager-selection`.
 - For TextKit 1 vs 2 architecture, launch the **textkit-reference** agent.
 - For a migration or performance decision, launch the **platform-reference** agent.
 - For debugging weird editor behavior, use `/skill apple-text-textkit-diag`.

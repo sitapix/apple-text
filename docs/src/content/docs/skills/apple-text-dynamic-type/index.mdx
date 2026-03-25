@@ -1,6 +1,6 @@
 ---
 title: "Dynamic Type Reference"
-description: "Use when implementing Dynamic Type for text views, scaling custom fonts, handling accessibility sizes, responding to content size category changes, or diagnosing what breaks at large sizes. Reach for this when the problem is text scaling and accessibility sizing, not VoiceOver or general accessibility."
+description: "Use when implementing Dynamic Type scaling, custom font metrics, accessibility sizes, or content size category changes."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when implementing Dynamic Type for text views, scaling custom fonts, handling accessibility sizes, responding to content size category changes, or diagnosing what breaks at large sizes. Reach for this when the problem is text scaling and accessibility sizing, not VoiceOver or general accessibility.
+Use when implementing Dynamic Type scaling, custom font metrics, accessibility sizes, or content size category changes.
 
 **Family:** Editor Features And Interaction
 
@@ -242,9 +242,9 @@ This page documents the `apple-text-dynamic-type` reference skill. Use it when t
 
 ## Related
 
-- [`apple-text-views`](/apple-text/skills/apple-text-views/): Use when the main task is choosing the right Apple text view or deciding whether a problem belongs in SwiftUI text, UIKit/AppKit text views, or TextKit mode. Reach for this when comparing capabilities and tradeoffs, not when implementing a specific wrapper or low-level API.
-- [`apple-text-colors`](/apple-text/skills/apple-text-colors/): Use when choosing text colors, semantic colors, dark-mode behavior, wide-color or HDR text, or making attributed-text colors adapt correctly across UIKit, AppKit, and SwiftUI. Reach for this when the problem is specifically text color behavior, not broader formatting or typography.
-- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging.
+- [`apple-text-views`](/apple-text/skills/apple-text-views/): Use when choosing between SwiftUI Text/TextField/TextEditor, UITextView, or NSTextView — capabilities and tradeoffs.
+- [`apple-text-colors`](/apple-text/skills/apple-text-colors/): Use when choosing text colors, semantic colors, dark mode adaptation, or wide-color/HDR text across UIKit, AppKit, and SwiftUI.
+- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools — writingToolsBehavior, UIWritingToolsCoordinator, protected ranges, or inline vs panel mode.
 
 <details>
 <summary>Full SKILL.md source</summary>

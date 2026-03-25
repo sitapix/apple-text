@@ -49,7 +49,8 @@
         "apple-text",
         "apple-text-fallback-triggers",
         "apple-text-layout-invalidation"
-      ]
+      ],
+      "agent": "textkit-diagnostics"
     },
     {
       "name": "apple-text-views",
@@ -118,7 +119,7 @@
     {
       "name": "apple-text-fallback-triggers",
       "category": "textkit-runtime",
-      "kind": "diag",
+      "kind": "ref",
       "entrypoint_priority": 3,
       "aliases": [
         "fallback",
@@ -134,7 +135,7 @@
     {
       "name": "apple-text-layout-invalidation",
       "category": "textkit-runtime",
-      "kind": "router",
+      "kind": "ref",
       "entrypoint_priority": 3,
       "aliases": [
         "layout stale",

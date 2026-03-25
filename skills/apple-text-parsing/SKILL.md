@@ -1,6 +1,6 @@
 ---
 name: apple-text-parsing
-description: Use when deciding between Swift Regex and NSRegularExpression, bridging regex results into NSRange for TextKit, or choosing the safest parsing approach for attributed-text manipulation and search or replace. Reach for this when the main task is parsing-strategy choice, not raw Foundation API lookup.
+description: Use when deciding between Swift Regex and NSRegularExpression, bridging regex results to NSRange, or choosing a parsing strategy
 license: MIT
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Apple Documentation Access"
-description: "Use when you need direct access to Apple-authored text-system documentation from the Xcode-bundled for-LLM markdown docs that MCP can expose at runtime, especially for AttributedString updates, styled TextEditor behavior, toolbars near editors, or official Swift diagnostic writeups. Reach for this when Apple\u2019s wording matters more than repo-authored guidance."
+description: "Use when you need official Apple-authored documentation, exact API signatures, or Swift diagnostic explanations from Xcode-bundled docs."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when you need direct access to Apple-authored text-system documentation from the Xcode-bundled for-LLM markdown docs that MCP can expose at runtime, especially for AttributedString updates, styled TextEditor behavior, toolbars near editors, or official Swift diagnostic writeups. Reach for this when Apple’s wording matters more than repo-authored guidance.
+Use when you need official Apple-authored documentation, exact API signatures, or Swift diagnostic explanations from Xcode-bundled docs.
 
 **Family:** Front Door Skills
 
@@ -24,6 +24,12 @@ Use this skill when you want Apple-authored guidance from the Xcode-bundled Appl
 - You want authoritative code examples for `AttributedString`, styled `TextEditor`, toolbar behavior, or related text-system changes that ship in Xcode docs.
 
 Priority: Apple Text skills provide opinionated guidance and project-specific tradeoffs. Apple docs provide authoritative API detail. Use both together.
+
+## Quick Decision
+
+- Need opinionated guidance, not Apple's exact wording -> use the relevant Apple Text skill directly
+- Need symptom-first debugging -> `/skill apple-text-textkit-diag`
+- Need Apple-authored API detail or Swift diagnostic explanation -> stay here
 
 ## Example Prompts
 
@@ -70,9 +76,9 @@ This page documents the `apple-text-apple-docs` router skill. The router maps te
 
 ## Related
 
-- [`apple-text-texteditor-26`](/apple-text/skills/apple-text-texteditor-26/): Use when building rich-text editing with SwiftUI TextEditor and AttributedString on iOS 26+, or deciding whether the new native APIs are enough versus a UITextView wrapper. Reach for this when the question is specifically about the iOS 26 TextEditor rich-text boundary, not generic SwiftUI wrapping.
-- [`apple-text-attributed-string`](/apple-text/skills/apple-text-attributed-string/): Use when choosing between AttributedString and NSAttributedString, defining custom attributes, converting between them, or deciding which model should own rich text in a feature. Reach for this when the main task is the attributed-string model decision, not low-level formatting catalog lookup.
-- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging.
+- [`apple-text-texteditor-26`](/apple-text/skills/apple-text-texteditor-26/): Use when building rich-text editing with SwiftUI TextEditor on iOS 26+ or evaluating whether it replaces a UITextView wrapper.
+- [`apple-text-attributed-string`](/apple-text/skills/apple-text-attributed-string/): Use when choosing between AttributedString and NSAttributedString, defining custom attributes, or converting between them.
+- [`apple-text-writing-tools`](/apple-text/skills/apple-text-writing-tools/): Use when integrating Writing Tools — writingToolsBehavior, UIWritingToolsCoordinator, protected ranges, or inline vs panel mode.
 
 ## Sidecar Files
 

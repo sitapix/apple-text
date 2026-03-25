@@ -41,15 +41,9 @@ class McpServerLayoutTests(unittest.TestCase):
         for path in expected_files:
             self.assertTrue(path.is_file(), msg=f"Missing MCP server file: {path}")
 
-    def test_root_package_exposes_mcp_scripts(self) -> None:
+    def test_root_package_exposes_mcp_dev(self) -> None:
         package = load_json(ROOT / "package.json")
-
-        self.assertEqual(package["scripts"]["mcp:build"], "npm --prefix mcp-server run build")
-        self.assertEqual(package["scripts"]["mcp:bundle"], "npm --prefix mcp-server run build:bundle")
-        self.assertEqual(package["scripts"]["mcp:pack:check"], "npm --prefix mcp-server run pack:check")
-        self.assertEqual(package["scripts"]["mcp:smoke"], "npm --prefix mcp-server run smoke")
-        self.assertEqual(package["scripts"]["mcp:smoke:dev"], "npm --prefix mcp-server run smoke:dev")
-        self.assertEqual(package["scripts"]["mcp:start"], "npm --prefix mcp-server run start:dev")
+        self.assertEqual(package["scripts"]["mcp:dev"], "npm --prefix mcp-server run start:dev")
 
 
 if __name__ == "__main__":

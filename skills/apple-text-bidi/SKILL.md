@@ -1,6 +1,6 @@
 ---
 name: apple-text-bidi
-description: Use when the user is dealing with bidirectional text, RTL languages, writing direction controls, mixed-direction content, or cursor and selection behavior in Arabic or Hebrew text. Reach for this when the problem is directionality and Unicode bidi behavior, not general localization.
+description: Use when handling bidirectional text, RTL languages, writing direction controls, or cursor behavior in Arabic/Hebrew
 license: MIT
 ---
 

@@ -26,7 +26,7 @@ Use this when the user wants an audit, integration walkthrough, or step-by-step 
 Use this when the user starts with stale layout, fallback, crashes, or rendering bugs.
 - **Tradeoff question**: use `apple-text-views`, `apple-text-attributed-string`, `apple-text-layout-manager-selection`.
 Use this when the main job is picking the right API, architecture, or view.
-- **Known API family**: start with `/skill apple-text-storage` or the matching reference skill.
+- **Known API family**: start with `/skill apple-text-fallback-triggers` or the matching reference skill.
 Use this when the user already knows the subsystem and wants mechanics, behavior, or API detail.
 
 ## Prompt Patterns

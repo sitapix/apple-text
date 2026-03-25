@@ -1,6 +1,6 @@
 ---
 title: "TextKit 1 Reference"
-description: "Use when the user is already on TextKit 1 and needs exact NSLayoutManager, NSTextStorage, or NSTextContainer APIs, glyph and layout lifecycle details, temporary attributes, exclusion paths, or multi-container behavior. Reach for this when the stack choice is already made and the task is reference-level TextKit 1 mechanics, not stack selection or symptom-first debugging."
+description: "Use when working with TextKit 1 and you need NSLayoutManager, NSTextStorage, or NSTextContainer APIs \u2014 glyphs, temporary attributes, multi-container."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when the user is already on TextKit 1 and needs exact NSLayoutManager, NSTextStorage, or NSTextContainer APIs, glyph and layout lifecycle details, temporary attributes, exclusion paths, or multi-container behavior. Reach for this when the stack choice is already made and the task is reference-level TextKit 1 mechanics, not stack selection or symptom-first debugging.
+Use when working with TextKit 1 and you need NSLayoutManager, NSTextStorage, or NSTextContainer APIs — glyphs, temporary attributes, multi-container.
 
 **Family:** TextKit Runtime And Layout
 
@@ -51,37 +51,11 @@ Subclass of `NSMutableAttributedString`. The canonical backing store for all Tex
 
 ### Required Primitives (When Subclassing)
 
-You **must** subclass NSTextStorage if you want a custom backing store. Implement these four:
+You **must** subclass NSTextStorage if you want a custom backing store. Override these four: `string`, `attributes(at:effectiveRange:)`, `replaceCharacters(in:with:)`, and `setAttributes(_:range:)`.
 
-```swift
-class CustomTextStorage: NSTextStorage {
-    private var storage = NSMutableAttributedString()
+**Critical:** Mutation overrides MUST call `edited(_:range:changeInLength:)` with the correct mask (`.editedCharacters`, `.editedAttributes`, or both) and wrap in `beginEditing()`/`endEditing()`. Without this, layout managers won't be notified.
 
-    override var string: String {
-        storage.string
-    }
-
-    override func attributes(at location: Int, effectiveRange range: NSRangePointer?) -> [NSAttributedString.Key: Any] {
-        storage.attributes(at: location, effectiveRange: range)
-    }
-
-    override func replaceCharacters(in range: NSRange, with str: String) {
-        beginEditing()
-        storage.replaceCharacters(in: range, with: str)
-        edited(.editedCharacters, range: range, changeInLength: (str as NSString).length - range.length)
-        endEditing()
-    }
-
-    override func setAttributes(_ attrs: [NSAttributedString.Key: Any]?, range: NSRange) {
-        beginEditing()
-        storage.setAttributes(attrs, range: range)
-        edited(.editedAttributes, range: range, changeInLength: 0)
-        endEditing()
-    }
-}
-```
-
-**Critical:** Mutation methods MUST call `edited(_:range:changeInLength:)` with the correct mask (`.editedCharacters`, `.editedAttributes`, or both). Without this, layout managers won't be notified.
+For the full subclass template, editing lifecycle diagram, and advanced patterns (piece table, CRDT), use `/skill apple-text-storage`.
 
 ### Editing Lifecycle
 
@@ -345,9 +319,9 @@ This page documents the `apple-text-textkit1-ref` reference skill. Use it when t
 
 ## Related
 
-- [`apple-text-layout-manager-selection`](/apple-text/skills/apple-text-layout-manager-selection/): Use when the main task is choosing between TextKit 1 and TextKit 2, especially NSLayoutManager versus NSTextLayoutManager for performance, migration risk, large documents, or feature fit. Reach for this when the stack choice is still open, not when the user already needs API-level mechanics.
-- [`apple-text-storage`](/apple-text/skills/apple-text-storage/): Use when the user is working on NSTextStorage, NSTextContentStorage, or NSTextContentManager and needs the text-model architecture, subclassing rules, delegate hooks, or processEditing lifecycle. Reach for this when the storage layer is the focus, not general TextKit choice or symptom-first debugging.
-- [`apple-text-fallback-triggers`](/apple-text/skills/apple-text-fallback-triggers/): Use when the user needs to know exactly what makes TextKit 2 fall back to TextKit 1, or wants to audit code for fallback risk before it ships. Reach for this when the question is specifically about compatibility-mode triggers, not general text-system debugging.
+- [`apple-text-layout-manager-selection`](/apple-text/skills/apple-text-layout-manager-selection/): Use when choosing between TextKit 1 and TextKit 2, evaluating migration risk, or comparing NSLayoutManager vs NSTextLayoutManager.
+- [`apple-text-storage`](/apple-text/skills/apple-text-storage/): Use when working with NSTextStorage, NSTextContentStorage, or NSTextContentManager — subclassing, processEditing, or delegate hooks.
+- [`apple-text-fallback-triggers`](/apple-text/skills/apple-text-fallback-triggers/): Use when debugging or preventing TextKit 2 fallback to TextKit 1 — complete trigger catalog, detection, and recovery.
 
 <details>
 <summary>Full SKILL.md source</summary>

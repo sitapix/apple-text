@@ -1,10 +1,6 @@
 ---
 name: apple-text-measurement
-description: >
-  Use when measuring text size, calculating bounding rects, sizing text views
-  to fit content, or getting line-level metrics. Covers NSString/NSAttributedString
-  measurement, NSStringDrawingOptions, NSStringDrawingContext, TextKit 1 glyph-range
-  measurement, TextKit 2 layout fragment measurement, and common sizing mistakes.
+description: Use when text is clipping, truncating unexpectedly, or when measuring text size, calculating boundingRect, or sizing views to fit text content
 license: MIT
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: apple-text
-description: Use when the user clearly has an Apple text-system problem but the right specialist skill is not obvious yet, or when the request mixes TextKit, text views, storage, layout, parsing, and Writing Tools. Reach for this router when you need the next best Apple-text skill, not when the subsystem is already clear.
+description: Use when the user has an Apple text-system problem but the right specialist skill is not obvious, or when the request mixes multiple text subsystems
 license: MIT
 ---
 
@@ -21,6 +21,7 @@ Choose the topic family first, then the right destination:
 - Broad intake, audits, or debugging triage -> `/skill apple-text-audit`, `/skill apple-text-textkit-diag`
 - View choice -> `/skill apple-text-views`
 - "How do I..." cookbook -> `/skill apple-text-recipes`
+- Apple-authored docs, official API detail, Swift diagnostics -> `/skill apple-text-apple-docs`
 - TextKit runtime, layout, storage, measurement, fallback, exclusion paths -> launch **textkit-reference** agent
 - Writing Tools, input, interaction, undo, paste, search, spelling, drag-drop, accessibility -> launch **editor-reference** agent
 - Attributed content, formatting, Markdown, colors, attachments, line breaking, bidi -> launch **rich-text-reference** agent
@@ -36,6 +37,7 @@ Choose the topic family first, then the right destination:
 | `apple-text-views` | "Which text view should I use?" |
 | `apple-text-textkit-diag` | Debugging symptoms, crashes, stale layout |
 | `apple-text-recipes` | Quick "how do I..." answers and snippets |
+| `apple-text-apple-docs` | Apple-authored docs, official API wording, Swift diagnostics |
 
 **Domain agents** (launch via Agent tool with the given `subagent_type`):
 

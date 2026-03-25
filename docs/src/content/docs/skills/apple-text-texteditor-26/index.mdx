@@ -1,6 +1,6 @@
 ---
 title: "SwiftUI TextEditor Rich Text Editing (iOS 26+)"
-description: "Use when building rich-text editing with SwiftUI TextEditor and AttributedString on iOS 26+, or deciding whether the new native APIs are enough versus a UITextView wrapper. Reach for this when the question is specifically about the iOS 26 TextEditor rich-text boundary, not generic SwiftUI wrapping."
+description: "Use when building rich-text editing with SwiftUI TextEditor on iOS 26+ or evaluating whether it replaces a UITextView wrapper."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when building rich-text editing with SwiftUI TextEditor and AttributedString on iOS 26+, or deciding whether the new native APIs are enough versus a UITextView wrapper. Reach for this when the question is specifically about the iOS 26 TextEditor rich-text boundary, not generic SwiftUI wrapping.
+Use when building rich-text editing with SwiftUI TextEditor on iOS 26+ or evaluating whether it replaces a UITextView wrapper.
 
 **Family:** SwiftUI And Wrapper Boundaries
 
@@ -266,9 +266,9 @@ This page documents the `apple-text-texteditor-26` reference skill. Use it when 
 
 ## Related
 
-- [`apple-text-views`](/apple-text/skills/apple-text-views/): Use when the main task is choosing the right Apple text view or deciding whether a problem belongs in SwiftUI text, UIKit/AppKit text views, or TextKit mode. Reach for this when comparing capabilities and tradeoffs, not when implementing a specific wrapper or low-level API.
-- [`apple-text-representable`](/apple-text/skills/apple-text-representable/): Use when embedding UITextView or NSTextView inside SwiftUI and the hard part is wrapper behavior: two-way binding, focus, sizing, cursor preservation, update loops, toolbars, or environment bridging. Reach for this when native SwiftUI text views are not enough, not when choosing between text stacks at a high level.
-- [`apple-text-attributed-string`](/apple-text/skills/apple-text-attributed-string/): Use when choosing between AttributedString and NSAttributedString, defining custom attributes, converting between them, or deciding which model should own rich text in a feature. Reach for this when the main task is the attributed-string model decision, not low-level formatting catalog lookup.
+- [`apple-text-views`](/apple-text/skills/apple-text-views/): Use when choosing between SwiftUI Text/TextField/TextEditor, UITextView, or NSTextView — capabilities and tradeoffs.
+- [`apple-text-representable`](/apple-text/skills/apple-text-representable/): Use when wrapping UITextView or NSTextView in SwiftUI — binding, focus, sizing, cursor preservation, or update loops.
+- [`apple-text-attributed-string`](/apple-text/skills/apple-text-attributed-string/): Use when choosing between AttributedString and NSAttributedString, defining custom attributes, or converting between them.
 
 <details>
 <summary>Full SKILL.md source</summary>

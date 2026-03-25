@@ -1,6 +1,6 @@
 ---
 name: apple-text-layout-invalidation
-description: Use when text layout stays stale, metrics do not refresh, or the user needs the exact invalidation model in TextKit 1 or TextKit 2. Reach for this when the problem is layout recalculation and ensureLayout-style mechanics, not broader rendering or storage architecture.
+description: Use when debugging stale layout or working with ensureLayout, invalidateLayout, or the invalidation model in TextKit 1 and 2
 license: MIT
 ---
 

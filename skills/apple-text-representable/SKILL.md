@@ -1,6 +1,6 @@
 ---
 name: apple-text-representable
-description: "Use when embedding UITextView or NSTextView inside SwiftUI and the hard part is wrapper behavior: two-way binding, focus, sizing, cursor preservation, update loops, toolbars, or environment bridging. Reach for this when native SwiftUI text views are not enough, not when choosing between text stacks at a high level."
+description: Use when wrapping UITextView or NSTextView in SwiftUI — binding, focus, sizing, cursor preservation, or update loops
 license: MIT
 ---
 

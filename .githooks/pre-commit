@@ -26,5 +26,4 @@ git add \
   docs/src/content/docs
 
 # ── Fast checks only (~2s) ───────────────────────────────────────────
-npm run lint
 node scripts/build-agents.mjs --check

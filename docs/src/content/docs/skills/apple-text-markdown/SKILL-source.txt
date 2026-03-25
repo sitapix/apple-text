@@ -1,6 +1,6 @@
 ---
 name: apple-text-markdown
-description: Use when the user is working with Markdown in SwiftUI Text or AttributedString and needs to know what renders, what is ignored, how PresentationIntent behaves, or when native Markdown stops being enough. Reach for this when the problem is Markdown semantics, not general attributed-string choice.
+description: Use when working with Markdown in SwiftUI Text or AttributedString — what renders, PresentationIntent, or rendering gaps
 license: MIT
 ---
 

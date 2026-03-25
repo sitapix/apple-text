@@ -1,10 +1,6 @@
 ---
 name: apple-text-line-breaking
-description: >
-  Use when configuring line break behavior, hyphenation, truncation, line height,
-  paragraph spacing, or tab stops. Covers NSParagraphStyle line properties,
-  NSLineBreakStrategy, truncation tokens, maximumNumberOfLines, line height
-  calculation, and common mistakes with line height multipliers.
+description: Use when configuring line break mode, hyphenation, truncation, line height, paragraph spacing, or tab stops via NSParagraphStyle
 license: MIT
 ---
 

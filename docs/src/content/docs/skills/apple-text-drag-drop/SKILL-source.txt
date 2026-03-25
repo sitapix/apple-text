@@ -1,6 +1,6 @@
 ---
 name: apple-text-drag-drop
-description: Use when customizing drag and drop in Apple text editors, including UITextDraggable or UITextDroppable, drag previews, multi-line selections, iPhone drag enablement, or custom drop handling in UITextInput views. Reach for this when the task is editor drag-and-drop behavior, not pasteboard-only workflows.
+description: Use when customizing drag and drop in Apple text editors — UITextDraggable, UITextDroppable, drag previews, or custom drop handling
 license: MIT
 ---
 

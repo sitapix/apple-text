@@ -1,6 +1,6 @@
 ---
 title: "Text Recipes Cookbook"
-description: "Use when the user has a \"how do I...\" question about text views and you need a quick working recipe, or when they want a copy-paste snippet for a common text task rather than architecture guidance. Covers the 25 most common text tasks - background colors per paragraph, line numbers, character limits, text wrapping around images, clickable links, syntax highlighting, placeholder text, auto-growing text views, and more."
+description: "Use when building common text features or looking up quick recipes \u2014 background colors, line numbers, character limits, links, placeholders."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Workflow Skills" variant="tip" />
 
-Use when the user has a "how do I..." question about text views and you need a quick working recipe, or when they want a copy-paste snippet for a common text task rather than architecture guidance. Covers the 25 most common text tasks - background colors per paragraph, line numbers, character limits, text wrapping around images, clickable links, syntax highlighting, placeholder text, auto-growing text views, and more.
+Use when building common text features or looking up quick recipes — background colors, line numbers, character limits, links, placeholders.
 
 **Family:** Front Door Skills
 
@@ -21,6 +21,8 @@ Quick, working solutions to the most common "how do I..." questions about Apple 
 - The question maps to a common text task that doesn't need a full skill.
 
 ## Quick Index
+
+Find the recipe number below, then see `recipes.md` for the code.
 
 | # | Recipe | Framework |
 |---|--------|-----------|
@@ -45,451 +47,16 @@ Quick, working solutions to the most common "how do I..." questions about Apple 
 | 19 | Programmatically scroll to range | UITextView |
 | 20 | Get current line number | TextKit 1 |
 
----
+## Platform Coverage
 
-## 1. Background Color Behind a Paragraph
+Recipes show UIKit (iOS) code by default. See the **Platform Note** at the top of `recipes.md` for a UIKit → AppKit translation table. Recipes that use only NSTextStorage, NSAttributedString, and NSParagraphStyle work on both platforms without changes.
 
-### Using `.backgroundColor` attribute (simple)
+## Quick Decision
 
-```swift
-let attrs: [NSAttributedString.Key: Any] = [
-    .backgroundColor: UIColor.systemYellow.withAlphaComponent(0.3),
-    .font: UIFont.systemFont(ofSize: 15)
-]
-let highlighted = NSAttributedString(string: "This paragraph has a background", attributes: attrs)
-```
-
-**Limitation:** Only colors the area directly behind glyphs, not full-width.
-
-### Full-width paragraph background (TextKit 1 subclass)
-
-```swift
-class ParagraphBackgroundLayoutManager: NSLayoutManager {
-    override func drawBackground(forGlyphRange glyphsToShow: NSRange, at origin: CGPoint) {
-        super.drawBackground(forGlyphRange: glyphsToShow, at: origin)
-
-        guard let textStorage = textStorage else { return }
-
-        textStorage.enumerateAttribute(.paragraphBackgroundColor,
-                                        in: characterRange(forGlyphRange: glyphsToShow,
-                                                           actualGlyphRange: nil)) { value, charRange, _ in
-            guard let color = value as? UIColor else { return }
-            let glyphRange = self.glyphRange(forCharacterRange: charRange, actualCharacterRange: nil)
-
-            enumerateLineFragments(forGlyphRange: glyphRange) { rect, _, container, _, _ in
-                guard let context = UIGraphicsGetCurrentContext() else { return }
-                let fullWidthRect = CGRect(
-                    x: 0,
-                    y: rect.origin.y + origin.y,
-                    width: container.size.width,
-                    height: rect.height
-                )
-                context.setFillColor(color.cgColor)
-                context.fill(fullWidthRect)
-            }
-        }
-    }
-}
-
-// Register custom attribute
-extension NSAttributedString.Key {
-    static let paragraphBackgroundColor = NSAttributedString.Key("paragraphBackgroundColor")
-}
-```
-
-## 2. Line Numbers in a Text View
-
-```swift
-class LineNumberGutter: UIView {
-    weak var textView: UITextView?
-
-    func updateLineNumbers() {
-        guard let textView = textView,
-              let layoutManager = textView.layoutManager else { return }
-
-        setNeedsDisplay()
-    }
-
-    override func draw(_ rect: CGRect) {
-        guard let textView = textView,
-              let layoutManager = textView.layoutManager else { return }
-
-        let font = UIFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: UIColor.secondaryLabel
-        ]
-
-        let visibleGlyphRange = layoutManager.glyphRange(
-            forBoundingRect: textView.bounds,
-            in: textView.textContainer
-        )
-
-        var lineNumber = 1
-        var previousLineY: CGFloat = -1
-        let inset = textView.textContainerInset
-
-        // Count lines before visible range
-        let textBeforeVisible = (textView.text as NSString)
-            .substring(to: layoutManager.characterRange(
-                forGlyphRange: NSRange(location: visibleGlyphRange.location, length: 0),
-                actualGlyphRange: nil).location)
-        lineNumber = textBeforeVisible.components(separatedBy: "\n").count
-
-        layoutManager.enumerateLineFragments(forGlyphRange: visibleGlyphRange) {
-            rect, _, _, glyphRange, _ in
-
-            let charRange = layoutManager.characterRange(forGlyphRange: glyphRange,
-                                                          actualGlyphRange: nil)
-            let lineY = rect.origin.y + inset.top - textView.contentOffset.y
-
-            // Only number paragraph-starting lines
-            if charRange.location == 0 ||
-               (textView.text as NSString).character(at: charRange.location - 1) == 0x0A {
-                let numStr = "\(lineNumber)" as NSString
-                let size = numStr.size(withAttributes: attrs)
-                numStr.draw(at: CGPoint(
-                    x: self.bounds.width - size.width - 4,
-                    y: lineY + (rect.height - size.height) / 2
-                ), withAttributes: attrs)
-                lineNumber += 1
-            }
-        }
-    }
-}
-```
-
-## 3. Character/Word Limit
-
-```swift
-// Character limit
-func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange,
-              replacementText text: String) -> Bool {
-    let currentLength = textView.text.count
-    let replacementLength = text.count
-    let rangeLength = range.length
-    let newLength = currentLength - rangeLength + replacementLength
-    return newLength <= 280  // Twitter-style limit
-}
-
-// Word limit
-func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange,
-              replacementText text: String) -> Bool {
-    let currentText = (textView.text as NSString).replacingCharacters(in: range, with: text)
-    let wordCount = currentText.split(separator: " ").count
-    return wordCount <= 500
-}
-```
-
-## 4. Text Wrapping Around an Image
-
-```swift
-// Add image view as subview of text view
-let imageView = UIImageView(image: myImage)
-imageView.frame = CGRect(x: 16, y: 16, width: 120, height: 120)
-textView.addSubview(imageView)
-
-// Create exclusion path in text container coordinates
-let inset = textView.textContainerInset
-let exclusionRect = CGRect(
-    x: imageView.frame.origin.x - inset.left + imageView.frame.width,
-    y: imageView.frame.origin.y - inset.top,
-    width: imageView.frame.width + 8,
-    height: imageView.frame.height + 8
-)
-
-// Set right-aligned exclusion (text wraps on left side)
-textView.textContainer.exclusionPaths = [UIBezierPath(rect: CGRect(
-    x: textView.textContainer.size.width - 120 - 8,
-    y: 0,
-    width: 120 + 8,
-    height: 120 + 8
-))]
-```
-
-## 5. Clickable Links (Non-Editable)
-
-```swift
-textView.isEditable = false
-textView.isSelectable = true
-textView.dataDetectorTypes = [.link]  // Auto-detect URLs
-
-// Or manual links via attributed string:
-let text = NSMutableAttributedString(string: "Visit our website for details.")
-text.addAttribute(.link, value: URL(string: "https://example.com")!,
-                  range: NSRange(location: 10, length: 7))
-textView.attributedText = text
-
-// Handle taps:
-func textView(_ textView: UITextView, shouldInteractWith URL: URL,
-              in characterRange: NSRange,
-              interaction: UITextItemInteraction) -> Bool {
-    // Return true for default behavior, false to handle yourself
-    return true
-}
-```
-
-## 6. Clickable Links (Editable Text View)
-
-```swift
-// Links in editable text views don't respond to taps by default.
-// Use UITextViewDelegate to detect taps on link-attributed ranges:
-func textView(_ textView: UITextView, shouldInteractWith URL: URL,
-              in characterRange: NSRange,
-              interaction: UITextItemInteraction) -> Bool {
-    if interaction == .invokeDefaultAction {
-        UIApplication.shared.open(URL)
-        return false
-    }
-    return true
-}
-```
-
-## 7. Placeholder Text in UITextView
-
-```swift
-class PlaceholderTextView: UITextView {
-    var placeholder: String = "" {
-        didSet { setNeedsDisplay() }
-    }
-
-    var placeholderColor: UIColor = .placeholderText
-
-    override var text: String! {
-        didSet { setNeedsDisplay() }
-    }
-
-    override func draw(_ rect: CGRect) {
-        super.draw(rect)
-        guard text.isEmpty else { return }
-
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: font ?? .systemFont(ofSize: 17),
-            .foregroundColor: placeholderColor
-        ]
-        let inset = textContainerInset
-        let padding = textContainer.lineFragmentPadding
-        let placeholderRect = CGRect(
-            x: inset.left + padding,
-            y: inset.top,
-            width: bounds.width - inset.left - inset.right - 2 * padding,
-            height: bounds.height - inset.top - inset.bottom
-        )
-        placeholder.draw(in: placeholderRect, withAttributes: attrs)
-    }
-
-    // Call setNeedsDisplay in textDidChange notification
-}
-```
-
-## 8. Auto-Growing Text View
-
-```swift
-// The simplest approach: disable scrolling
-textView.isScrollEnabled = false
-// Auto Layout now uses intrinsicContentSize to grow the text view
-
-// With a maximum height:
-textView.isScrollEnabled = false
-
-// In your constraint setup:
-let heightConstraint = textView.heightAnchor.constraint(lessThanOrEqualToConstant: 200)
-heightConstraint.isActive = true
-
-// When content exceeds max height, enable scrolling:
-func textViewDidChange(_ textView: UITextView) {
-    let fittingSize = textView.sizeThatFits(
-        CGSize(width: textView.bounds.width, height: .greatestFiniteMagnitude)
-    )
-    textView.isScrollEnabled = fittingSize.height > 200
-}
-```
-
-## 9. Highlight Search Results
-
-```swift
-// TextKit 1 — temporary attributes (don't modify the model)
-func highlightOccurrences(of searchText: String, in textView: UITextView) {
-    guard let layoutManager = textView.layoutManager,
-          let text = textView.text else { return }
-
-    // Clear previous highlights
-    let fullRange = NSRange(location: 0, length: (text as NSString).length)
-    layoutManager.removeTemporaryAttribute(.backgroundColor, forCharacterRange: fullRange)
-
-    // Add new highlights
-    var searchRange = text.startIndex..<text.endIndex
-    while let range = text.range(of: searchText, options: .caseInsensitive, range: searchRange) {
-        let nsRange = NSRange(range, in: text)
-        layoutManager.addTemporaryAttribute(.backgroundColor,
-                                             value: UIColor.systemYellow,
-                                             forCharacterRange: nsRange)
-        searchRange = range.upperBound..<text.endIndex
-    }
-}
-```
-
-## 10. Strikethrough Text
-
-```swift
-// Single strikethrough
-let attrs: [NSAttributedString.Key: Any] = [
-    .strikethroughStyle: NSUnderlineStyle.single.rawValue,
-    .strikethroughColor: UIColor.red
-]
-
-// Double strikethrough
-let attrs: [NSAttributedString.Key: Any] = [
-    .strikethroughStyle: NSUnderlineStyle.double.rawValue
-]
-
-// Thick strikethrough
-let attrs: [NSAttributedString.Key: Any] = [
-    .strikethroughStyle: NSUnderlineStyle.thick.rawValue
-]
-```
-
-## 11. Letter Spacing
-
-```swift
-// Kern — fixed spacing in points (doesn't scale with font size)
-let attrs: [NSAttributedString.Key: Any] = [
-    .kern: 2.0  // 2pt between characters
-]
-
-// Tracking (iOS 14+) — scales with font size
-let attrs: [NSAttributedString.Key: Any] = [
-    .tracking: 0.5  // Proportional to font size
-]
-```
-
-**Use `.tracking` when possible** — it produces consistent results across font sizes.
-
-## 12. Different Line Heights Per Paragraph
-
-```swift
-func styledParagraph(_ text: String, lineHeight: CGFloat, font: UIFont) -> NSAttributedString {
-    let style = NSMutableParagraphStyle()
-    style.minimumLineHeight = lineHeight
-    style.maximumLineHeight = lineHeight
-
-    let baselineOffset = (lineHeight - font.lineHeight) / 2
-
-    return NSAttributedString(string: text + "\n", attributes: [
-        .font: font,
-        .paragraphStyle: style,
-        .baselineOffset: baselineOffset
-    ])
-}
-
-let result = NSMutableAttributedString()
-result.append(styledParagraph("Title", lineHeight: 36,
-              font: .boldSystemFont(ofSize: 28)))
-result.append(styledParagraph("Body text here...", lineHeight: 24,
-              font: .systemFont(ofSize: 17)))
-```
-
-## 13. Indent First Line
-
-```swift
-let style = NSMutableParagraphStyle()
-style.firstLineHeadIndent = 24  // Only first line indented
-```
-
-## 14. Bullet Lists (Manual, Cross-Platform)
-
-```swift
-func bulletList(_ items: [String], font: UIFont) -> NSAttributedString {
-    let bullet = "\u{2022}"  // bullet character
-    let indentWidth: CGFloat = 20
-
-    let style = NSMutableParagraphStyle()
-    style.headIndent = indentWidth
-    style.tabStops = [NSTextTab(textAlignment: .left, location: indentWidth)]
-    style.firstLineHeadIndent = 0
-
-    let result = NSMutableAttributedString()
-    for item in items {
-        let line = "\(bullet)\t\(item)\n"
-        result.append(NSAttributedString(string: line, attributes: [
-            .font: font,
-            .paragraphStyle: style
-        ]))
-    }
-    return result
-}
-```
-
-## 15. Read-Only Styled Text
-
-```swift
-textView.isEditable = false
-textView.isSelectable = true  // Allow copy
-textView.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
-textView.attributedText = styledContent
-textView.backgroundColor = .systemBackground
-```
-
-## 16. Auto-Detect Data
-
-```swift
-textView.isEditable = false
-textView.dataDetectorTypes = [.link, .phoneNumber, .address, .calendarEvent]
-// Text view automatically makes detected data tappable
-```
-
-**Must be non-editable.** Data detection is disabled when `isEditable = true`.
-
-## 17. Custom Cursor Color
-
-```swift
-textView.tintColor = .systemPurple  // Changes cursor AND selection handles
-```
-
-## 18. Disable Text Selection
-
-```swift
-// Option 1: Subclass
-class NonSelectableTextView: UITextView {
-    override var canBecomeFirstResponder: Bool { false }
-}
-
-// Option 2: Disable interaction
-textView.isSelectable = false
-textView.isEditable = false
-```
-
-## 19. Scroll to Range
-
-```swift
-// Scroll to make a character range visible
-let range = NSRange(location: 500, length: 0)
-textView.scrollRangeToVisible(range)
-
-// Scroll to bottom
-let bottom = NSRange(location: textView.text.count - 1, length: 1)
-textView.scrollRangeToVisible(bottom)
-```
-
-## 20. Get Current Line Number
-
-```swift
-func currentLineNumber(in textView: UITextView) -> Int {
-    guard let layoutManager = textView.layoutManager else { return 1 }
-
-    let cursorPosition = textView.selectedRange.location
-    var lineNumber = 1
-    let glyphIndex = layoutManager.glyphIndexForCharacter(at: cursorPosition)
-
-    layoutManager.enumerateLineFragments(
-        forGlyphRange: NSRange(location: 0, length: glyphIndex)
-    ) { _, _, _, _, _ in
-        lineNumber += 1
-    }
-
-    return lineNumber
-}
-```
+- Need architecture guidance, not a snippet -> `/skill apple-text` (router)
+- Need paragraph style details (line height, spacing) -> `/skill apple-text-line-breaking`
+- Need formatting attribute catalog -> `/skill apple-text-formatting-ref`
+- Need measurement or sizing -> `/skill apple-text-measurement`
 
 ## Related Skills and Agents
 
@@ -504,10 +71,14 @@ This page documents the `apple-text-recipes` workflow skill. Use it when the job
 
 ## Related
 
-- [`apple-text`](/apple-text/skills/apple-text/): Use when the user clearly has an Apple text-system problem but the right specialist skill is not obvious yet, or when the request mixes TextKit, text views, storage, layout, parsing, and Writing Tools. Reach for this router when you need the next best Apple-text skill, not when the subsystem is already clear.
-- [`apple-text-measurement`](/apple-text/skills/apple-text-measurement/): Use when measuring text size, calculating bounding rects, sizing text views to fit content, or getting line-level metrics. Covers NSString/NSAttributedString measurement, NSStringDrawingOptions, NSStringDrawingContext, TextKit 1 glyph-range measurement, TextKit 2 layout fragment measurement, and common sizing mistakes.
-- [`apple-text-exclusion-paths`](/apple-text/skills/apple-text-exclusion-paths/): Use when wrapping text around images or shapes, creating multi-column text layout, linking text containers for magazine/book layout, configuring NSTextContainer exclusion paths, or building non-rectangular text regions. Covers exclusionPaths, linked containers, multi-container layout in TextKit 1 and 2, and NSTextBlock/NSTextTable for in-text tables.
-- [`apple-text-line-breaking`](/apple-text/skills/apple-text-line-breaking/): Use when configuring line break behavior, hyphenation, truncation, line height, paragraph spacing, or tab stops. Covers NSParagraphStyle line properties, NSLineBreakStrategy, truncation tokens, maximumNumberOfLines, line height calculation, and common mistakes with line height multipliers.
+- [`apple-text`](/apple-text/skills/apple-text/): Use when the user has an Apple text-system problem but the right specialist skill is not obvious, or when the request mixes multiple text subsystems.
+- [`apple-text-measurement`](/apple-text/skills/apple-text-measurement/): Use when text is clipping, truncating unexpectedly, or when measuring text size, calculating boundingRect, or sizing views to fit text content.
+- [`apple-text-exclusion-paths`](/apple-text/skills/apple-text-exclusion-paths/): Use when text needs to wrap around images or shapes, building multi-column text layout, or using exclusion paths, linked containers, and NSTextTable.
+- [`apple-text-line-breaking`](/apple-text/skills/apple-text-line-breaking/): Use when configuring line break mode, hyphenation, truncation, line height, paragraph spacing, or tab stops via NSParagraphStyle.
+
+## Sidecar Files
+
+- `skills/apple-text-recipes/recipes.md`
 
 <details>
 <summary>Full SKILL.md source</summary>

@@ -1,6 +1,6 @@
 ---
 name: apple-text-fallback-triggers
-description: Use when the user needs to know exactly what makes TextKit 2 fall back to TextKit 1, or wants to audit code for fallback risk before it ships. Reach for this when the question is specifically about compatibility-mode triggers, not general text-system debugging.
+description: Use when debugging or preventing TextKit 2 fallback to TextKit 1 — complete trigger catalog, detection, and recovery
 license: MIT
 ---
 
@@ -118,6 +118,36 @@ TextKit 2 has **zero glyph APIs**. Any glyph access requires TextKit 1:
 | Quick Look preview of attachments | Bug in macOS 14 and earlier |
 | `drawInsertionPoint(in:color:turnedOn:)` override | Doesn't trigger fallback but **silently stops working** under TextKit 2 |
 | Any NSTextField accessing field editor's `layoutManager` | Falls back ALL field editors in that window |
+| Printing (before macOS 15) | Automatic fallback for print layout |
+
+### Field Editor Cascade (macOS Critical Gotcha)
+
+macOS uses a **shared `NSTextView`** as the field editor for ALL `NSTextField` instances in a window. If ANY field triggers a TextKit 1 fallback on the field editor, **every text field in that window loses TextKit 2**.
+
+```swift
+// ❌ One bad field editor access breaks ALL fields in the window
+let fieldEditor = window.fieldEditor(true, for: someTextField) as? NSTextView
+let lm = fieldEditor?.layoutManager  // Fallback — now ALL fields are TextKit 1
+```
+
+This cascade is especially dangerous with third-party libraries that inspect the field editor.
+
+**Detection (macOS):**
+```swift
+NotificationCenter.default.addObserver(
+    forName: NSTextView.willSwitchToNSLayoutManagerNotification,
+    object: nil, queue: .main  // nil = any text view, catches field editor
+) { notification in
+    print("⚠️ \(notification.object) switching to TK1")
+    Thread.callStackSymbols.forEach { print($0) }
+}
+```
+
+### macOS 26 Changes
+
+- `NSTextViewAllowsDowngradeToLayoutManager` user default — set to `NO` to prevent fallback entirely (crashes instead of silently degrading)
+- `includesTextListMarkers` property on `NSTextList` and `NSTextContentStorage` — controls whether list marker strings appear in attributed string contents. AppKit adopts TextKit 2 list behavior by default in macOS 26.
+- `.layoutManager` access on apps linked against macOS 26 SDK triggers a logged, tracked downgrade
 
 ## What Does NOT Cause Fallback
 

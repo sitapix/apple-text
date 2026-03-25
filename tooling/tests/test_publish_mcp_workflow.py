@@ -15,12 +15,6 @@ class PublishMcpWorkflowTests(unittest.TestCase):
         self.assertIn("run: npm publish --access public", workflow)
         self.assertNotIn("run: npm --prefix mcp-server publish", workflow)
 
-    def test_root_package_exposes_publish_scripts(self) -> None:
-        package_json = (ROOT / "package.json").read_text(encoding="utf-8")
-        self.assertIn('"mcp:pack:check": "npm --prefix mcp-server run pack:check"', package_json)
-        self.assertIn('"mcp:pack:dry-run": "npm --prefix mcp-server run pack:dry-run"', package_json)
-        self.assertIn('"mcp:publish:dry-run": "npm --prefix mcp-server run publish:dry-run"', package_json)
-
     def test_mcp_package_has_publish_config(self) -> None:
         package_json = (ROOT / "mcp-server" / "package.json").read_text(encoding="utf-8")
         self.assertIn('"bin"', package_json)

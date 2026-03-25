@@ -46,16 +46,12 @@ echo ""
 
 # 2. Rebuild all derived files
 echo "2. Rebuilding derived files..."
-node scripts/build-agents.mjs
-python3 tooling/scripts/docs/generate_docs.py
-python3 tooling/scripts/mcp/generate_mcp_annotations.py
-python3 tooling/scripts/mcp/generate_mcp_bundle.py
-npm --prefix mcp-server run build:bundle
+./scripts/regenerate.sh
 echo ""
 
 # 3. Run full validation
 echo "3. Running full validation..."
-npm run check
+./scripts/quality-check.sh --full
 echo ""
 
 # 4. Stage and commit

@@ -1,6 +1,6 @@
 ---
 name: apple-text-find-replace
-description: Use when implementing find and replace in Apple text editors, wiring UIFindInteraction or NSTextFinder, highlighting matches, or handling replace-all efficiently. Reach for this when the task is editor search UX and mechanics, not generic regex parsing alone.
+description: Use when implementing find and replace in text editors — UIFindInteraction, NSTextFinder, highlighting, or replace-all
 license: MIT
 ---
 

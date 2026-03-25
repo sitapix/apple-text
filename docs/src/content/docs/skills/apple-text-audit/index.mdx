@@ -1,6 +1,6 @@
 ---
 title: "Text Audit"
-description: "Use when the user wants a review-style scan of Apple text code for risks such as TextKit fallback, editing lifecycle bugs, deprecated APIs, performance traps, or Writing Tools breakage. Reach for this when the job is findings from real code, not a symptom-first debug answer or direct API lookup."
+description: "Use when reviewing Apple text code for TextKit fallback risk, editing lifecycle bugs, deprecated APIs, or Writing Tools breakage."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Workflow Skills" variant="tip" />
 
-Use when the user wants a review-style scan of Apple text code for risks such as TextKit fallback, editing lifecycle bugs, deprecated APIs, performance traps, or Writing Tools breakage. Reach for this when the job is findings from real code, not a symptom-first debug answer or direct API lookup.
+Use when reviewing Apple text code for TextKit fallback risk, editing lifecycle bugs, deprecated APIs, or Writing Tools breakage.
 
 **Family:** Front Door Skills
 
@@ -103,9 +103,9 @@ This page documents the `apple-text-audit` workflow skill. Use it when the job i
 
 ## Related
 
-- [`apple-text`](/apple-text/skills/apple-text/): Use when the user clearly has an Apple text-system problem but the right specialist skill is not obvious yet, or when the request mixes TextKit, text views, storage, layout, parsing, and Writing Tools. Reach for this router when you need the next best Apple-text skill, not when the subsystem is already clear.
-- [`apple-text-textkit-diag`](/apple-text/skills/apple-text-textkit-diag/): Use when the user starts with a broken Apple text symptom such as stale layout, fallback, crashes in editing, rendering artifacts, missing Writing Tools, or large-document slowness. Reach for this when debugging misbehavior, not when reviewing code systematically or looking up APIs.
-- [`apple-text-fallback-triggers`](/apple-text/skills/apple-text-fallback-triggers/): Use when the user needs to know exactly what makes TextKit 2 fall back to TextKit 1, or wants to audit code for fallback risk before it ships. Reach for this when the question is specifically about compatibility-mode triggers, not general text-system debugging.
+- [`apple-text`](/apple-text/skills/apple-text/): Use when the user has an Apple text-system problem but the right specialist skill is not obvious, or when the request mixes multiple text subsystems.
+- [`apple-text-textkit-diag`](/apple-text/skills/apple-text-textkit-diag/): Use when debugging broken text — stale layout, editing crashes, fallback, Writing Tools issues, or rendering artifacts.
+- [`apple-text-fallback-triggers`](/apple-text/skills/apple-text-fallback-triggers/): Use when debugging or preventing TextKit 2 fallback to TextKit 1 — complete trigger catalog, detection, and recovery.
 
 <details>
 <summary>Full SKILL.md source</summary>

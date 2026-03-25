@@ -1,6 +1,6 @@
 ---
 name: apple-text-interaction
-description: Use when customizing text-editor interactions in UIKit, such as selection behavior, edit menus, link taps, gestures, cursor appearance, or long-press actions. Reach for this when the problem is interaction behavior, not custom text input protocol plumbing.
+description: Use when customizing selection, edit menus, link taps, gestures, cursor appearance, or long-press actions in text editors
 license: MIT
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: apple-text-apple-docs
-description: Use when you need direct access to Apple-authored text-system documentation from the Xcode-bundled for-LLM markdown docs that MCP can expose at runtime, especially for AttributedString updates, styled TextEditor behavior, toolbars near editors, or official Swift diagnostic writeups. Reach for this when Apple’s wording matters more than repo-authored guidance.
+description: Use when you need official Apple-authored documentation, exact API signatures, or Swift diagnostic explanations from Xcode-bundled docs
 license: MIT
 ---
 
@@ -18,6 +18,12 @@ Use this skill when you want Apple-authored guidance from the Xcode-bundled Appl
 - You want authoritative code examples for `AttributedString`, styled `TextEditor`, toolbar behavior, or related text-system changes that ship in Xcode docs.
 
 Priority: Apple Text skills provide opinionated guidance and project-specific tradeoffs. Apple docs provide authoritative API detail. Use both together.
+
+## Quick Decision
+
+- Need opinionated guidance, not Apple's exact wording -> use the relevant Apple Text skill directly
+- Need symptom-first debugging -> `/skill apple-text-textkit-diag`
+- Need Apple-authored API detail or Swift diagnostic explanation -> stay here
 
 ## Example Prompts
 

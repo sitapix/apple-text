@@ -1,6 +1,6 @@
 ---
 title: "Text Measurement & Sizing Reference"
-description: "Use when measuring text size, calculating bounding rects, sizing text views to fit content, or getting line-level metrics. Covers NSString/NSAttributedString measurement, NSStringDrawingOptions, NSStringDrawingContext, TextKit 1 glyph-range measurement, TextKit 2 layout fragment measurement, and common sizing mistakes."
+description: "Use when text is clipping, truncating unexpectedly, or when measuring text size, calculating boundingRect, or sizing views to fit text content."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when measuring text size, calculating bounding rects, sizing text views to fit content, or getting line-level metrics. Covers NSString/NSAttributedString measurement, NSStringDrawingOptions, NSStringDrawingContext, TextKit 1 glyph-range measurement, TextKit 2 layout fragment measurement, and common sizing mistakes.
+Use when text is clipping, truncating unexpectedly, or when measuring text size, calculating boundingRect, or sizing views to fit text content.
 
 **Family:** TextKit Runtime And Layout
 
@@ -293,9 +293,9 @@ This page documents the `apple-text-measurement` reference skill. Use it when th
 
 ## Related
 
-- [`apple-text-textkit1-ref`](/apple-text/skills/apple-text-textkit1-ref/): Use when the user is already on TextKit 1 and needs exact NSLayoutManager, NSTextStorage, or NSTextContainer APIs, glyph and layout lifecycle details, temporary attributes, exclusion paths, or multi-container behavior. Reach for this when the stack choice is already made and the task is reference-level TextKit 1 mechanics, not stack selection or symptom-first debugging.
-- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when the user is already on TextKit 2 and needs exact NSTextLayoutManager, NSTextContentManager, NSTextContentStorage, viewport layout, fragment, rendering-attribute, or migration details. Reach for this when the stack choice is already made and the task is reference-level TextKit 2 mechanics, not stack selection or generic text-system debugging.
-- [`apple-text-viewport-rendering`](/apple-text/skills/apple-text-viewport-rendering/): Use when the user needs to understand how Apple text actually renders on screen: viewport layout, line-fragment geometry, rendering attributes, font substitution, fixAttributes, scroll-driven layout, or TextKit versus Core Text drawing differences. Reach for this when the issue is rendering mechanics, not generic layout invalidation.
+- [`apple-text-textkit1-ref`](/apple-text/skills/apple-text-textkit1-ref/): Use when working with TextKit 1 and you need NSLayoutManager, NSTextStorage, or NSTextContainer APIs — glyphs, temporary attributes, multi-container.
+- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when working with TextKit 2 and you need NSTextLayoutManager or NSTextContentManager APIs — viewport layout, fragments, rendering attributes.
+- [`apple-text-viewport-rendering`](/apple-text/skills/apple-text-viewport-rendering/): Use when working with viewport layout, line-fragment geometry, rendering attributes, font substitution, or scroll-driven layout.
 
 <details>
 <summary>Full SKILL.md source</summary>

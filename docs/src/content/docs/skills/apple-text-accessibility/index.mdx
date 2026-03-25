@@ -1,6 +1,6 @@
 ---
 title: "Accessibility in Custom Text Editors"
-description: "Use when making custom Apple text editors accessible, including VoiceOver behavior, Dynamic Type support in wrapped text views, accessibility value updates during editing, or text-specific accessibility traits and context. Reach for this when the problem is editor accessibility, not general color or sizing guidance alone."
+description: "Use when implementing VoiceOver, Dynamic Type, or accessibility traits in custom Apple text editors."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Workflow Skills" variant="tip" />
 
-Use when making custom Apple text editors accessible, including VoiceOver behavior, Dynamic Type support in wrapped text views, accessibility value updates during editing, or text-specific accessibility traits and context. Reach for this when the problem is editor accessibility, not general color or sizing guidance alone.
+Use when implementing VoiceOver, Dynamic Type, or accessibility traits in custom Apple text editors.
 
 **Family:** Editor Features And Interaction
 
@@ -285,9 +285,9 @@ This page documents the `apple-text-accessibility` workflow skill. Use it when t
 
 ## Related
 
-- [`apple-text-dynamic-type`](/apple-text/skills/apple-text-dynamic-type/): Use when implementing Dynamic Type for text views, scaling custom fonts, handling accessibility sizes, responding to content size category changes, or diagnosing what breaks at large sizes. Reach for this when the problem is text scaling and accessibility sizing, not VoiceOver or general accessibility.
-- [`apple-text-colors`](/apple-text/skills/apple-text-colors/): Use when choosing text colors, semantic colors, dark-mode behavior, wide-color or HDR text, or making attributed-text colors adapt correctly across UIKit, AppKit, and SwiftUI. Reach for this when the problem is specifically text color behavior, not broader formatting or typography.
-- [`apple-text-representable`](/apple-text/skills/apple-text-representable/): Use when embedding UITextView or NSTextView inside SwiftUI and the hard part is wrapper behavior: two-way binding, focus, sizing, cursor preservation, update loops, toolbars, or environment bridging. Reach for this when native SwiftUI text views are not enough, not when choosing between text stacks at a high level.
+- [`apple-text-dynamic-type`](/apple-text/skills/apple-text-dynamic-type/): Use when implementing Dynamic Type scaling, custom font metrics, accessibility sizes, or content size category changes.
+- [`apple-text-colors`](/apple-text/skills/apple-text-colors/): Use when choosing text colors, semantic colors, dark mode adaptation, or wide-color/HDR text across UIKit, AppKit, and SwiftUI.
+- [`apple-text-representable`](/apple-text/skills/apple-text-representable/): Use when wrapping UITextView or NSTextView in SwiftUI — binding, focus, sizing, cursor preservation, or update loops.
 
 <details>
 <summary>Full SKILL.md source</summary>

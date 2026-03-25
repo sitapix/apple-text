@@ -1,6 +1,6 @@
 ---
 name: apple-text-swiftui-bridging
-description: Use when deciding whether a text type or attribute model crosses the SwiftUI and TextKit boundary cleanly, such as AttributedString, NSAttributedString, UITextView, or SwiftUI Text. Reach for this when the main question is interoperability and support boundaries, not wrapper mechanics.
+description: Use when deciding whether a text type or attribute crosses the SwiftUI/TextKit boundary cleanly, or checking interoperability rules
 license: MIT
 ---
 

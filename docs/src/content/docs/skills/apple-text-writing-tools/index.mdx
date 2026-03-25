@@ -1,6 +1,6 @@
 ---
 title: "Writing Tools Integration"
-description: "Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging."
+description: "Use when integrating Writing Tools \u2014 writingToolsBehavior, UIWritingToolsCoordinator, protected ranges, or inline vs panel mode."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Workflow Skills" variant="tip" />
 
-Use when integrating Writing Tools into a native or custom text editor, configuring writingToolsBehavior, adopting UIWritingToolsCoordinator, protecting ranges, or debugging why Writing Tools do not appear. Reach for this when the problem is specifically Writing Tools, not generic editor debugging.
+Use when integrating Writing Tools — writingToolsBehavior, UIWritingToolsCoordinator, protected ranges, or inline vs panel mode.
 
 **Family:** Editor Features And Interaction
 
@@ -323,9 +323,9 @@ This page documents the `apple-text-writing-tools` workflow skill. Use it when t
 
 ## Related
 
-- [`apple-text`](/apple-text/skills/apple-text/): Use when the user clearly has an Apple text-system problem but the right specialist skill is not obvious yet, or when the request mixes TextKit, text views, storage, layout, parsing, and Writing Tools. Reach for this router when you need the next best Apple-text skill, not when the subsystem is already clear.
-- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when the user is already on TextKit 2 and needs exact NSTextLayoutManager, NSTextContentManager, NSTextContentStorage, viewport layout, fragment, rendering-attribute, or migration details. Reach for this when the stack choice is already made and the task is reference-level TextKit 2 mechanics, not stack selection or generic text-system debugging.
-- [`apple-text-fallback-triggers`](/apple-text/skills/apple-text-fallback-triggers/): Use when the user needs to know exactly what makes TextKit 2 fall back to TextKit 1, or wants to audit code for fallback risk before it ships. Reach for this when the question is specifically about compatibility-mode triggers, not general text-system debugging.
+- [`apple-text`](/apple-text/skills/apple-text/): Use when the user has an Apple text-system problem but the right specialist skill is not obvious, or when the request mixes multiple text subsystems.
+- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when working with TextKit 2 and you need NSTextLayoutManager or NSTextContentManager APIs — viewport layout, fragments, rendering attributes.
+- [`apple-text-fallback-triggers`](/apple-text/skills/apple-text-fallback-triggers/): Use when debugging or preventing TextKit 2 fallback to TextKit 1 — complete trigger catalog, detection, and recovery.
 
 <details>
 <summary>Full SKILL.md source</summary>

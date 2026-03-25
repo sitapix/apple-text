@@ -64,37 +64,11 @@ Subclass of `NSMutableAttributedString`. The canonical backing store for all Tex
 
 ### Required Primitives (When Subclassing)
 
-You **must** subclass NSTextStorage if you want a custom backing store. Implement these four:
+You **must** subclass NSTextStorage if you want a custom backing store. Override these four: `string`, `attributes(at:effectiveRange:)`, `replaceCharacters(in:with:)`, and `setAttributes(_:range:)`.
 
-```swift
-class CustomTextStorage: NSTextStorage {
-    private var storage = NSMutableAttributedString()
+**Critical:** Mutation overrides MUST call `edited(_:range:changeInLength:)` with the correct mask (`.editedCharacters`, `.editedAttributes`, or both) and wrap in `beginEditing()`/`endEditing()`. Without this, layout managers won't be notified.
 
-    override var string: String {
-        storage.string
-    }
-
-    override func attributes(at location: Int, effectiveRange range: NSRangePointer?) -> [NSAttributedString.Key: Any] {
-        storage.attributes(at: location, effectiveRange: range)
-    }
-
-    override func replaceCharacters(in range: NSRange, with str: String) {
-        beginEditing()
-        storage.replaceCharacters(in: range, with: str)
-        edited(.editedCharacters, range: range, changeInLength: (str as NSString).length - range.length)
-        endEditing()
-    }
-
-    override func setAttributes(_ attrs: [NSAttributedString.Key: Any]?, range: NSRange) {
-        beginEditing()
-        storage.setAttributes(attrs, range: range)
-        edited(.editedAttributes, range: range, changeInLength: 0)
-        endEditing()
-    }
-}
-```
-
-**Critical:** Mutation methods MUST call `edited(_:range:changeInLength:)` with the correct mask (`.editedCharacters`, `.editedAttributes`, or both). Without this, layout managers won't be notified.
+For the full subclass template, editing lifecycle diagram, and advanced patterns (piece table, CRDT), use the storage section in this reference.
 
 ### Editing Lifecycle
 
@@ -397,7 +371,7 @@ NSTextParagraph             (viewport management)
 
 ### Design Principles
 
-1. **Correctness** — No glyph APIs. International text (Arabic, Devanagari, CJK) handled correctly without character-glyph mapping assumptions.
+1. **Abstraction** — No glyph APIs. International text (Arabic, Devanagari, CJK) handled correctly without character-glyph mapping assumptions. Trade-off: glyph-level work requires TextKit 1 or Core Text.
 2. **Safety** — Immutable value semantics for elements and fragments. Thread-safe reads.
 3. **Performance** — Always non-contiguous. Only viewport text is laid out. O(viewport) not O(document).
 
@@ -646,8 +620,8 @@ Use this skill when the main question is how TextKit 2 viewport layout, fragment
 ## Quick Decision
 
 - Need full TextKit 2 object reference -> the textkit2 ref section in this reference
-- Need rendering and viewport behavior -> stay here
-- Need invalidation semantics rather than rendering pipeline details -> the layout invalidation section in this reference
+- Need to know **how** viewport layout, fragments, and rendering work -> stay here
+- Need to know **what triggers** layout recalculation (when to call `invalidateLayout`) -> the layout invalidation section in this reference
 
 ## Core Guidance
 
@@ -2326,6 +2300,36 @@ TextKit 2 has **zero glyph APIs**. Any glyph access requires TextKit 1:
 | Quick Look preview of attachments | Bug in macOS 14 and earlier |
 | `drawInsertionPoint(in:color:turnedOn:)` override | Doesn't trigger fallback but **silently stops working** under TextKit 2 |
 | Any NSTextField accessing field editor's `layoutManager` | Falls back ALL field editors in that window |
+| Printing (before macOS 15) | Automatic fallback for print layout |
+
+### Field Editor Cascade (macOS Critical Gotcha)
+
+macOS uses a **shared `NSTextView`** as the field editor for ALL `NSTextField` instances in a window. If ANY field triggers a TextKit 1 fallback on the field editor, **every text field in that window loses TextKit 2**.
+
+```swift
+// ❌ One bad field editor access breaks ALL fields in the window
+let fieldEditor = window.fieldEditor(true, for: someTextField) as? NSTextView
+let lm = fieldEditor?.layoutManager  // Fallback — now ALL fields are TextKit 1
+```
+
+This cascade is especially dangerous with third-party libraries that inspect the field editor.
+
+**Detection (macOS):**
+```swift
+NotificationCenter.default.addObserver(
+    forName: NSTextView.willSwitchToNSLayoutManagerNotification,
+    object: nil, queue: .main  // nil = any text view, catches field editor
+) { notification in
+    print("⚠️ \(notification.object) switching to TK1")
+    Thread.callStackSymbols.forEach { print($0) }
+}
+```
+
+### macOS 26 Changes
+
+- `NSTextViewAllowsDowngradeToLayoutManager` user default — set to `NO` to prevent fallback entirely (crashes instead of silently degrading)
+- `includesTextListMarkers` property on `NSTextList` and `NSTextContentStorage` — controls whether list marker strings appear in attributed string contents. AppKit adopts TextKit 2 list behavior by default in macOS 26.
+- `.layoutManager` access on apps linked against macOS 26 SDK triggers a logged, tracked downgrade
 
 ## What Does NOT Cause Fallback
 

@@ -1371,13 +1371,30 @@ NSTextViewDelegate is significantly richer than UITextViewDelegate:
 
 UITextViewDelegate is minimal, though iOS 17 text item interactions narrowed the gap.
 
-### Writing Tools (Equivalent)
+### Writing Tools (Mostly Equivalent, Key Differences)
 
-Both platforms have identical Writing Tools support as of iOS 18 / macOS 15:
-- `writingToolsBehavior` / `writingToolsAllowedInputOptions`
-- `isWritingToolsActive`
-- Matching delegate methods
-- Both require TextKit 2 for full inline experience
+Both platforms support Writing Tools as of iOS 18 / macOS 15. The system view API is parallel (`writingToolsBehavior`, `writingToolsAllowedInputOptions`, `isWritingToolsActive`, matching delegate methods). Both require TextKit 2 for full inline experience.
+
+**Differences for custom text engines:**
+
+| Aspect | UIKit | AppKit |
+|--------|-------|--------|
+| Coordinator class | `UIWritingToolsCoordinator` | `NSWritingToolsCoordinator` |
+| Attachment | `view.addInteraction(coordinator)` | `view.writingToolsCoordinator = coordinator` |
+| Preview type | `UITargetedPreview` | `NSTextPreview` |
+| Path type | `[UIBezierPath]` | `[NSBezierPath]` |
+| Menu integration | Automatic via `UITextInteraction` | Requires `NSServicesMenuRequestor` (`validRequestor(forSendType:returnType:)`, `writeSelection(to:types:)`, `readSelection(from:)`) |
+
+**macOS 26 additions:** `automaticallyInsertsWritingToolsItems` (default: true), `.writingToolsItems` for standard menu items, stock `NSToolbarItem` for toolbar integration.
+
+### Fallback Detection (Different Per Platform)
+
+| Aspect | UIKit | AppKit |
+|--------|-------|--------|
+| Detection | Check `textView.textLayoutManager == nil` | Same check + notifications |
+| Breakpoint | `_UITextViewEnablingCompatibilityMode` | Not available |
+| Notifications | None | `NSTextView.willSwitchToNSLayoutManagerNotification`, `NSTextView.didSwitchToNSLayoutManagerNotification` |
+| Console log | Yes (system logs the switch) | Yes |
 
 ## Quick Decision Guide
 
@@ -1433,11 +1450,14 @@ Need Writing Tools inline experience?
 Document > 10K lines and performance-critical?
     → Read the Performance Evidence section carefully
 
-Building new app, iOS 16+?
-    → Start with TextKit 2 (default). Fall back to TK1 only if needed.
+Reliable syntax highlighting via temporary attributes?
+    → NSLayoutManager (TextKit 1) — TK2 renderingAttributes have known bugs
 
-Maintaining legacy app?
-    → Stay on TextKit 1 unless you have a specific reason to migrate.
+Targeting iOS 15?
+    → NSLayoutManager (TextKit 1) — UITextView defaults to TK1 on iOS 15
+
+Building new app, iOS 16+, none of the above?
+    → TextKit 2 is the default and a good starting point.
 ```
 
 ## Core Guidance
@@ -1508,17 +1528,24 @@ Both systems struggle with this:
 
 **For either system:** Consider maintaining a separate line count (incremental update on edit) rather than querying the layout system.
 
+## TextKit 1 Is Not Deprecated
+
+**`NSLayoutManager` is a fully supported, non-deprecated API.** Apple has not deprecated the class or its core methods. Apple's own apps (Pages, Xcode, Notes) still use TextKit 1 as of 2025. TextEdit uses TextKit 2 but falls back to TextKit 1 for tables, page layout, and printing.
+
+TextKit 1 is not "legacy mode to maintain until you can migrate." It is the correct choice when your requirements include features that TextKit 2 does not support.
+
 ## When TextKit 1 Is the Right Choice
 
-1. **Glyph-level access** — Custom glyph substitution, glyph inspection, typography tools
-2. **Multi-page/multi-column layout** — NSTextLayoutManager supports only one container
-3. **Text tables** — NSTextTable/NSTextTableBlock are TextKit 1 only
-4. **Proven reliability for large documents** — Decades of battle-testing
-5. **Need printing** — Better pagination control (though TextKit 2 printing improving)
+1. **Glyph-level access** — Custom glyph substitution, glyph inspection, typography tools. TextKit 2 has zero glyph APIs; you'd need to drop to Core Text.
+2. **Multi-page/multi-column layout** — NSTextLayoutManager supports only one container. No workaround exists.
+3. **Text tables** — NSTextTable/NSTextTableBlock are TextKit 1 only (macOS). Text tables in content trigger automatic fallback.
+4. **Syntax highlighting via temporary attributes** — `addTemporaryAttribute` is rendering-only and well-tested. TextKit 2's `setRenderingAttributes` has known drawing bugs (FB9692714) and requires custom `NSTextLayoutFragment` subclasses as a workaround.
+5. **Printing** — TextKit 2 has limited printing support (iOS 18+/macOS 15+) but still falls back for multi-page pagination.
 6. **Custom NSLayoutManager subclass** — Significant investment in `drawGlyphs`, `drawBackground`, delegate methods
 7. **`shouldGenerateGlyphs` delegate** — No TextKit 2 equivalent
 8. **Exact document height required** — TextKit 1 contiguous layout gives exact height; TextKit 2 estimates
 9. **Scroll bar accuracy critical** — TextKit 2's estimated heights cause scroll bar instability
+10. **Targeting iOS 15** — UITextView defaults to TextKit 1 on iOS 15. ~2-3% of devices as of early 2026, but significant for apps with broad reach.
 
 ## When TextKit 2 Is the Right Choice
 
@@ -1602,6 +1629,12 @@ Use this skill when you want Apple-authored guidance from the Xcode-bundled Appl
 
 Priority: Apple Text skills provide opinionated guidance and project-specific tradeoffs. Apple docs provide authoritative API detail. Use both together.
 
+## Quick Decision
+
+- Need opinionated guidance, not Apple's exact wording -> use the relevant Apple Text skill directly
+- Need symptom-first debugging -> `/skill apple-text-textkit-diag`
+- Need Apple-authored API detail or Swift diagnostic explanation -> stay here
+
 ## Example Prompts
 
 - "What does Apple's AttributedString update doc say about the newest Foundation text changes?"
@@ -1652,7 +1685,7 @@ When runtime Apple docs are enabled in the current client, use them first. Treat
 
 # Core Text for TextKit Developers
 
-Use this skill when TextKit cannot do what you need and you must drop to Core Text for glyph-level control.
+Use this skill when you need glyph-level control — either because TextKit 2 has no glyph APIs, or because your use case (custom typesetting, font tables, per-glyph rendering) requires the Core Text layer directly.
 
 ## When to Use
 

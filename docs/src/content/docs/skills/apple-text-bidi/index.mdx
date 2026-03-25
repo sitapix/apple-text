@@ -1,6 +1,6 @@
 ---
 title: "Bidirectional Text and RTL"
-description: "Use when the user is dealing with bidirectional text, RTL languages, writing direction controls, mixed-direction content, or cursor and selection behavior in Arabic or Hebrew text. Reach for this when the problem is directionality and Unicode bidi behavior, not general localization."
+description: "Use when handling bidirectional text, RTL languages, writing direction controls, or cursor behavior in Arabic/Hebrew."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when the user is dealing with bidirectional text, RTL languages, writing direction controls, mixed-direction content, or cursor and selection behavior in Arabic or Hebrew text. Reach for this when the problem is directionality and Unicode bidi behavior, not general localization.
+Use when handling bidirectional text, RTL languages, writing direction controls, or cursor behavior in Arabic/Hebrew.
 
 **Family:** Text Model And Foundation Utilities
 
@@ -242,9 +242,9 @@ This page documents the `apple-text-bidi` reference skill. Use it when the subsy
 
 ## Related
 
-- [`apple-text-formatting-ref`](/apple-text/skills/apple-text-formatting-ref/): Use when the user already knows the formatting problem and needs exact text-formatting attributes such as NSAttributedString.Key values, underline styles, shadows, lists, tables, or view-compatibility rules. Reach for this when the job is verifying concrete formatting APIs, not choosing the text model.
-- [`apple-text-input-ref`](/apple-text/skills/apple-text-input-ref/): Use when the user already knows the problem lives in the text input system and needs exact UITextInput, UIKeyInput, NSTextInputClient, marked-text, or selection-UI behavior. Reach for this when implementing or debugging custom text input plumbing, not high-level editor interactions alone.
-- [`apple-text-interaction`](/apple-text/skills/apple-text-interaction/): Use when customizing text-editor interactions in UIKit, such as selection behavior, edit menus, link taps, gestures, cursor appearance, or long-press actions. Reach for this when the problem is interaction behavior, not custom text input protocol plumbing.
+- [`apple-text-formatting-ref`](/apple-text/skills/apple-text-formatting-ref/): Use when looking up NSAttributedString.Key values, underline styles, shadows, lists, tables, or view-compatibility rules.
+- [`apple-text-input-ref`](/apple-text/skills/apple-text-input-ref/): Use when implementing or debugging UITextInput, UIKeyInput, or NSTextInputClient — marked text, selection UI, custom input.
+- [`apple-text-interaction`](/apple-text/skills/apple-text-interaction/): Use when customizing selection, edit menus, link taps, gestures, cursor appearance, or long-press actions in text editors.
 
 <details>
 <summary>Full SKILL.md source</summary>

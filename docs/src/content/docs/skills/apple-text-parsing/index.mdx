@@ -1,6 +1,6 @@
 ---
 title: "Text Parsing Approaches"
-description: "Use when deciding between Swift Regex and NSRegularExpression, bridging regex results into NSRange for TextKit, or choosing the safest parsing approach for attributed-text manipulation and search or replace. Reach for this when the main task is parsing-strategy choice, not raw Foundation API lookup."
+description: "Use when deciding between Swift Regex and NSRegularExpression, bridging regex results to NSRange, or choosing a parsing strategy."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Decision Skills" variant="default" />
 
-Use when deciding between Swift Regex and NSRegularExpression, bridging regex results into NSRange for TextKit, or choosing the safest parsing approach for attributed-text manipulation and search or replace. Reach for this when the main task is parsing-strategy choice, not raw Foundation API lookup.
+Use when deciding between Swift Regex and NSRegularExpression, bridging regex results to NSRange, or choosing a parsing strategy.
 
 **Family:** Text Model And Foundation Utilities
 
@@ -277,9 +277,9 @@ This page documents the `apple-text-parsing` decision skill. Use it when the mai
 
 ## Related
 
-- [`apple-text-foundation-ref`](/apple-text/skills/apple-text-foundation-ref/): Use when the user already knows they need Foundation or NaturalLanguage text utilities such as NSRegularExpression, NSDataDetector, NLTagger, NLTokenizer, NSString bridging, text measurement, or embeddings. Reach for this when the job is applying a utility API directly, not choosing a parsing strategy at a high level.
-- [`apple-text-markdown`](/apple-text/skills/apple-text-markdown/): Use when the user is working with Markdown in SwiftUI Text or AttributedString and needs to know what renders, what is ignored, how PresentationIntent behaves, or when native Markdown stops being enough. Reach for this when the problem is Markdown semantics, not general attributed-string choice.
-- [`apple-text-attributed-string`](/apple-text/skills/apple-text-attributed-string/): Use when choosing between AttributedString and NSAttributedString, defining custom attributes, converting between them, or deciding which model should own rich text in a feature. Reach for this when the main task is the attributed-string model decision, not low-level formatting catalog lookup.
+- [`apple-text-foundation-ref`](/apple-text/skills/apple-text-foundation-ref/): Use when using Foundation or NaturalLanguage text utilities — NSRegularExpression, NSDataDetector, NLTagger, NLTokenizer, or NSString bridging.
+- [`apple-text-markdown`](/apple-text/skills/apple-text-markdown/): Use when working with Markdown in SwiftUI Text or AttributedString — what renders, PresentationIntent, or rendering gaps.
+- [`apple-text-attributed-string`](/apple-text/skills/apple-text-attributed-string/): Use when choosing between AttributedString and NSAttributedString, defining custom attributes, or converting between them.
 
 <details>
 <summary>Full SKILL.md source</summary>

@@ -1,6 +1,6 @@
 ---
 title: "Text Storage Architecture"
-description: "Use when the user is working on NSTextStorage, NSTextContentStorage, or NSTextContentManager and needs the text-model architecture, subclassing rules, delegate hooks, or processEditing lifecycle. Reach for this when the storage layer is the focus, not general TextKit choice or symptom-first debugging."
+description: "Use when working with NSTextStorage, NSTextContentStorage, or NSTextContentManager \u2014 subclassing, processEditing, or delegate hooks."
 ---
 
 import { Code, Badge } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import skillSource from './SKILL-source.txt?raw';
 
 <Badge text="Reference Skills" variant="note" />
 
-Use when the user is working on NSTextStorage, NSTextContentStorage, or NSTextContentManager and needs the text-model architecture, subclassing rules, delegate hooks, or processEditing lifecycle. Reach for this when the storage layer is the focus, not general TextKit choice or symptom-first debugging.
+Use when working with NSTextStorage, NSTextContentStorage, or NSTextContentManager — subclassing, processEditing, or delegate hooks.
 
 **Family:** Text Model And Foundation Utilities
 
@@ -355,9 +355,9 @@ This page documents the `apple-text-storage` reference skill. Use it when the su
 
 ## Related
 
-- [`apple-text-layout-invalidation`](/apple-text/skills/apple-text-layout-invalidation/): Use when text layout stays stale, metrics do not refresh, or the user needs the exact invalidation model in TextKit 1 or TextKit 2. Reach for this when the problem is layout recalculation and ensureLayout-style mechanics, not broader rendering or storage architecture.
-- [`apple-text-textkit1-ref`](/apple-text/skills/apple-text-textkit1-ref/): Use when the user is already on TextKit 1 and needs exact NSLayoutManager, NSTextStorage, or NSTextContainer APIs, glyph and layout lifecycle details, temporary attributes, exclusion paths, or multi-container behavior. Reach for this when the stack choice is already made and the task is reference-level TextKit 1 mechanics, not stack selection or symptom-first debugging.
-- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when the user is already on TextKit 2 and needs exact NSTextLayoutManager, NSTextContentManager, NSTextContentStorage, viewport layout, fragment, rendering-attribute, or migration details. Reach for this when the stack choice is already made and the task is reference-level TextKit 2 mechanics, not stack selection or generic text-system debugging.
+- [`apple-text-layout-invalidation`](/apple-text/skills/apple-text-layout-invalidation/): Use when debugging stale layout or working with ensureLayout, invalidateLayout, or the invalidation model in TextKit 1 and 2.
+- [`apple-text-textkit1-ref`](/apple-text/skills/apple-text-textkit1-ref/): Use when working with TextKit 1 and you need NSLayoutManager, NSTextStorage, or NSTextContainer APIs — glyphs, temporary attributes, multi-container.
+- [`apple-text-textkit2-ref`](/apple-text/skills/apple-text-textkit2-ref/): Use when working with TextKit 2 and you need NSTextLayoutManager or NSTextContentManager APIs — viewport layout, fragments, rendering attributes.
 
 ## Sidecar Files
 

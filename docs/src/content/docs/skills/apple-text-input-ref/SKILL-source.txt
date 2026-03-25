@@ -1,6 +1,6 @@
 ---
 name: apple-text-input-ref
-description: Use when the user already knows the problem lives in the text input system and needs exact UITextInput, UIKeyInput, NSTextInputClient, marked-text, or selection-UI behavior. Reach for this when implementing or debugging custom text input plumbing, not high-level editor interactions alone.
+description: Use when implementing or debugging UITextInput, UIKeyInput, or NSTextInputClient — marked text, selection UI, custom input
 license: MIT
 ---
 
@@ -367,6 +367,29 @@ editMenu.presentEditMenu(with: config)
 UITextView and UITextField get Scribble for free. Custom `UITextInput` views also get automatic support if the implementation is complete.
 
 For customization (`UIScribbleInteraction`) and non-text-input views that should accept handwriting (`UIIndirectScribbleInteraction`), see [scribble-patterns.md](scribble-patterns.md).
+
+## CJK / IME Gotchas
+
+These are common bugs specific to multistage input (Chinese, Japanese, Korean). They do not affect Latin-only input.
+
+1. **UIKeyInput alone cannot support CJK.** Multi-stage input methods require `setMarkedText`/`unmarkText`. If your view only adopts `UIKeyInput`, CJK keyboards will not work.
+
+2. **Two-way binding corruption with reactive frameworks.** Reactive bindings (RxSwift, Combine, SwiftUI `@Binding`) that read and write text on every change corrupt CJK composition. Japanese input produces garbled output. **Fix:** suppress text observation callbacks while `markedTextRange != nil`.
+
+   ```swift
+   func textDidChange() {
+       guard markedTextRange == nil else { return }  // Skip during composition
+       binding.wrappedValue = text
+   }
+   ```
+
+3. **`selectedRange` in `setMarkedText` is relative to marked text, not the document.** Add `markedTextRange.location` to get the document-relative cursor position.
+
+4. **`setMarkedText` can fire twice for a single composition event on iOS.** The first call may report an inconsistent state. Guard against re-entrant processing.
+
+5. **`deleteBackward()` counts grapheme clusters, but `adjustTextPosition(byCharacterOffset:)` counts UTF-16 code units.** Mixing these in CJK text (where one character can be multiple UTF-16 units) produces off-by-one cursor jumps.
+
+6. **NSTextInputClient (macOS) has an extra `replacementRange` parameter** in `setMarkedText(_:selectedRange:replacementRange:)`. Some Japanese IMEs use this for reconverting committed text. If you pass `NSRange(location: NSNotFound, length: 0)`, the system uses the current selection.
 
 ## Common Pitfalls
 

@@ -1,6 +1,6 @@
 ---
 name: apple-text-pasteboard
-description: Use when handling copy, cut, and paste in Apple text editors, including stripping formatting, sanitizing rich text, custom pasteboard types, pasted attachments, or NSItemProvider bridging. Reach for this when the problem is pasteboard behavior, not general editor interaction.
+description: Use when handling copy, cut, or paste in text editors — format stripping, rich text sanitization, custom pasteboard types
 license: MIT
 ---
 

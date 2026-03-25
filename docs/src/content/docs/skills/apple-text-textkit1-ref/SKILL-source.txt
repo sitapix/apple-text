@@ -1,12 +1,6 @@
 ---
 name: apple-text-textkit1-ref
-description: >
-  Use when the user is already on TextKit 1 and needs exact
-  NSLayoutManager, NSTextStorage, or NSTextContainer APIs, glyph and
-  layout lifecycle details, temporary attributes, exclusion paths, or
-  multi-container behavior. Reach for this when the stack choice is
-  already made and the task is reference-level TextKit 1 mechanics, not
-  stack selection or symptom-first debugging.
+description: Use when working with TextKit 1 and you need NSLayoutManager, NSTextStorage, or NSTextContainer APIs — glyphs, temporary attributes, multi-container
 license: MIT
 ---
 
@@ -51,37 +45,11 @@ Subclass of `NSMutableAttributedString`. The canonical backing store for all Tex
 
 ### Required Primitives (When Subclassing)
 
-You **must** subclass NSTextStorage if you want a custom backing store. Implement these four:
+You **must** subclass NSTextStorage if you want a custom backing store. Override these four: `string`, `attributes(at:effectiveRange:)`, `replaceCharacters(in:with:)`, and `setAttributes(_:range:)`.
 
-```swift
-class CustomTextStorage: NSTextStorage {
-    private var storage = NSMutableAttributedString()
+**Critical:** Mutation overrides MUST call `edited(_:range:changeInLength:)` with the correct mask (`.editedCharacters`, `.editedAttributes`, or both) and wrap in `beginEditing()`/`endEditing()`. Without this, layout managers won't be notified.
 
-    override var string: String {
-        storage.string
-    }
-
-    override func attributes(at location: Int, effectiveRange range: NSRangePointer?) -> [NSAttributedString.Key: Any] {
-        storage.attributes(at: location, effectiveRange: range)
-    }
-
-    override func replaceCharacters(in range: NSRange, with str: String) {
-        beginEditing()
-        storage.replaceCharacters(in: range, with: str)
-        edited(.editedCharacters, range: range, changeInLength: (str as NSString).length - range.length)
-        endEditing()
-    }
-
-    override func setAttributes(_ attrs: [NSAttributedString.Key: Any]?, range: NSRange) {
-        beginEditing()
-        storage.setAttributes(attrs, range: range)
-        edited(.editedAttributes, range: range, changeInLength: 0)
-        endEditing()
-    }
-}
-```
-
-**Critical:** Mutation methods MUST call `edited(_:range:changeInLength:)` with the correct mask (`.editedCharacters`, `.editedAttributes`, or both). Without this, layout managers won't be notified.
+For the full subclass template, editing lifecycle diagram, and advanced patterns (piece table, CRDT), use `/skill apple-text-storage`.
 
 ### Editing Lifecycle
 

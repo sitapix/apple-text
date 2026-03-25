@@ -1,6 +1,6 @@
 ---
 name: apple-text-viewport-rendering
-description: "Use when the user needs to understand how Apple text actually renders on screen: viewport layout, line-fragment geometry, rendering attributes, font substitution, fixAttributes, scroll-driven layout, or TextKit versus Core Text drawing differences. Reach for this when the issue is rendering mechanics, not generic layout invalidation."
+description: Use when working with viewport layout, line-fragment geometry, rendering attributes, font substitution, or scroll-driven layout
 license: MIT
 ---
 
@@ -17,8 +17,8 @@ Use this skill when the main question is how TextKit 2 viewport layout, fragment
 ## Quick Decision
 
 - Need full TextKit 2 object reference -> `/skill apple-text-textkit2-ref`
-- Need rendering and viewport behavior -> stay here
-- Need invalidation semantics rather than rendering pipeline details -> `/skill apple-text-layout-invalidation`
+- Need to know **how** viewport layout, fragments, and rendering work -> stay here
+- Need to know **what triggers** layout recalculation (when to call `invalidateLayout`) -> `/skill apple-text-layout-invalidation`
 
 ## Core Guidance
 

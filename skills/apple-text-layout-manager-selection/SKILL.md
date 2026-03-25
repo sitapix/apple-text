@@ -1,6 +1,6 @@
 ---
 name: apple-text-layout-manager-selection
-description: Use when the main task is choosing between TextKit 1 and TextKit 2, especially NSLayoutManager versus NSTextLayoutManager for performance, migration risk, large documents, or feature fit. Reach for this when the stack choice is still open, not when the user already needs API-level mechanics.
+description: Use when choosing between TextKit 1 and TextKit 2, evaluating migration risk, or comparing NSLayoutManager vs NSTextLayoutManager
 license: MIT
 ---
 
@@ -32,11 +32,14 @@ Need Writing Tools inline experience?
 Document > 10K lines and performance-critical?
     → Read the Performance Evidence section carefully
 
-Building new app, iOS 16+?
-    → Start with TextKit 2 (default). Fall back to TK1 only if needed.
+Reliable syntax highlighting via temporary attributes?
+    → NSLayoutManager (TextKit 1) — TK2 renderingAttributes have known bugs
 
-Maintaining legacy app?
-    → Stay on TextKit 1 unless you have a specific reason to migrate.
+Targeting iOS 15?
+    → NSLayoutManager (TextKit 1) — UITextView defaults to TK1 on iOS 15
+
+Building new app, iOS 16+, none of the above?
+    → TextKit 2 is the default and a good starting point.
 ```
 
 ## Core Guidance
@@ -107,17 +110,24 @@ Both systems struggle with this:
 
 **For either system:** Consider maintaining a separate line count (incremental update on edit) rather than querying the layout system.
 
+## TextKit 1 Is Not Deprecated
+
+**`NSLayoutManager` is a fully supported, non-deprecated API.** Apple has not deprecated the class or its core methods. Apple's own apps (Pages, Xcode, Notes) still use TextKit 1 as of 2025. TextEdit uses TextKit 2 but falls back to TextKit 1 for tables, page layout, and printing.
+
+TextKit 1 is not "legacy mode to maintain until you can migrate." It is the correct choice when your requirements include features that TextKit 2 does not support.
+
 ## When TextKit 1 Is the Right Choice
 
-1. **Glyph-level access** — Custom glyph substitution, glyph inspection, typography tools
-2. **Multi-page/multi-column layout** — NSTextLayoutManager supports only one container
-3. **Text tables** — NSTextTable/NSTextTableBlock are TextKit 1 only
-4. **Proven reliability for large documents** — Decades of battle-testing
-5. **Need printing** — Better pagination control (though TextKit 2 printing improving)
+1. **Glyph-level access** — Custom glyph substitution, glyph inspection, typography tools. TextKit 2 has zero glyph APIs; you'd need to drop to Core Text.
+2. **Multi-page/multi-column layout** — NSTextLayoutManager supports only one container. No workaround exists.
+3. **Text tables** — NSTextTable/NSTextTableBlock are TextKit 1 only (macOS). Text tables in content trigger automatic fallback.
+4. **Syntax highlighting via temporary attributes** — `addTemporaryAttribute` is rendering-only and well-tested. TextKit 2's `setRenderingAttributes` has known drawing bugs (FB9692714) and requires custom `NSTextLayoutFragment` subclasses as a workaround.
+5. **Printing** — TextKit 2 has limited printing support (iOS 18+/macOS 15+) but still falls back for multi-page pagination.
 6. **Custom NSLayoutManager subclass** — Significant investment in `drawGlyphs`, `drawBackground`, delegate methods
 7. **`shouldGenerateGlyphs` delegate** — No TextKit 2 equivalent
 8. **Exact document height required** — TextKit 1 contiguous layout gives exact height; TextKit 2 estimates
 9. **Scroll bar accuracy critical** — TextKit 2's estimated heights cause scroll bar instability
+10. **Targeting iOS 15** — UITextView defaults to TextKit 1 on iOS 15. ~2-3% of devices as of early 2026, but significant for apps with broad reach.
 
 ## When TextKit 2 Is the Right Choice
 

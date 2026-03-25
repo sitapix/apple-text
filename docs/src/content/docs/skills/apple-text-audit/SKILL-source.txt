@@ -1,6 +1,6 @@
 ---
 name: apple-text-audit
-description: Use when the user wants a review-style scan of Apple text code for risks such as TextKit fallback, editing lifecycle bugs, deprecated APIs, performance traps, or Writing Tools breakage. Reach for this when the job is findings from real code, not a symptom-first debug answer or direct API lookup.
+description: Use when reviewing Apple text code for TextKit fallback risk, editing lifecycle bugs, deprecated APIs, or Writing Tools breakage
 license: MIT
 metadata:
   context: fork
