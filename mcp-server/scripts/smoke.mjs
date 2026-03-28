@@ -236,10 +236,11 @@ try {
 
   const expectedAgents = [
     { name: "textkit-auditor", mustContain: "P0" },
-    { name: "textkit-reference", mustContain: "NSLayoutManager" },
-    { name: "editor-reference", mustContain: "Writing Tools" },
-    { name: "rich-text-reference", mustContain: "AttributedString" },
-    { name: "platform-reference", mustContain: "UIViewRepresentable" },
+    { name: "textkit-diagnostics", mustContain: "Diagnostic" },
+    { name: "textkit-reference", mustContain: "Routing Table" },
+    { name: "editor-reference", mustContain: "Routing Table" },
+    { name: "rich-text-reference", mustContain: "Routing Table" },
+    { name: "platform-reference", mustContain: "Routing Table" },
   ];
 
   for (const { name, mustContain } of expectedAgents) {

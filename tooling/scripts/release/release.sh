@@ -7,13 +7,13 @@
 #   2. Rebuilds all derived files (agents, docs, bundle, annotations)
 #   3. Runs full validation
 #   4. Commits everything
-#   5. Tags for both plugin and MCP
+#   5. Tags (vX.Y.Z)
 #   6. Pushes (pre-push hook runs full check again)
 #
 # After push, CI automatically:
 #   - Validates (validate.yml)
 #   - Deploys docs (deploy-docs.yml)
-#   - Publishes MCP to npm (publish-mcp.yml, triggered by mcp-v* tag)
+#   - Publishes MCP to npm (publish-mcp.yml, triggered by v* tag)
 
 set -eu
 
@@ -60,15 +60,14 @@ git add -A
 git commit -m "version ${VERSION}"
 echo ""
 
-# 5. Tag for both plugin and MCP
+# 5. Tag
 echo "5. Tagging..."
 git tag "v${VERSION}"
-git tag "mcp-v${VERSION}"
 echo ""
 
 # 6. Push
 echo "6. Pushing..."
-git push origin main "v${VERSION}" "mcp-v${VERSION}"
+git push origin main "v${VERSION}"
 echo ""
 
 echo "=== Released Apple Text v${VERSION} ==="

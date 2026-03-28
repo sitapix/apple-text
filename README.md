@@ -70,7 +70,7 @@ You can also use commands directly:
 
 ## How It Works
 
-39 skills organized into 5 lightweight entry points and 5 domain agents. Entry-point skills load inline for routing and quick answers. Domain agents handle deep API lookups in isolated context — the full reference runs in a separate agent and only the focused answer comes back.
+39 skills organized into 5 lightweight entry points and 6 agents. Entry-point skills load inline for routing and quick answers. Domain agents handle deep API lookups in isolated context, loading only the relevant skill on demand.
 
 ## Documentation
 

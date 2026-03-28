@@ -5,8 +5,8 @@ This repository is packaged for skill consumers first. Keep user-facing entry po
 ## Repo Layout
 
 - `skills/` contains all 39 skill source files (SKILL.md per directory)
-- `agents/` contains the textkit-auditor agent and 4 generated domain agents
-- `scripts/build-agents.mjs` combines skill content into domain agent files
+- `agents/` contains textkit-auditor, textkit-diagnostics, and 4 generated domain agents
+- `scripts/build-agents.mjs` generates routing-table domain agents from skill metadata
 - `.agents/` mirrors skills/ and agents/ via symlinks for Agent Skills discovery
 - `.claude-plugin/` contains marketplace metadata
 - `mcp-server/` contains the standalone MCP package
@@ -17,8 +17,9 @@ This repository is packaged for skill consumers first. Keep user-facing entry po
 Apple Text uses a two-tier architecture to keep AI context clean:
 
 - **5 registered skills** load inline in Claude Code (apple-text, apple-text-audit, apple-text-views, apple-text-textkit-diag, apple-text-recipes)
-- **4 domain agents** bundle the other 34 skills into isolated-context reference lookups (textkit-reference, editor-reference, rich-text-reference, platform-reference)
+- **4 domain agents** carry routing tables and load 1-2 skill files on demand in isolated context (textkit-reference, editor-reference, rich-text-reference, platform-reference)
 - **1 audit agent** (textkit-auditor) scans code for anti-patterns
+- **1 diagnostic agent** (textkit-diagnostics) debugs text symptoms with code inspection
 - **MCP server** serves all 39 skills directly for non-Claude clients
 
 The domain agents are **generated files** — do not edit them directly. Edit the source skill in `skills/*/SKILL.md` and run `node scripts/build-agents.mjs` to rebuild.
@@ -72,14 +73,21 @@ npm run agents:check   # verify generated agents match source skills
 ## Common Commands
 
 ```bash
-npm run lint              # repo hygiene + skill descriptions
-npm run agents:build      # rebuild domain agents from skills
-npm run agents:check      # fail if agents are stale vs source skills
+npm run build             # rebuild all derived files (agents, docs, MCP)
 npm run check             # full validation pipeline (~12s)
-npm run docs:generate     # refresh README and docs pages
-npm run mcp:generate      # refresh MCP annotations and bundle
-npm run mcp:build         # compile standalone MCP server
-npm run mcp:smoke         # routing + content tests against MCP server
+npm run test              # Python test suite
+npm run setup             # install deps + git hooks
+npm run setup:all         # setup + rebuild all derived files
+npm run mcp:dev           # start MCP server in dev mode
+npm run docs:dev          # generate docs + start Astro dev server
+```
+
+For individual steps:
+
+```bash
+node scripts/build-agents.mjs           # rebuild domain agents
+node scripts/build-agents.mjs --check   # verify agents are current
+./scripts/regenerate.sh --check         # verify all derived files
 ```
 
 ## Editing Rules
@@ -102,19 +110,12 @@ npm run mcp:smoke         # routing + content tests against MCP server
 
 The standalone package lives in `mcp-server/`. It serves all 39 skills to MCP clients.
 
-Typical validation:
+Typical validation (run from `mcp-server/`):
 
 ```bash
-npm run mcp:generate
-npm run mcp:build
-npm run mcp:smoke
-```
-
-For packaging dry runs:
-
-```bash
-npm run mcp:pack:dry-run
-npm run mcp:publish:dry-run
+npm run build:bundle      # compile + regenerate bundle
+npm run smoke             # routing + content smoke tests
+npm run pack:dry-run      # packaging dry run
 ```
 
 ## Releases
@@ -125,7 +126,7 @@ One command:
 npm run release -- X.Y.Z
 ```
 
-This bumps version across all manifests, rebuilds all derived files, runs full validation, commits, tags (`vX.Y.Z` + `mcp-vX.Y.Z`), and pushes.
+This bumps version across all manifests, rebuilds all derived files, runs full validation, commits, tags (`vX.Y.Z`), and pushes.
 
 CI then automatically deploys docs and publishes the MCP package to npm.
 

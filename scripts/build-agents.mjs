@@ -1,22 +1,33 @@
 #!/usr/bin/env node
 
 /**
- * Combines skill SKILL.md files into domain agent files.
+ * Generates lightweight domain agent files from skill metadata.
  *
- * Each domain agent bundles related reference/workflow content so the full
- * text runs inside an isolated agent context instead of polluting the main
- * conversation.
+ * Each domain agent carries a routing table and discovery instructions so
+ * it can read the relevant skill file(s) on demand, instead of bundling
+ * all skill content upfront. This cuts per-spawn token cost from ~25k to
+ * ~3-6k while keeping answers focused on the relevant content.
  *
  * Run:  node scripts/build-agents.mjs
+ * Check: node scripts/build-agents.mjs --check
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SKILLS_DIR = join(ROOT, "skills");
 const AGENTS_DIR = join(ROOT, "agents");
+const CATALOG_PATH = join(SKILLS_DIR, "catalog.json");
+
+// ── Load catalog for keyword aliases ───────────────────────────────────────
+
+const catalog = JSON.parse(readFileSync(CATALOG_PATH, "utf-8"));
+const catalogByName = new Map();
+for (const entry of catalog.skills) {
+  catalogByName.set(entry.name, entry);
+}
 
 // ── Domain agent definitions ────────────────────────────────────────────────
 
@@ -37,14 +48,17 @@ const agents = [
     ],
     preamble: `You answer specific questions about TextKit APIs and runtime behavior.
 
+**You MUST read the relevant skill file before answering.** Do not answer from memory or training knowledge. The skill files contain authoritative, up-to-date reference content that may differ from your training data.
+
 ## Instructions
 
 1. Read the user's question carefully.
-2. Find the relevant section in the reference material below.
-3. Return ONLY the information that answers their question — maximum 40 lines.
-4. Include exact API signatures, code examples, and gotchas when relevant.
-5. Do NOT dump all reference material — extract what is relevant.
-6. If the question is about choosing between TextKit 1 and TextKit 2, recommend the user consult the apple-text-views or apple-text-layout-manager-selection skill instead.`,
+2. Match it to one or two topics in the routing table below.
+3. Use Glob to find the skill file, then Read it. **This step is mandatory — never skip it.**
+4. Answer from the loaded skill content — maximum 40 lines.
+5. Include exact API signatures, code examples, and gotchas from the skill file.
+6. Do NOT dump all reference material — extract what is relevant.
+7. If the question is about choosing between TextKit 1 and TextKit 2, recommend the user consult the apple-text-views or apple-text-layout-manager-selection skill instead.`,
   },
   {
     name: "editor-reference",
@@ -64,13 +78,16 @@ const agents = [
     ],
     preamble: `You answer specific questions about text editor features and interaction APIs.
 
+**You MUST read the relevant skill file before answering.** Do not answer from memory or training knowledge. The skill files contain authoritative, up-to-date reference content that may differ from your training data.
+
 ## Instructions
 
 1. Read the user's question carefully.
-2. Find the relevant section in the reference material below.
-3. Return ONLY the information that answers their question — maximum 40 lines.
-4. Include exact API signatures, code examples, and gotchas when relevant.
-5. Do NOT dump all reference material — extract what is relevant.`,
+2. Match it to one or two topics in the routing table below.
+3. Use Glob to find the skill file, then Read it. **This step is mandatory — never skip it.**
+4. Answer from the loaded skill content — maximum 40 lines.
+5. Include exact API signatures, code examples, and gotchas from the skill file.
+6. Do NOT dump all reference material — extract what is relevant.`,
   },
   {
     name: "rich-text-reference",
@@ -87,14 +104,17 @@ const agents = [
     ],
     preamble: `You answer specific questions about rich text modeling, formatting, and content attributes.
 
+**You MUST read the relevant skill file before answering.** Do not answer from memory or training knowledge. The skill files contain authoritative, up-to-date reference content that may differ from your training data.
+
 ## Instructions
 
 1. Read the user's question carefully.
-2. Find the relevant section in the reference material below.
-3. Return ONLY the information that answers their question — maximum 40 lines.
-4. Include exact API signatures, code examples, and gotchas when relevant.
-5. Do NOT dump all reference material — extract what is relevant.
-6. When the user needs to choose between AttributedString and NSAttributedString, include the trade-off summary.`,
+2. Match it to one or two topics in the routing table below.
+3. Use Glob to find the skill file, then Read it. **This step is mandatory — never skip it.**
+4. Answer from the loaded skill content — maximum 40 lines.
+5. Include exact API signatures, code examples, and gotchas from the skill file.
+6. Do NOT dump all reference material — extract what is relevant.
+7. When the user needs to choose between AttributedString and NSAttributedString, include the trade-off summary.`,
   },
   {
     name: "platform-reference",
@@ -113,27 +133,22 @@ const agents = [
     ],
     preamble: `You answer specific questions about platform choices, SwiftUI bridging, and low-level text utilities.
 
+**You MUST read the relevant skill file before answering.** Do not answer from memory or training knowledge. The skill files contain authoritative, up-to-date reference content that may differ from your training data.
+
 ## Instructions
 
 1. Read the user's question carefully.
-2. Find the relevant section in the reference material below.
-3. Return ONLY the information that answers their question — maximum 40 lines.
-4. Include exact API signatures, code examples, and gotchas when relevant.
-5. Do NOT dump all reference material — extract what is relevant.
-6. For "which view should I use" questions, start with the view selection guidance.`,
+2. Match it to one or two topics in the routing table below.
+3. Use Glob to find the skill file, then Read it. **This step is mandatory — never skip it.**
+4. Answer from the loaded skill content — maximum 40 lines.
+5. Include exact API signatures, code examples, and gotchas from the skill file.
+6. Do NOT dump all reference material — extract what is relevant.
+7. For "which view should I use" questions, start with the view selection guidance.`,
   },
 ];
 
-// ── Skill-to-agent mapping (for rewriting cross-references) ─────────────────
+// ── Skills that remain registered (keep as `/skill` references) ─────────────
 
-const skillToAgent = new Map();
-for (const agent of agents) {
-  for (const skill of agent.skills) {
-    skillToAgent.set(skill, agent.name);
-  }
-}
-
-// Skills that remain registered (keep as `/skill` references)
 const registeredSkills = new Set([
   "apple-text",
   "apple-text-audit",
@@ -142,58 +157,107 @@ const registeredSkills = new Set([
   "apple-text-recipes",
 ]);
 
+// ─��� Skill-to-agent mapping (for cross-references) ───────────────────────────
+
+const skillToAgent = new Map();
+for (const agent of agents) {
+  for (const skill of agent.skills) {
+    skillToAgent.set(skill, agent.name);
+  }
+}
+
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function readSkillContent(skillName) {
+/**
+ * Read the description from a skill's SKILL.md frontmatter.
+ */
+function readSkillDescription(skillName) {
   const path = join(SKILLS_DIR, skillName, "SKILL.md");
   if (!existsSync(path)) {
     console.error(`  ⚠ Skill not found: ${path}`);
-    return null;
+    return "";
   }
   const raw = readFileSync(path, "utf-8");
-  // Strip YAML frontmatter
-  const match = raw.match(/^---\n[\s\S]*?\n---\n?([\s\S]*)$/);
-  return match ? match[1].trim() : raw.trim();
+  const match = raw.match(/^---\n[\s\S]*?description:\s*(.+)\n[\s\S]*?\n---/);
+  return match ? match[1].trim() : skillName;
 }
 
 /**
- * Rewrite `/skill apple-text-X` references:
- * - If skill is still registered, keep the `/skill` reference
- * - If skill is bundled in the SAME agent, replace with "see the X section above"
- * - If skill is bundled in a DIFFERENT agent, replace with "ask the Y agent"
+ * Detect sidecar .md files in a skill directory (files other than SKILL.md).
  */
-function rewriteCrossReferences(content, currentAgentName) {
-  return content.replace(
-    /`?\/skill (apple-text[\w-]*)`?/g,
-    (match, skillName) => {
-      if (registeredSkills.has(skillName)) {
-        return match; // keep registered skill references
-      }
-      const targetAgent = skillToAgent.get(skillName);
-      if (!targetAgent) {
-        return match; // unknown skill, leave as-is
-      }
-      // Derive a readable label from the skill name
-      const label = skillName
-        .replace("apple-text-", "")
-        .replace(/-/g, " ");
-      if (targetAgent === currentAgentName) {
-        return `the ${label} section in this reference`;
-      }
-      return `the **${targetAgent}** agent`;
-    },
-  );
+function detectSidecars(skillName) {
+  const dir = join(SKILLS_DIR, skillName);
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".md") && f !== "SKILL.md")
+    .sort();
 }
 
-function buildAgent(agent) {
-  const sections = [];
+/**
+ * Get keyword aliases from catalog.json for a skill.
+ */
+function getKeywords(skillName) {
+  const entry = catalogByName.get(skillName);
+  if (!entry || !entry.aliases) return [];
+  return entry.aliases;
+}
 
-  for (const skillName of agent.skills) {
-    const content = readSkillContent(skillName);
-    if (!content) continue;
-    sections.push(rewriteCrossReferences(content, agent.name));
+/**
+ * Build a routing table row for a single skill.
+ */
+function buildRoutingRow(skillName) {
+  const desc = readSkillDescription(skillName);
+  const keywords = getKeywords(skillName);
+  const sidecars = detectSidecars(skillName);
+
+  // Derive a readable topic label from the skill name
+  const topic = skillName
+    .replace("apple-text-", "")
+    .replace(/-/g, " ")
+    .replace(/\bref\b/, "reference");
+
+  const keywordStr = keywords.length > 0 ? keywords.join(", ") : "—";
+  const sidecarStr =
+    sidecars.length > 0 ? sidecars.join(", ") : "—";
+
+  return `| ${topic} | ${keywordStr} | \`${skillName}\` | ${sidecarStr} |`;
+}
+
+/**
+ * Build cross-reference section listing registered skills and other agents.
+ */
+function buildCrossReferences(currentAgentName) {
+  const lines = [];
+
+  lines.push("## Cross-References");
+  lines.push("");
+
+  // Registered skills
+  for (const skill of registeredSkills) {
+    const entry = catalogByName.get(skill);
+    if (entry) {
+      const desc = readSkillDescription(skill);
+      lines.push(`- \`/skill ${skill}\` — ${desc}`);
+    }
+  }
+  lines.push("");
+
+  // Other domain agents
+  for (const agent of agents) {
+    if (agent.name !== currentAgentName) {
+      lines.push(
+        `- **${agent.name}** agent — ${agent.description}`,
+      );
+    }
   }
 
+  return lines.join("\n");
+}
+
+/**
+ * Build the complete agent file content.
+ */
+function buildAgent(agent) {
   const frontmatter = [
     "---",
     `name: ${agent.name}`,
@@ -203,6 +267,7 @@ function buildAgent(agent) {
     "  - Glob",
     "  - Grep",
     "  - Read",
+    "  - Bash",
     "---",
   ].join("\n");
 
@@ -211,6 +276,37 @@ function buildAgent(agent) {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ")} Agent`;
 
+  // Routing table
+  const tableHeader = [
+    "## Routing Table",
+    "",
+    "| Topic | Keywords | Skill | Sidecars |",
+    "|-------|----------|-------|----------|",
+  ].join("\n");
+
+  const tableRows = agent.skills.map(buildRoutingRow).join("\n");
+
+  const discoveryInstructions = `## Required Workflow
+
+Your FIRST action on every question must be to locate and read the relevant skill file — before writing any text. You do not have the reference content in your instructions. It lives in external skill files that you must load.
+
+1. Match the question to one or two skill names in the routing table.
+2. **Discover the skills directory** — run this Bash command once, before your first Read:
+   \`\`\`bash
+   find "$HOME/.claude/plugins/marketplaces" -path "*/skills/apple-text-*/SKILL.md" 2>/dev/null | head -1 | sed 's|/apple-text-[^/]*/SKILL.md$||'
+   \`\`\`
+   Save the output as your skills base path (e.g. \`/Users/me/.claude/plugins/.../skills\`). If empty, fall back to \`skills\` in the current working directory (local development).
+3. **Read the skill file**: \`{skills-base}/{skill-name}/SKILL.md\`
+4. Write your answer using the loaded content. Maximum 40 lines.
+
+If the Sidecars column lists additional files, they are in the same directory as SKILL.md. Read sidecars only when the primary file is insufficient.
+
+**Never load more than 3 files.** For broad questions, answer from the most relevant skill and suggest follow-ups.
+
+**You have NO reference content embedded in these instructions.** If you answer without reading a file, your answer will lack the Apple-specific gotchas and edge cases that make it valuable.`;
+
+  const crossRefs = buildCrossReferences(agent.name);
+
   const body = [
     frontmatter,
     "",
@@ -218,9 +314,12 @@ function buildAgent(agent) {
     "",
     agent.preamble,
     "",
-    "---",
+    discoveryInstructions,
     "",
-    sections.join("\n\n---\n\n"),
+    tableHeader,
+    tableRows,
+    "",
+    crossRefs,
     "", // trailing newline
   ].join("\n");
 
@@ -232,8 +331,6 @@ function buildAgent(agent) {
 const checkMode = process.argv.includes("--check");
 
 if (checkMode) {
-  // Verify that generated agent files match what the source skills would produce.
-  // Exits non-zero if any agent is out of date.
   let stale = 0;
   for (const agent of agents) {
     const expected = buildAgent(agent);
@@ -250,7 +347,9 @@ if (checkMode) {
     }
   }
   if (stale > 0) {
-    console.error(`\nERROR: ${stale} agent file(s) out of date. Run: node scripts/build-agents.mjs`);
+    console.error(
+      `\nERROR: ${stale} agent file(s) out of date. Run: node scripts/build-agents.mjs`,
+    );
     process.exit(1);
   }
   console.log("Agent files are up to date.");
@@ -265,7 +364,10 @@ for (const agent of agents) {
   writeFileSync(outPath, output, "utf-8");
 
   const lineCount = output.split("\n").length;
-  console.log(`  ✓ ${agent.name}.md (${lineCount} lines, ${agent.skills.length} skills)`);
+  const charCount = output.length;
+  console.log(
+    `  ✓ ${agent.name}.md (${lineCount} lines, ~${Math.round(charCount / 4)} tokens, ${agent.skills.length} skills)`,
+  );
 }
 
 console.log("\nDone. Agent files written to agents/");

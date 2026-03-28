@@ -96,7 +96,7 @@ From the repo root:
 npm run release -- X.Y.Z
 ```
 
-This bumps all versions, rebuilds the bundle, runs full validation, commits, tags (`vX.Y.Z` + `mcp-vX.Y.Z`), and pushes. CI then publishes to npm.
+This bumps all versions, rebuilds the bundle, runs full validation, commits, tags (`vX.Y.Z`), and pushes. CI then publishes to npm.
 
 ### Manual Dry Run
 

@@ -73,7 +73,7 @@ Pick this path when you already know the subsystem and want a smaller local surf
 ## What You Get
 
 - **3 commands**: `/apple-text:ask` for plain-language questions.
-- **6 agents**: domain reference lookups in isolated context, plus `editor-reference` for code audits.
+- **6 agents**: 4 domain reference, plus code auditing and diagnostics in isolated context.
 - **Skills**: browse the [full catalog](/apple-text/skills/) or start from [problem routing](/apple-text/guide/problem-routing/).
 
 ## Troubleshooting

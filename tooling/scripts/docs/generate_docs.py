@@ -549,8 +549,9 @@ def render_readme(plugin: Dict, marketplace: Dict, skills: List[Dict], commands:
     plugin_title = display_plugin_name(plugin["name"])
     owner = marketplace["owner"]["name"]
     command_name = default_command_name(plugin, commands)
-    reference_agents = [a for a in agents if not _is_auditor_agent(a)]
+    reference_agents = [a for a in agents if _is_reference_agent(a)]
     auditor_agents = [a for a in agents if _is_auditor_agent(a)]
+    diagnostic_agents = [a for a in agents if _is_diagnostic_agent(a)]
 
     lines = [
         f"# {plugin_title}",
@@ -622,7 +623,7 @@ def render_readme(plugin: Dict, marketplace: Dict, skills: List[Dict], commands:
         "",
         "## How It Works",
         "",
-        f"{len(skills)} skills organized into 5 lightweight entry points and {len(reference_agents)} domain agents. Entry-point skills load inline for routing and quick answers. Domain agents handle deep API lookups in isolated context — the full reference runs in a separate agent and only the focused answer comes back.",
+        f"{len(skills)} skills organized into 5 lightweight entry points and {len(agents)} agents. Entry-point skills load inline for routing and quick answers. Domain agents handle deep API lookups in isolated context, loading only the relevant skill on demand.",
         "",
         "## Documentation",
         "",
@@ -749,7 +750,7 @@ def render_home(plugin: Dict, marketplace: Dict, skills: List[Dict], commands: L
 def render_setup_page(marketplace: Dict, plugin: Dict, skills: List[Dict], commands: List[Dict], agents: List[Dict]) -> str:
     owner = marketplace["owner"]["name"]
     command_name = default_command_name(plugin, commands)
-    agent_note = agents[0]["name"] if agents else "the bundled specialist agent"
+    reference_agents = [a for a in agents if _is_reference_agent(a)]
 
     lines = [
         "Use this page when you are installing Apple Text and choosing the fastest path into the skills.",
@@ -811,7 +812,7 @@ def render_setup_page(marketplace: Dict, plugin: Dict, skills: List[Dict], comma
         "## What You Get",
         "",
         f"- **{len(commands)} command{'s' if len(commands) != 1 else ''}**: `/{command_name}` for plain-language questions.",
-        f"- **{len(agents)} agent{'s' if len(agents) != 1 else ''}**: domain reference lookups in isolated context, plus `{agent_note}` for code audits.",
+        f"- **{len(agents)} agent{'s' if len(agents) != 1 else ''}**: {len(reference_agents)} domain reference, plus code auditing and diagnostics in isolated context.",
         f"- **Skills**: browse the [full catalog]({docs_page_link('skills', 'root')}) or start from [problem routing]({docs_page_link('guide/problem-routing', 'root')}).",
         "",
         "## Troubleshooting",
@@ -1020,6 +1021,14 @@ def _is_auditor_agent(agent: Dict) -> bool:
     return "auditor" in agent["name"]
 
 
+def _is_diagnostic_agent(agent: Dict) -> bool:
+    return "diagnostics" in agent["name"]
+
+
+def _is_reference_agent(agent: Dict) -> bool:
+    return not _is_auditor_agent(agent) and not _is_diagnostic_agent(agent)
+
+
 def _render_auditor_agent_card(agent: Dict) -> List[str]:
     return [
         f"## `{agent['name']}`",
@@ -1099,18 +1108,27 @@ def _render_reference_agent_card(agent: Dict) -> List[str]:
 def render_agents_page(root: Path, agents: List[Dict], skills: List[Dict]) -> str:
     audit_skill = find_skill(skills, "apple-text-audit")
     auditor_agents = [a for a in agents if _is_auditor_agent(a)]
-    reference_agents = [a for a in agents if not _is_auditor_agent(a)]
+    diagnostic_agents = [a for a in agents if _is_diagnostic_agent(a)]
+    reference_agents = [a for a in agents if _is_reference_agent(a)]
+    specialist_agents = auditor_agents + diagnostic_agents
+
+    specialist_parts = []
+    if auditor_agents:
+        specialist_parts.append(f"{len(auditor_agents)} code auditor{'s' if len(auditor_agents) != 1 else ''}")
+    if diagnostic_agents:
+        specialist_parts.append(f"{len(diagnostic_agents)} diagnostic{'s' if len(diagnostic_agents) != 1 else ''}")
+    specialist_summary = " and ".join(specialist_parts) if specialist_parts else ""
 
     lines = [
         'import { CardGrid, LinkCard } from "@astrojs/starlight/components";',
         "",
         '<div class="docs-intro">',
         "",
-        '<p class="docs-eyebrow">Reference and audit agents</p>',
+        '<p class="docs-eyebrow">Reference, audit, and diagnostic agents</p>',
         "",
-        '<p class="docs-lead">Agents run in isolated context. Use reference agents for focused API lookups and the auditor for code review findings.</p>',
+        '<p class="docs-lead">Agents run in isolated context. Use reference agents for focused API lookups, the auditor for code review, and the diagnostics agent for debugging broken text.</p>',
         "",
-        f"<p>Apple Text ships {len(agents)} agent{'s' if len(agents) != 1 else ''}: {len(reference_agents)} domain reference agent{'s' if len(reference_agents) != 1 else ''} and {len(auditor_agents)} code auditor{'s' if len(auditor_agents) != 1 else ''}.</p>",
+        f"<p>Apple Text ships {len(agents)} agents: {len(reference_agents)} domain reference agent{'s' if len(reference_agents) != 1 else ''}, {specialist_summary}.</p>",
         "",
         "</div>",
         "",
@@ -1119,16 +1137,16 @@ def render_agents_page(root: Path, agents: List[Dict], skills: List[Dict]) -> st
     if reference_agents:
         lines.extend(["## Domain Reference Agents", ""])
         lines.extend([
-            "Domain reference agents bundle related skills and answer specific questions in isolated context. "
+            "Domain reference agents load relevant skills on demand and answer specific questions in isolated context. "
             "The router skill and `/apple-text:ask` command launch these automatically when a reference lookup is needed.",
             "",
         ])
         for agent in reference_agents:
             lines.extend(_render_reference_agent_card(agent))
 
-    if auditor_agents:
-        lines.extend(["## Code Audit Agents", ""])
-        for agent in auditor_agents:
+    if specialist_agents:
+        lines.extend(["## Specialist Agents", ""])
+        for agent in specialist_agents:
             lines.extend(_render_auditor_agent_card(agent))
 
     if audit_skill is not None:
