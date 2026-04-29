@@ -1,13 +1,14 @@
 {
   "name": "apple-text",
   "version": "2.0.0",
-  "description": "Apple text system skills focused on TextKit, UITextView, NSTextView, attributed text, and Writing Tools",
+  "description": "Skills for Apple's text-editing stack: TextKit 1 and 2, UITextView, NSTextView, AttributedString, Core Text, Writing Tools, and the iOS 26 SwiftUI TextEditor.",
   "homepage": "https://github.com/sitapix/apple-text",
   "repository": "https://github.com/sitapix/apple-text",
   "author": {
     "name": "sitapix"
   },
   "license": "MIT",
+  "category": "development",
   "skills": [
     "./skills/txt-accessibility",
     "./skills/txt-appkit-vs-uikit",
@@ -49,7 +50,13 @@
     "./skills/txt-writing-tools"
   ],
   "keywords": [
-    "apple",
+    "claude-code",
+    "claude-skills",
+    "agent-skills",
+    "ios",
+    "macos",
+    "swift",
+    "swiftui",
     "textkit",
     "textkit1",
     "textkit2",
@@ -57,10 +64,11 @@
     "appkit",
     "uitextview",
     "nstextview",
-    "non-swiftui",
     "attributedstring",
+    "core-text",
     "writing-tools",
-    "ios",
-    "macos"
+    "rich-text",
+    "dynamic-type",
+    "accessibility"
   ]
 }

@@ -1,6 +1,10 @@
 # Apple Text
 
-Deep text-system expertise skills. Covers TextKit 1 and 2, UITextView, NSTextView, attributed strings, text input, Core Text, and Writing Tools.
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-compatible-d97757)](https://code.claude.com)
+[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-compatible-blue)](https://github.com/vercel-labs/skills)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+Skills for Apple's text-editing stack: TextKit 1 and 2, UITextView, NSTextView, AttributedString, Core Text, Writing Tools, and the iOS 26 SwiftUI TextEditor.
 
 ## Install
 
@@ -51,14 +55,14 @@ npx skills update
 | [txt-textkit-choice](skills/txt-textkit-choice/) | TextKit 1 vs TextKit 2 decisions and migration risk |
 | [txt-attributed-string](skills/txt-attributed-string/) | AttributedString vs NSAttributedString, custom attributes, conversions |
 | [txt-appkit-vs-uikit](skills/txt-appkit-vs-uikit/) | NSTextView vs UITextView capability comparison and porting notes |
-| [txt-swiftui-texteditor](skills/txt-swiftui-texteditor/) | SwiftUI TextEditor on iOS 26+ — when it replaces a UITextView wrapper |
+| [txt-swiftui-texteditor](skills/txt-swiftui-texteditor/) | SwiftUI TextEditor on iOS 26+, when it replaces a UITextView wrapper |
 
 ### TextKit & Layout
 
 | Skill | What it covers |
 |-------|----------------|
-| [txt-textkit1](skills/txt-textkit1/) | TextKit 1 APIs — NSLayoutManager, NSTextStorage, NSTextContainer, glyphs |
-| [txt-textkit2](skills/txt-textkit2/) | TextKit 2 APIs — NSTextLayoutManager, NSTextContentManager, viewport, fragments |
+| [txt-textkit1](skills/txt-textkit1/) | TextKit 1 APIs: NSLayoutManager, NSTextStorage, NSTextContainer, glyphs |
+| [txt-textkit2](skills/txt-textkit2/) | TextKit 2 APIs: NSTextLayoutManager, NSTextContentManager, viewport, fragments |
 | [txt-storage](skills/txt-storage/) | NSTextStorage, NSTextContentStorage, processEditing, delegate hooks |
 | [txt-viewport-rendering](skills/txt-viewport-rendering/) | Viewport layout, fragment geometry, rendering attributes, font substitution |
 | [txt-layout-invalidation](skills/txt-layout-invalidation/) | ensureLayout, invalidateLayout, debugging stale layout in TextKit 1 and 2 |
@@ -72,7 +76,7 @@ npx skills update
 | Skill | What it covers |
 |-------|----------------|
 | [txt-formatting](skills/txt-formatting/) | NSAttributedString.Key values, underline styles, shadows, lists, tables |
-| [txt-attachments](skills/txt-attachments/) | Embed images, custom views, Genmoji — NSTextAttachment, view providers, baseline |
+| [txt-attachments](skills/txt-attachments/) | Embed images, custom views, Genmoji via NSTextAttachment, view providers, baseline |
 | [txt-markdown](skills/txt-markdown/) | Markdown in SwiftUI Text and AttributedString, PresentationIntent, rendering gaps |
 | [txt-colors](skills/txt-colors/) | Text colors, semantic colors, dark mode, wide-color/HDR across UIKit, AppKit, SwiftUI |
 | [txt-foundation-utils](skills/txt-foundation-utils/) | NSRegularExpression, NSDataDetector, NLTagger, NLTokenizer, NSString bridging |
@@ -101,13 +105,13 @@ npx skills update
 | Skill | What it covers |
 |-------|----------------|
 | [txt-swiftui-bridging](skills/txt-swiftui-bridging/) | When a text type or attribute crosses the SwiftUI/TextKit boundary cleanly |
-| [txt-representable](skills/txt-representable/) | Wrap UITextView/NSTextView in SwiftUI — binding, focus, sizing, cursor preservation |
+| [txt-representable](skills/txt-representable/) | Wrap UITextView/NSTextView in SwiftUI: binding, focus, sizing, cursor preservation |
 
 ### Modern Features & Accessibility
 
 | Skill | What it covers |
 |-------|----------------|
-| [txt-writing-tools](skills/txt-writing-tools/) | Writing Tools — writingToolsBehavior, UIWritingToolsCoordinator, protected ranges |
+| [txt-writing-tools](skills/txt-writing-tools/) | Writing Tools: writingToolsBehavior, UIWritingToolsCoordinator, protected ranges |
 | [txt-dynamic-type](skills/txt-dynamic-type/) | Dynamic Type scaling, custom font metrics, content size category changes |
 | [txt-accessibility](skills/txt-accessibility/) | VoiceOver, Dynamic Type, accessibility traits in custom Apple text editors |
 | [txt-apple-docs](skills/txt-apple-docs/) | Apple-authored docs, exact API signatures, Swift diagnostic explanations |
@@ -134,7 +138,7 @@ Or invoke a skill directly:
 /txt-recipes        # quick how-do-I snippets
 ```
 
-Installed via the Claude Code plugin marketplace? Prefix each command with `apple-text:` — e.g. `/apple-text:txt-audit`.
+If you installed via the Claude Code plugin marketplace, prefix each command with `apple-text:`. For example, `/apple-text:txt-audit`.
 
 ## Acknowledgments
 
