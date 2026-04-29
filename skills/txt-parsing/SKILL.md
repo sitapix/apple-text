@@ -1,0 +1,272 @@
+---
+name: txt-parsing
+description: Use when deciding between Swift Regex and NSRegularExpression, bridging regex results to NSRange, or choosing a parsing strategy
+license: MIT
+---
+
+# Text Parsing Approaches
+
+Swift Regex vs NSRegularExpression — when to use which, performance, and TextKit integration.
+
+## When to Use
+
+- You are choosing between Swift Regex and `NSRegularExpression`.
+- You are wiring parsing into TextKit or editor code.
+- You need tradeoffs around ranges, performance, or deployment target.
+
+## Quick Decision
+
+```
+Deployment target iOS 16+?
+    YES → Need dynamic pattern (user input)?
+        YES → try Regex(userPattern) or NSRegularExpression (both runtime)
+        NO → Swift Regex literal (/pattern/) — compile-time validated
+    NO → NSRegularExpression (only option)
+
+Working with TextKit / NSAttributedString APIs (NSRange)?
+    → NSRegularExpression gives NSRange directly
+    → Swift Regex gives Range<String.Index> — needs NSRange(range, in:) bridge
+
+Complex parsing with dates/numbers?
+    → Swift Regex + Foundation parsers (.date(), .currency())
+
+Need readable, maintainable pattern?
+    → RegexBuilder DSL
+```
+
+## Core Guidance
+
+## Swift Regex (iOS 16+)
+
+### Three Creation Methods
+
+```swift
+// 1. Regex literal — compile-time validated, strongly typed
+let emailRegex = /(?<user>\w+)@(?<domain>\w+\.\w+)/
+
+// 2. String-based — runtime, AnyRegexOutput (loses type safety)
+let dynamicRegex = try Regex(patternString)
+
+// 3. RegexBuilder DSL — structured, self-documenting
+import RegexBuilder
+let emailPattern = Regex {
+    Capture { OneOrMore(.word) }
+    "@"
+    Capture {
+        OneOrMore(.word)
+        "."
+        OneOrMore(.word)
+    }
+}
+```
+
+### Pros
+
+- **Compile-time validation** — regex literals catch syntax errors at build time
+- **Type-safe captures** — output types known at compile time (`Regex<(Substring, Substring)>`)
+- **Unicode-correct** — matches extended grapheme clusters, canonical equivalence by default
+- **Foundation parser integration** — embed `.date()`, `.currency()`, `.localizedInteger`
+- **Native String indices** — results use `Range<String.Index>`
+- **RegexBuilder readability** — self-documenting, modular components
+- **Backtracking control** — `Local { }` for atomic groups, `.repetitionBehavior(.reluctant)`
+
+### Cons
+
+- **iOS 16+ only**
+- **No direct NSRange** — must bridge for TextKit APIs
+- **New engine** — less battle-tested than ICU
+- **`AnyRegexOutput`** — string-constructed regexes lose type safety
+- **Learning curve** — RegexBuilder is a new paradigm
+
+### String Methods
+
+```swift
+let text = "Hello World 2025"
+
+// Check if matches
+text.contains(/\d+/)
+
+// First match
+if let match = text.firstMatch(of: /(\d+)/) {
+    let number = match.1  // Substring "2025"
+}
+
+// All match ranges
+let ranges = text.ranges(of: /\w+/)
+
+// Replace
+let result = text.replacing(/\d+/, with: "YEAR")
+
+// Split
+let parts = text.split(separator: /\s+/)
+
+// Trim prefix
+let trimmed = text.trimmingPrefix(/Hello\s*/)
+```
+
+### Foundation Parser Integration
+
+```swift
+import RegexBuilder
+
+let dateRegex = Regex {
+    "Date: "
+    Capture { .date(.numeric, locale: .current, timeZone: .current) }
+}
+
+let currencyRegex = Regex {
+    "Price: "
+    Capture { .localizedCurrency(code: "USD") }
+}
+
+// Parses "Date: 03/15/2025" → actual Date object
+// Parses "Price: $42.99" → actual Decimal value
+```
+
+## NSRegularExpression
+
+### Pros
+
+- **All OS versions** — no deployment target restrictions
+- **NSRange native** — works directly with TextKit, NSAttributedString APIs
+- **ICU engine** — mature, well-tested, predictable performance
+- **Familiar syntax** — standard POSIX/ICU regex
+
+### Cons
+
+- **No compile-time checking** — pattern errors are runtime exceptions
+- **String-based** — no type safety, easy typos
+- **NSRange/String.Index mismatch** — UTF-16 offsets vs grapheme clusters
+- **Verbose API** — manual range extraction from `NSTextCheckingResult`
+- **No parser integration** — must post-process captures manually
+
+### TextKit Integration Pattern
+
+```swift
+let regex = try NSRegularExpression(pattern: "\\b(TODO|FIXME|HACK)\\b")
+let text = textStorage.string
+let fullRange = NSRange(location: 0, length: textStorage.length)
+
+regex.enumerateMatches(in: text, range: fullRange) { match, flags, stop in
+    guard let matchRange = match?.range else { return }
+    // Direct NSRange — works immediately with NSAttributedString
+    textStorage.addAttribute(.foregroundColor, value: UIColor.orange, range: matchRange)
+}
+```
+
+## Bridging Swift Regex to NSRange
+
+When using Swift Regex with TextKit/NSAttributedString APIs:
+
+```swift
+let text = textStorage.string
+
+// Swift Regex match
+if let match = text.firstMatch(of: /TODO:\s*(.+)/) {
+    // Convert Range<String.Index> → NSRange
+    let fullNSRange = NSRange(match.range, in: text)
+    let captureNSRange = NSRange(match.1.startIndex..<match.1.endIndex, in: text)
+
+    // Now use with NSAttributedString
+    textStorage.addAttribute(.foregroundColor, value: UIColor.red, range: fullNSRange)
+    textStorage.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 14), range: captureNSRange)
+}
+
+// All matches
+for match in text.matches(of: /\b\w+\b/) {
+    let nsRange = NSRange(match.range, in: text)
+    // Use nsRange with TextKit
+}
+```
+
+**Bridging cost:** `NSRange(range, in: string)` is O(1) for contiguous strings. Lightweight but adds a line per use.
+
+## Performance Comparison
+
+| Aspect | Swift Regex | NSRegularExpression |
+|--------|-------------|---------------------|
+| **Simple patterns** | Comparable | Comparable (ICU mature) |
+| **Complex backtracking** | `Local { }` prevents catastrophic backtracking | ICU may catastrophically backtrack |
+| **Compilation** | Regex literals: compile-time; Regex(string): runtime | Always runtime |
+| **Match execution** | New engine, improving | ICU, very optimized |
+| **Foundation parsers** | Single-pass date/currency extraction | Regex + manual parsing (two passes) |
+| **Hot loop** | Benchmark both | May have slight edge for simple patterns |
+
+**Practical advice:** For most text processing, the performance difference is negligible. Choose based on:
+1. Deployment target (iOS 16+ required for Swift Regex)
+2. Whether you need NSRange directly (TextKit) or Range<String.Index>
+3. Whether type-safe captures matter for your use case
+
+## Syntax Highlighting Pattern
+
+### With NSRegularExpression (TextKit-native)
+
+```swift
+func highlightSyntax(in range: NSRange, textStorage: NSTextStorage) {
+    let text = textStorage.string
+
+    // Keywords
+    let keywordRegex = try! NSRegularExpression(pattern: "\\b(func|var|let|class|struct|enum|if|else|for|while|return)\\b")
+    keywordRegex.enumerateMatches(in: text, range: range) { match, _, _ in
+        guard let r = match?.range else { return }
+        textStorage.addAttribute(.foregroundColor, value: UIColor.systemPink, range: r)
+    }
+
+    // Strings
+    let stringRegex = try! NSRegularExpression(pattern: "\"[^\"]*\"")
+    stringRegex.enumerateMatches(in: text, range: range) { match, _, _ in
+        guard let r = match?.range else { return }
+        textStorage.addAttribute(.foregroundColor, value: UIColor.systemRed, range: r)
+    }
+
+    // Comments
+    let commentRegex = try! NSRegularExpression(pattern: "//.*$", options: .anchorsMatchLines)
+    commentRegex.enumerateMatches(in: text, range: range) { match, _, _ in
+        guard let r = match?.range else { return }
+        textStorage.addAttribute(.foregroundColor, value: UIColor.systemGreen, range: r)
+    }
+}
+```
+
+### With Swift Regex (Bridged)
+
+```swift
+func highlightSyntax(in range: NSRange, textStorage: NSTextStorage) {
+    let text = textStorage.string
+    guard let swiftRange = Range(range, in: text) else { return }
+    let substring = text[swiftRange]
+
+    // Keywords — type-safe, compile-time validated
+    for match in substring.matches(of: /\b(func|var|let|class|struct|enum|if|else|for|while|return)\b/) {
+        let nsRange = NSRange(match.range, in: text)
+        textStorage.addAttribute(.foregroundColor, value: UIColor.systemPink, range: nsRange)
+    }
+}
+```
+
+## When to Use Which — Summary
+
+| Scenario | Recommendation |
+|----------|---------------|
+| iOS 16+ app, new code | Swift Regex |
+| Must support iOS 15 or earlier | NSRegularExpression |
+| Heavy TextKit integration (NSRange everywhere) | NSRegularExpression or Swift Regex with bridging |
+| Complex parsing with dates/numbers | Swift Regex (Foundation parsers) |
+| User-supplied patterns | Either (both support runtime patterns) |
+| Compile-time safety desired | Swift Regex literals |
+| Syntax highlighting in NSTextStorage delegate | NSRegularExpression (NSRange native, no bridging) |
+| Readable, maintainable complex patterns | RegexBuilder DSL |
+
+## Common Pitfalls
+
+1. **String.count ≠ NSString.length** — Swift Regex uses String.Index (grapheme clusters). NSRegularExpression uses NSRange (UTF-16). Always bridge explicitly.
+2. **Compiling NSRegularExpression in a loop** — Cache the compiled regex. Construction is expensive.
+3. **Forgetting `try` on Regex(string)** — Runtime-constructed regexes can throw.
+4. **Using `AnyRegexOutput` when type safety matters** — Prefer regex literals for static patterns.
+5. **Not using `.anchorsMatchLines` for per-line matching** — Default anchors match document start/end only.
+
+## Related Skills
+
+- Use `/skill txt-foundation-utils` for the wider Foundation text utility catalog.
+- Use `/skill txt-markdown` when the parsing question is really Markdown rendering or intent handling.
+- Use `/skill txt-attributed-string` when parsing output feeds attributed-text pipelines.

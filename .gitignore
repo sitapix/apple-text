@@ -1,12 +1,2 @@
 # OS
 .DS_Store
-
-# Generated local/build artifacts
-node_modules/
-.astro/
-.npm-cache/
-.uv-cache/
-dist/
-__pycache__/
-.pytest_cache/
-skills-ref.log

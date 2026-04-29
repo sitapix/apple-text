@@ -1,7 +1,0 @@
-node_modules/
-.astro/
-.agents/
-.uv-cache/
-dist/
-tests/
-__pycache__/

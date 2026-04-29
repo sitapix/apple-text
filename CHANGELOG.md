@@ -1,31 +1,45 @@
 # Changelog
 
-## Unreleased
+## 2.0.0
 
-### Architecture: Context-Aware Skill Delivery
+Breaking release. Reinstall required for v1.x users — every skill path changed.
 
-Restructured how skills are delivered to keep AI context clean:
+### Renamed all 38 specialist skills from `apple-text-*` to `txt-*`
 
-- Reduced registered Claude Code skills from 39 to 5 entry points (apple-text, apple-text-audit, apple-text-views, apple-text-textkit-diag, apple-text-recipes)
-- Created 4 domain agents (textkit-reference, editor-reference, rich-text-reference, platform-reference) that bundle the other 34 skills and run in isolated context
-- Added `scripts/build-agents.mjs` to generate domain agents from source skills, with `--check` mode for staleness validation
-- MCP server unchanged — still serves all 39 skills directly to MCP clients
-- Added routing tests (12 test cases) and content verification to MCP smoke tests
-- Updated README to explain the two-tier architecture (entry skills + domain agents)
-- Added `npm run release -- X.Y.Z` for one-command releases (version bump, rebuild, validate, commit, tag, push)
-- Split git hooks: pre-commit is fast (~2s, lint + regenerate), pre-push runs full validation (~12s)
+The router stays as `apple-text`. The specialist prefix changed for shorter `/skill` invocations.
 
-### Earlier Unreleased
+Notable renames beyond the prefix swap:
 
-- Split `apple-text-views` into a short `SKILL.md` plus `reference.md` and `examples.md` to improve retrieval quality.
-- Added `/skill apple-text-audit` as a public audit entry point backed by the `textkit-auditor` agent.
-- Added `/apple-text:ask` as a natural-language command that routes users to the right Apple Text skill or agent.
-- Added marketplace metadata for agents, license, author, and tags.
-- Added a plugin hook and helper script to rerun validation after relevant edits.
-- Hardened `tooling/scripts/quality/validate_plugin.py` with `SKILL.md` size checks, markdown link validation, and manifest metadata drift checks.
-- Added `docs/src/content/docs/example-conversations.md` and `MARKETPLACE-SUBMISSION.md`.
-- Added a VitePress docs site scaffold with guide, catalog, command, agent, and maintenance pages.
-- Added `tooling/scripts/dev/install_skill.py` for selective skill installs and GitHub Pages deployment for the docs site.
+- `apple-text-textkit-diag` → `txt-textkit-debug`
+- `apple-text-attachments-ref` → `txt-attachments`
+- `apple-text-formatting-ref` → `txt-formatting`
+- `apple-text-foundation-ref` → `txt-foundation-utils`
+- `apple-text-input-ref` → `txt-input`
+- `apple-text-textkit1-ref` → `txt-textkit1`
+- `apple-text-textkit2-ref` → `txt-textkit2`
+- `apple-text-texteditor-26` → `txt-swiftui-texteditor`
+- `apple-text-layout-manager-selection` → `txt-textkit-choice`
+
+### Repo restructure
+
+- Removed the `apple-text` router skill. Specialists auto-activate from descriptions or are invoked directly. Skill count: 38.
+- Removed the domain-agent layer (`textkit-reference`, `editor-reference`, `rich-text-reference`, `platform-reference`, `textkit-auditor`).
+- Removed generated docs site, MCP server, build/validation tooling, and contributor scripts. Repo is now a flat skills collection conformant with the [Vercel skills CLI](https://github.com/vercel-labs/skills).
+- Plugin manifests (`plugin.json`, `marketplace.json`) now list all 39 skills instead of just 5 entry points.
+- README adopted a categorized skills table.
+
+### Reinstall
+
+```sh
+npx skills add sitapix/apple-text
+```
+
+Or via Claude Code:
+
+```sh
+/plugin marketplace add sitapix/apple-text
+/plugin install apple-text@apple-text
+```
 
 ## 1.0.0
 

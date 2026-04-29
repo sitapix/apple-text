@@ -1,0 +1,242 @@
+---
+name: txt-textkit-choice
+description: Use when choosing between TextKit 1 and TextKit 2, evaluating migration risk, or comparing NSLayoutManager vs NSTextLayoutManager
+license: MIT
+---
+
+# Layout Manager Selection Guide
+
+Use this skill when the main question is whether the editor should use TextKit 1 or TextKit 2.
+
+## When to Use
+
+- You are choosing between `NSLayoutManager` and `NSTextLayoutManager`.
+- You are evaluating migration risk or performance tradeoffs.
+- You need a recommendation tied to feature requirements.
+
+## Quick Decision
+
+```
+Need glyph-level access?
+    YES → NSLayoutManager (TextKit 1)
+
+Need multi-page/multi-column layout?
+    YES → NSLayoutManager (TextKit 1)
+
+Need text tables (NSTextTable)?
+    YES → NSLayoutManager (TextKit 1)
+
+Need Writing Tools inline experience?
+    YES → NSTextLayoutManager (TextKit 2)
+
+Document > 10K lines and performance-critical?
+    → Read the Performance Evidence section carefully
+
+Reliable syntax highlighting via temporary attributes?
+    → NSLayoutManager (TextKit 1) — TK2 renderingAttributes have known bugs
+
+Targeting iOS 15?
+    → NSLayoutManager (TextKit 1) — UITextView defaults to TK1 on iOS 15
+
+Building new app, iOS 16+, none of the above?
+    → TextKit 2 is the default and a good starting point.
+```
+
+## Core Guidance
+
+## The Two Layout Managers
+
+| Aspect | NSLayoutManager (TK1) | NSTextLayoutManager (TK2) |
+|--------|----------------------|--------------------------|
+| **Available** | iOS 7+ / macOS 10.0+ | iOS 15+ / macOS 12+ |
+| **Layout model** | Contiguous (optional non-contiguous) | Always non-contiguous (viewport) |
+| **Abstraction** | Glyph-based | Element/fragment-based |
+| **Text containers** | Multiple | Single only |
+| **Performance model** | O(document) or O(visible) | O(viewport) theoretical |
+| **International text** | Manual glyph handling | Correct by design |
+| **Writing Tools** | Panel only | Full inline |
+| **Custom rendering** | Subclass + drawGlyphs | Subclass NSTextLayoutFragment |
+| **Overlay styling** | Temporary attributes | Rendering attributes |
+| **Printing** | Full support | Limited (iOS 18+) |
+
+## Performance Evidence
+
+### Apple's Claims (WWDC21)
+
+> *"TextKit 2 is extremely fast for an incredibly wide range of scenarios, from quickly rendering labels that are only a few lines each to laying out documents that are hundreds of megabytes being scrolled through at interactive rates."*
+
+### Developer Experience (Real-World)
+
+**ChimeHQ TextViewBenchmark (macOS 14 beta):**
+> *"TextKit 1 is extremely fast and TextKit 2 actually even a small amount faster."*
+
+For comparable document sizes on recent macOS, TextKit 2 has reached parity or slightly better.
+
+**Large document scrolling (Apple Developer Forums, multiple reports):**
+- TextKit 2 scrolling performance degrades above ~3,000 lines
+- 10K+ lines described as "an absolute nightmare" with TextKit 2
+- Switching to TextKit 1 restored smooth scrolling with 1 million characters
+- These reports are primarily from iOS 16/17 era; improvements in each release
+
+**Memory usage (developer measurement):**
+- ~0.5 GB with TextKit 1 custom labels
+- ~1.2 GB with TextKit 2 for same content
+- TextKit 2's immutable object model (NSTextLayoutFragment, NSTextLineFragment) has overhead
+
+**Apple's own apps:**
+- Pages, Xcode, Notes: still use TextKit 1 (as of reports through 2025)
+- TextEdit: uses TextKit 2 but falls back for tables, page layout, printing
+
+### Short Text (Labels, Chat Bubbles)
+
+TextKit 2 wins here:
+- No performance penalty for viewport management on short text
+- Correctness benefits for international text
+- Modern API with rendering attributes
+
+### Large Documents (10K+ lines)
+
+Mixed results:
+- **Theoretical advantage:** Viewport layout should scale to any document size
+- **Practical issues:** Scroll bar jiggle (estimated heights), jump-to-position inaccuracy, height estimation instability
+- **Improving per OS release:** macOS 14+ shows near-parity in benchmarks
+- **Recommendation:** Test on your target OS version with your actual content
+
+### Line Counting
+
+Both systems struggle with this:
+- **TextKit 1:** `numberOfGlyphs` + enumeration. Requires full layout with `allowsNonContiguousLayout = false`, or approximate with non-contiguous.
+- **TextKit 2:** Must enumerate ALL layout fragments with `.ensuresLayout`. Defeats viewport optimization.
+
+**For either system:** Consider maintaining a separate line count (incremental update on edit) rather than querying the layout system.
+
+## Creating Each Stack Explicitly
+
+Both `UITextView` and `NSTextView` default to TextKit 2 on iOS 16+/macOS 13+. Force a specific stack only when you have a documented reason.
+
+### TextKit 1 (explicit)
+
+```swift
+// UIKit: usingTextLayoutManager: false forces NSLayoutManager
+let textView = UITextView(usingTextLayoutManager: false)
+// textView.textLayoutManager == nil from the start; no fallback risk
+
+// Manual TK1 construction (custom views)
+let storage = NSTextStorage()
+let layoutManager = NSLayoutManager()
+layoutManager.allowsNonContiguousLayout = true   // critical for scroll perf
+let container = NSTextContainer()
+storage.addLayoutManager(layoutManager)
+layoutManager.addTextContainer(container)
+```
+
+### TextKit 2 (default)
+
+```swift
+// UIKit: default initializer uses NSTextLayoutManager
+let textView = UITextView()
+assert(textView.textLayoutManager != nil)
+
+// Manual TK2 construction (custom views)
+let contentStorage = NSTextContentStorage()
+let layoutManager = NSTextLayoutManager()
+let container = NSTextContainer()
+contentStorage.addTextLayoutManager(layoutManager)
+layoutManager.textContainer = container
+contentStorage.attributedString = NSAttributedString(string: "Hello")
+```
+
+### Detecting Which Stack You're On
+
+```swift
+func currentStack(for textView: UITextView) -> String {
+    textView.textLayoutManager != nil ? "TextKit 2" : "TextKit 1"
+}
+
+// ⚠️ Never test by reading `textView.layoutManager` first —
+// that access ITSELF triggers fallback. Always check textLayoutManager.
+```
+
+## TextKit 1 Is Not Deprecated
+
+**`NSLayoutManager` is a fully supported, non-deprecated API.** Apple has not deprecated the class or its core methods. Apple's own apps (Pages, Xcode, Notes) still use TextKit 1 as of 2025. TextEdit uses TextKit 2 but falls back to TextKit 1 for tables, page layout, and printing.
+
+TextKit 1 is not "legacy mode to maintain until you can migrate." It is the correct choice when your requirements include features that TextKit 2 does not support.
+
+## When TextKit 1 Is the Right Choice
+
+1. **Glyph-level access** — Custom glyph substitution, glyph inspection, typography tools. TextKit 2 has zero glyph APIs; you'd need to drop to Core Text.
+2. **Multi-page/multi-column layout** — NSTextLayoutManager supports only one container. No workaround exists.
+3. **Text tables** — NSTextTable/NSTextTableBlock are TextKit 1 only (macOS). Text tables in content trigger automatic fallback.
+4. **Syntax highlighting via temporary attributes** — `addTemporaryAttribute` is rendering-only and well-tested. TextKit 2's `setRenderingAttributes` has known drawing bugs (FB9692714) and requires custom `NSTextLayoutFragment` subclasses as a workaround.
+5. **Printing** — TextKit 2 has limited printing support (iOS 18+/macOS 15+) but still falls back for multi-page pagination.
+6. **Custom NSLayoutManager subclass** — Significant investment in `drawGlyphs`, `drawBackground`, delegate methods
+7. **`shouldGenerateGlyphs` delegate** — No TextKit 2 equivalent
+8. **Exact document height required** — TextKit 1 contiguous layout gives exact height; TextKit 2 estimates
+9. **Scroll bar accuracy critical** — TextKit 2's estimated heights cause scroll bar instability
+10. **Targeting iOS 15** — UITextView defaults to TextKit 1 on iOS 15. ~2-3% of devices as of early 2026, but significant for apps with broad reach.
+
+## When TextKit 2 Is the Right Choice
+
+1. **New iOS 16+ app** — It's the default; fighting it adds complexity
+2. **Writing Tools (full inline)** — Requires TextKit 2
+3. **International text correctness** — Arabic, Devanagari, CJK handled correctly without glyph assumptions
+4. **Custom rendering via fragments** — Cleaner API than drawGlyphs subclassing
+5. **Short text (labels, chat bubbles)** — No downside, cleaner API
+6. **Viewport-based display of large content** — When you don't need exact document metrics
+7. **Custom text elements** — NSTextContentManager subclass for non-attributed-string backends
+
+## Migration Decision Framework
+
+### Don't Migrate If:
+
+- App works well with TextKit 1
+- You rely on glyph APIs extensively
+- You need multi-container layout
+- No specific TextKit 2 feature is required
+- Target OS includes iOS 15 or earlier
+
+### Consider Migrating If:
+
+- Users need Writing Tools inline experience
+- International text rendering issues in TextKit 1
+- Building new text features from scratch
+- Want viewport performance for very large documents
+- Need rendering attributes (cleaner than temporary attributes)
+
+### Migration Strategy
+
+1. **Check `textLayoutManager` first** — write all new code to check TextKit 2 availability
+2. **Dual code paths** — support both TK1 and TK2 during transition
+3. **Test fallback** — ensure your app handles fallback gracefully
+4. **Migrate incrementally** — one feature at a time, not big bang
+
+```swift
+// Dual code path pattern
+if let textLayoutManager = textView.textLayoutManager {
+    // TextKit 2 path
+    textLayoutManager.enumerateTextLayoutFragments(from: nil, options: [.ensuresLayout]) { fragment in
+        // ...
+        return true
+    }
+} else {
+    // TextKit 1 fallback
+    let layoutManager = textView.layoutManager!
+    layoutManager.ensureLayout(for: textView.textContainer)
+    // ...
+}
+```
+
+## Common Pitfalls
+
+1. **Migrating without a reason** — TextKit 1 works. Don't fix what isn't broken.
+2. **Assuming TextKit 2 is always faster** — Real-world performance depends on document size, OS version, and use case.
+3. **Not testing on target OS** — TextKit 2 performance improves each release. Test on YOUR minimum deployment target.
+4. **Full-document `ensureLayout` in TextKit 2** — Defeats viewport optimization. O(document_size).
+5. **Expecting exact scroll metrics from TextKit 2** — Estimated heights cause scroll bar instability. If exact metrics matter, use TextKit 1.
+
+## Related Skills
+
+- Use `/skill txt-textkit1` or `/skill txt-textkit2` after you know which stack you need.
+- Use `/skill txt-fallback-triggers` when compatibility mode is driving the decision.
+- Use `/skill txt-views` when the real question is control choice, not layout-manager internals.
