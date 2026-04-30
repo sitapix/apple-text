@@ -1,289 +1,168 @@
 ---
 name: txt-measurement
-description: Use when text is clipping, truncating unexpectedly, or when measuring text size, calculating boundingRect, or sizing views to fit text content
+description: Measure rendered size of strings and attributed strings, size views to fit text content, and read per-line metrics from NSLayoutManager and NSTextLayoutManager. Covers boundingRect with NSStringDrawingOptions, NSStringDrawingContext for auto-shrink, sizeThatFits, intrinsicContentSize, usedRect, enumerateLineFragments, usageBoundsForTextContainer, line-fragment typographic bounds, and the lineFragmentPadding/textContainerInset arithmetic that makes measurements match what UITextView actually renders. Use when text clips by a pixel, boundingRect returns a single-line size for multi-line text, a self-sizing UITextView refuses to size, intrinsicContentSize is wrong, or the user needs line counts. Do NOT use for paragraph style, hyphenation, or line height — see txt-line-breaking. Do NOT use for layout invalidation timing — see txt-layout-invalidation.
 license: MIT
 ---
 
-# Text Measurement & Sizing Reference
+# Text Measurement
 
-Use this skill when you need to know how big text will be before (or after) rendering it.
+Authored against iOS 26.x / Swift 6.x / Xcode 26.x.
 
-## When to Use
+Measuring text means asking the typesetter how big a string will be once it lays it out. The right question — single-line size, constrained-width multi-line size, per-line metrics, fit-to-content sizing — picks the right API. The wrong question silently returns a number that disagrees with what UITextView later renders, and the difference is usually 1-2 pixels of clipping. The patterns here are starting points; before quoting any specific API signature, fetch the current Apple docs via Sosumi (`sosumi.ai/documentation/foundation/nsattributedstring/boundingrect(with:options:context:)`) and check that the call site uses the same font, paragraph style, and container insets that the rendering path uses — most measurement bugs are an attribute mismatch, not an API misuse.
 
-- You need `boundingRect` or `size(withAttributes:)` and it's returning wrong values.
-- You're sizing a view to fit text content.
-- You need line-by-line metrics (line heights, fragment rects).
-- You're calculating `intrinsicContentSize` for a custom text view.
-- Text is clipping, truncating unexpectedly, or leaving extra space.
+The measurement and the render must agree on every relevant attribute: font, line height, line break mode, container width minus `lineFragmentPadding`, and `textContainerInset`. A measurement that uses default attributes against a render that uses a customized paragraph style produces predictable disagreement.
 
-## Quick Decision
+## Contents
 
-- Quick single-line measurement -> `NSAttributedString.size()`
-- Multi-line measurement in a constrained width -> `boundingRect(with:options:context:)`
-- Per-line metrics in TextKit 1 -> `NSLayoutManager.enumerateLineFragments`
-- Per-line metrics in TextKit 2 -> `NSTextLayoutManager.enumerateTextLayoutFragments`
-- "How tall should my text view be?" -> use the text system, not manual calculation
+- [boundingRect: the workhorse](#boundingrect-the-workhorse)
+- [Single-line measurement](#single-line-measurement)
+- [Auto-shrink with NSStringDrawingContext](#auto-shrink-with-nsstringdrawingcontext)
+- [TextKit 1 per-line metrics](#textkit-1-per-line-metrics)
+- [TextKit 2 per-line metrics](#textkit-2-per-line-metrics)
+- [Sizing views to fit content](#sizing-views-to-fit-content)
+- [Common Mistakes](#common-mistakes)
+- [References](#references)
 
-## The #1 Mistake
+## boundingRect: the workhorse
+
+`boundingRect(with:options:context:)` is the right answer for "how big is this attributed string when wrapped to width W." Multi-line measurement requires `.usesLineFragmentOrigin`. Without it, the call measures as a single line ignoring the width constraint, which is the single most common measurement bug. Pair it with `.usesFontLeading` so the height includes the leading the renderer will add — without it the measurement comes back consistently shorter than the rendered text and the next line below clips.
 
 ```swift
-// WRONG — returns single-line size, ignores line wrapping
-let size = myString.size(withAttributes: attrs)
-
-// RIGHT — constrains to width, enables multi-line measurement
-let rect = myString.boundingRect(
+let rect = attributedString.boundingRect(
     with: CGSize(width: maxWidth, height: .greatestFiniteMagnitude),
     options: [.usesLineFragmentOrigin, .usesFontLeading],
-    attributes: attrs,
-    context: nil
-)
-let measuredSize = CGSize(width: ceil(rect.width), height: ceil(rect.height))
+    context: nil)
+let measured = CGSize(width: ceil(rect.width), height: ceil(rect.height))
 ```
 
-**You must pass `.usesLineFragmentOrigin`** for multi-line measurement. Without it, `boundingRect` measures as if the text is a single line.
+`ceil()` is mandatory. The returned rect is fractional. Passing a fractional height to a layout that snaps to integer points clips the descender of the last line. Round up.
 
-## NSString / NSAttributedString Measurement
+The other options are situational. `.usesDeviceMetrics` swaps typographic bounds for actual glyph bounds — useful for pixel-perfect rendering checks, almost never for layout sizing. `.truncatesLastVisibleLine` tells the measurement to apply truncation when the proposed height is the constraint; use this when you constrain height and want the truncated size, not the full content size.
 
-### size(withAttributes:) / size()
+## Single-line measurement
 
-```swift
-// NSString — single line only
-let size = "Hello".size(withAttributes: [.font: UIFont.systemFont(ofSize: 17)])
+`NSAttributedString.size()` and `NSString.size(withAttributes:)` always return single-line sizes. They ignore any width constraint. Using them for a multi-line label is the bug behind half of "label clips at the bottom" tickets. They are the right answer for badges, single-line chrome, or a width-only check before a multi-line call.
 
-// NSAttributedString — single line only
-let size = attributedString.size()
-```
+## Auto-shrink with NSStringDrawingContext
 
-**Limitations:** Always returns the single-line size. No width constraint. Useless for multi-line text.
-
-**Use for:** Badge labels, single-line metrics, width-only calculations.
-
-### boundingRect (the workhorse)
+For UILabel-style auto-shrink, pass an `NSStringDrawingContext` with `minimumScaleFactor`. After the call, read `actualScaleFactor` for the scale the typesetter used and `totalBounds` for where text actually landed:
 
 ```swift
-// NSString version
-let rect = string.boundingRect(
-    with: CGSize(width: containerWidth, height: .greatestFiniteMagnitude),
-    options: [.usesLineFragmentOrigin, .usesFontLeading],
-    attributes: [.font: font, .paragraphStyle: paragraphStyle],
-    context: nil
-)
-
-// NSAttributedString version (attributes come from the string itself)
-let rect = attributedString.boundingRect(
-    with: CGSize(width: containerWidth, height: .greatestFiniteMagnitude),
-    options: [.usesLineFragmentOrigin, .usesFontLeading],
-    context: nil
-)
-```
-
-**Always `ceil()` the result.** `boundingRect` returns fractional values. Passing them directly to layout causes 1-pixel clipping:
-
-```swift
-let height = ceil(rect.height)  // Not rect.height
-let width = ceil(rect.width)    // Not rect.width
-```
-
-### NSStringDrawingOptions
-
-| Option | Effect | When to use |
-|--------|--------|-------------|
-| `.usesLineFragmentOrigin` | Measures multi-line text using line fragment origins | **Almost always.** Without this, you get single-line measurement. |
-| `.usesFontLeading` | Includes font leading (inter-line spacing from the font) in height | **Almost always.** Matches what UILabel/UITextView actually renders. |
-| `.usesDeviceMetrics` | Uses actual glyph bounds instead of typographic bounds | Pixel-perfect rendering. Rarely needed. |
-| `.truncatesLastVisibleLine` | Accounts for truncation ellipsis in height-constrained measurement | When you're constraining height and want accurate truncated size. |
-
-**The standard combo:** `[.usesLineFragmentOrigin, .usesFontLeading]` — use this by default.
-
-### NSStringDrawingContext
-
-For auto-shrinking text (like UILabel's `adjustsFontSizeToFitWidth`):
-
-```swift
-let context = NSStringDrawingContext()
-context.minimumScaleFactor = 0.5  // Allow shrinking to 50%
+let ctx = NSStringDrawingContext()
+ctx.minimumScaleFactor = 0.5
 
 let rect = attributedString.boundingRect(
-    with: constrainedSize,
+    with: constrained,
     options: [.usesLineFragmentOrigin, .usesFontLeading],
-    context: context
-)
+    context: ctx)
 
-// After measurement:
-let actualScale = context.actualScaleFactor  // What scale was applied
-let actualBounds = context.totalBounds       // Where text actually landed
+let scale = ctx.actualScaleFactor
+let bounds = ctx.totalBounds
 ```
 
-## TextKit 1 Measurement (NSLayoutManager)
+The shrink only triggers when the unscaled text would not fit; a shrunk-and-fits result is in `totalBounds`, not the returned rect.
 
-When you need per-line metrics, not just total size.
+`minimumScaleFactor` is single-line in practice. UILabel honors it for one-line text; multi-paragraph or wrap-mode strings ignore it, and `actualScaleFactor` reads back as 1.0 even when the text clips. Once an `NSParagraphStyle` is attached to the run — line height, line break mode, anything paragraph-level — the typesetter often refuses to scale at all (radar://26575435). The reliable path for multi-line shrink-to-fit is to measure at the unscaled font, compute the ratio against the available size yourself, and re-render at a smaller font size. `boundingRect` with `NSStringDrawingContext` is correct for the single-line case; for multi-line, treat its `actualScaleFactor` as advisory at best. See `/skill txt-line-breaking` for the paragraph-style interaction.
 
-### Total content size
+## TextKit 1 per-line metrics
+
+When the question is per-line — line counts, line heights, the y-coordinate of the third line — `boundingRect` is too coarse. NSLayoutManager has the metrics. Force layout first, then read; layout is lazy and queries before layout return stale data.
 
 ```swift
-// Force layout for entire container
 layoutManager.ensureLayout(for: textContainer)
-
-// Get used rect — the actual area text occupies
 let usedRect = layoutManager.usedRect(for: textContainer)
-let contentHeight = ceil(usedRect.height)
 ```
 
-### Specific range size
+`usedRect` is the actual area glyphs occupy; the container's full size is the upper bound. For per-line enumeration, walk fragments:
 
 ```swift
-let glyphRange = layoutManager.glyphRange(forCharacterRange: charRange,
-                                           actualCharacterRange: nil)
-let boundingRect = layoutManager.boundingRect(forGlyphRange: glyphRange,
-                                               in: textContainer)
-```
-
-### Line-by-line enumeration
-
-```swift
-let fullGlyphRange = layoutManager.glyphRange(for: textContainer)
-layoutManager.enumerateLineFragments(forGlyphRange: fullGlyphRange) {
+let fullRange = layoutManager.glyphRange(for: textContainer)
+layoutManager.enumerateLineFragments(forGlyphRange: fullRange) {
     rect, usedRect, container, glyphRange, stop in
-    // rect: full line fragment rectangle (includes padding)
-    // usedRect: actual area used by glyphs (tighter)
-    // glyphRange: which glyphs are on this line
-    print("Line height: \(usedRect.height), y: \(usedRect.origin.y)")
+    // rect: full line fragment (includes leading/trailing padding)
+    // usedRect: glyph bounds (tighter)
 }
 ```
 
-### Line count
+For a line count, the same enumeration is the simplest answer — increment a counter inside the closure. There is no `numberOfLines` getter on the layout manager.
 
-```swift
-func lineCount(for layoutManager: NSLayoutManager,
-               in textContainer: NSTextContainer) -> Int {
-    layoutManager.ensureLayout(for: textContainer)
-    var count = 0
-    let fullRange = layoutManager.glyphRange(for: textContainer)
-    layoutManager.enumerateLineFragments(forGlyphRange: fullRange) { _, _, _, _, _ in
-        count += 1
-    }
-    return count
-}
-```
+## TextKit 2 per-line metrics
 
-## TextKit 2 Measurement (NSTextLayoutManager)
-
-### Total content size
+TextKit 2 uses `usageBoundsForTextContainer` for total content bounds and `enumerateTextLayoutFragments` for per-fragment metrics. A layout fragment may contain multiple line fragments (`textLineFragments`); a typical paragraph has one layout fragment containing several line fragments.
 
 ```swift
 textLayoutManager.ensureLayout(for: textLayoutManager.documentRange)
-let usageBounds = textLayoutManager.usageBoundsForTextContainer
-let contentHeight = ceil(usageBounds.height)
-```
+let total = textLayoutManager.usageBoundsForTextContainer
 
-### Layout fragment enumeration
-
-```swift
 textLayoutManager.enumerateTextLayoutFragments(
     from: textLayoutManager.documentRange.location,
     options: [.ensuresLayout]
 ) { fragment in
-    let frame = fragment.layoutFragmentFrame       // Position in container
-    let surface = fragment.renderingSurfaceBounds   // Actual rendering area
-
-    for lineFragment in fragment.textLineFragments {
-        let lineOrigin = lineFragment.typographicBounds.origin
-        let lineHeight = lineFragment.typographicBounds.height
-        print("Line at y=\(frame.origin.y + lineOrigin.y), height=\(lineHeight)")
+    let frame = fragment.layoutFragmentFrame
+    for line in fragment.textLineFragments {
+        let bounds = line.typographicBounds
+        // line origin is fragment.frame.origin + bounds.origin
     }
-    return true  // continue enumeration
+    return true
 }
 ```
 
-### NSTextLineFragment metrics
+`enumerateTextLayoutFragments` over the full document defeats the viewport optimization that makes TK2 fast for long documents. If the work needs all fragments, accept the cost; if it only needs visible fragments, scope the enumeration to the viewport.
 
-Each `NSTextLineFragment` within a layout fragment gives you:
+## Sizing views to fit content
 
-```swift
-lineFragment.typographicBounds  // Bounds based on font metrics
-lineFragment.glyphOrigin        // Where glyphs start
-lineFragment.characterRange     // Character range for this line
-```
-
-## Common Sizing Patterns
-
-### "Size text view to fit content"
-
-**UITextView:**
-```swift
-// Let the text system do the work
-let fittingSize = textView.sizeThatFits(
-    CGSize(width: maxWidth, height: .greatestFiniteMagnitude)
-)
-textView.frame.size.height = fittingSize.height
-```
-
-**With Auto Layout (preferred):**
-```swift
-textView.isScrollEnabled = false  // CRITICAL — enables intrinsicContentSize
-// Auto Layout handles the rest via intrinsicContentSize
-```
-
-**`isScrollEnabled = false` is the key.** When scrolling is enabled, `intrinsicContentSize` returns `(.noIntrinsicMetric, .noIntrinsicMetric)`. When disabled, it returns the full content size.
-
-### "How tall is N lines of text?"
+For UITextView, the supported path is `isScrollEnabled = false` plus Auto Layout. With scrolling enabled, `intrinsicContentSize` returns `(.noIntrinsicMetric, .noIntrinsicMetric)` and the view will not size itself. With scrolling disabled, `intrinsicContentSize` returns the full content size and Auto Layout drives the height.
 
 ```swift
-func heightForLines(_ n: Int, font: UIFont, width: CGFloat) -> CGFloat {
-    let paragraphStyle = NSMutableParagraphStyle()
-    paragraphStyle.lineBreakMode = .byWordWrapping
-
-    // Build a string with N-1 newlines
-    let sampleText = String(repeating: "Wy\n", count: n).dropLast()
-    let attrs: [NSAttributedString.Key: Any] = [
-        .font: font,
-        .paragraphStyle: paragraphStyle
-    ]
-    let rect = (sampleText as NSString).boundingRect(
-        with: CGSize(width: width, height: .greatestFiniteMagnitude),
-        options: [.usesLineFragmentOrigin, .usesFontLeading],
-        attributes: attrs,
-        context: nil
-    )
-    return ceil(rect.height)
-}
+textView.isScrollEnabled = false
+// Auto Layout uses intrinsicContentSize from here on
 ```
 
-### "Does text fit in this rect?"
+For frame-based layout, ask `sizeThatFits`:
 
 ```swift
-func textFits(_ text: NSAttributedString, in size: CGSize) -> Bool {
-    let rect = text.boundingRect(
-        with: size,
-        options: [.usesLineFragmentOrigin, .usesFontLeading],
-        context: nil
-    )
-    return ceil(rect.height) <= size.height && ceil(rect.width) <= size.width
-}
+let fitting = textView.sizeThatFits(
+    CGSize(width: maxWidth, height: .greatestFiniteMagnitude))
+textView.frame.size.height = fitting.height
 ```
 
-## Pitfalls
+UITextView adds two amounts on top of the raw text size: `textContainerInset` (default `(8, 0, 8, 0)`) and `lineFragmentPadding` (default 5pt each side). A measurement that ignores either undercuts the actual rendered size:
 
-1. **Forgetting `.usesLineFragmentOrigin`** — Without it, multi-line text is measured as one line. This is the single most common measurement bug.
+```swift
+let textWidth = container.size.width - 2 * container.lineFragmentPadding
+// height of measured text + textView.textContainerInset.top + textView.textContainerInset.bottom
+```
 
-2. **Not calling `ceil()`** — Fractional heights cause 1px clipping. Always round up.
+For UILabel, `intrinsicContentSize` is reliable; the label internally uses `boundingRect` with the right options.
 
-3. **Mismatched attributes** — Measuring with font A but rendering with font B. Ensure the same paragraph style, font, and line height are used for both measurement and display.
+## Common Mistakes
 
-4. **`textContainer.lineFragmentPadding`** — Default is 5pt. This adds 10pt total width (5 each side). If you measure without accounting for it, your widths are 10pt off:
-    ```swift
-    let effectiveWidth = containerWidth - 2 * textContainer.lineFragmentPadding
-    ```
+1. **Missing `.usesLineFragmentOrigin`.** Without it, `boundingRect` measures as a single line and ignores the width constraint. The returned width matches the full string laid out without wrapping; the height is one line. Always include the option for multi-line measurement.
 
-5. **`textContainerInset`** — UITextView default is `UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)`. You must add these to the measured text height for the actual view height.
+2. **Missing `.usesFontLeading`.** The default measurement omits the font's leading, so the height is consistently shorter than the rendered text. The next view below the label gets clipped from the top. Include the option to match the renderer.
 
-6. **Measuring before layout** — In TextKit, measurements are only valid after layout. Call `ensureLayout(for:)` before reading rects.
+3. **Not calling `ceil()` on the result.** `boundingRect` returns fractional values. A 24.7-point measurement assigned to a 24-point integer-rounded layout clips the last descender. Round up.
 
-7. **Thread safety** — All measurement APIs that touch NSLayoutManager or NSTextLayoutManager must be called from the main thread (or the layout queue for TK2).
+4. **Measuring with attributes that disagree with the render.** Default attributes for measurement, customized paragraph style for render — or vice versa — produces a measurement that is correct in isolation and wrong in context. Use the *same* attributes that the rendering path uses, including paragraph style and any overrides.
 
-## Related Skills
+5. **Forgetting `lineFragmentPadding` and `textContainerInset`.** UITextView's default container subtracts 10pt of horizontal padding (5pt each side) from the usable width, and the view adds 16pt of vertical inset (8pt top + 8pt bottom). A measurement against the raw view bounds is off by these amounts.
 
-- For text colors and Dynamic Type scaling -> `/skill txt-colors`, `/skill txt-dynamic-type`
-- For viewport-based lazy measurement -> `/skill txt-viewport-rendering`
-- For layout invalidation after content changes -> `/skill txt-layout-invalidation`
-- For Core Text glyph-level measurement -> `/skill txt-core-text`
+6. **Reading layout-manager metrics without forcing layout.** TextKit layout is lazy. `usedRect`, `lineFragmentRect`, and `glyphRange` queries before the next layout pass return values from the previous layout. Call `ensureLayout(for:)` (TK1) or `ensureLayout(for: documentRange)` (TK2) before reading.
+
+7. **Single-line APIs used for multi-line text.** `NSAttributedString.size()` and `NSString.size(withAttributes:)` ignore width constraints and return one-line sizes. They are the right answer for badges and single-line chrome, never for paragraphs.
+
+8. **Self-sizing UITextView with `isScrollEnabled = true`.** With scrolling enabled, `intrinsicContentSize` returns no intrinsic metrics and Auto Layout cannot size the view. Disable scrolling for self-sizing; re-enable only when content exceeds the cap.
+
+9. **Measurement on a background thread.** All TextKit measurement APIs that touch a layout manager must run on the main thread (or, for TK2, the layout queue). Background measurement crashes sporadically with no obvious frame in the offending code.
+
+10. **Trusting `actualScaleFactor` on multi-line text.** `NSStringDrawingContext.minimumScaleFactor` is effectively single-line. Multi-paragraph or wrap-mode strings ignore the shrink; `actualScaleFactor` reads back as 1.0 even when the rendered text clips, and an attached `NSParagraphStyle` defeats it further (radar://26575435). For multi-line auto-shrink, measure at the base font, compute the ratio yourself, and re-render at a smaller size — don't rely on `actualScaleFactor`. See `/skill txt-line-breaking` for the paragraph-style interaction.
+
+## References
+
+- `/skill txt-line-breaking` — paragraph style decisions that change measurement results
+- `/skill txt-layout-invalidation` — `ensureLayout` semantics and what makes prior measurements stale
+- `/skill txt-viewport-rendering` — viewport-scoped TK2 measurement for long documents
+- `/skill txt-core-text` — glyph-level measurement when typesetter-level measurement is not enough
+- [NSAttributedString.boundingRect](https://sosumi.ai/documentation/foundation/nsattributedstring/boundingrect(with:options:context:))
+- [NSLayoutManager](https://sosumi.ai/documentation/uikit/nslayoutmanager)
+- [NSTextLayoutManager](https://sosumi.ai/documentation/uikit/nstextlayoutmanager)

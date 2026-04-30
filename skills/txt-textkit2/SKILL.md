@@ -1,276 +1,327 @@
 ---
 name: txt-textkit2
-description: Use when working with TextKit 2 and you need NSTextLayoutManager or NSTextContentManager APIs — viewport layout, fragments, rendering attributes
+description: Reference for TextKit 2 — NSTextLayoutManager, NSTextContentManager, NSTextContentStorage, NSTextLayoutFragment, NSTextLineFragment. Covers the element-based content model, the editing transaction, viewport-driven layout via NSTextViewportLayoutController, rendering attributes vs storage attributes, fragment enumeration options, range types (NSTextRange / NSTextLocation), and delegate hooks for custom paragraphs and custom layout fragments. Use when the editor uses NSTextLayoutManager, when working on TextKit 2 features (Writing Tools inline, viewport layout, custom fragment rendering), or when bridging an attributed-string backing store into the modern stack. Do NOT use for the picker decision between TK1 and TK2 — see txt-textkit-choice. Do NOT use for symptom-driven debugging — see txt-textkit-debug.
 license: MIT
 ---
 
-# TextKit 2 Reference
+# TextKit 2 reference
 
-Use this skill when you already know the editor is on TextKit 2 and need exact APIs, object roles, or migration details.
+Authored against iOS 26.x / Swift 6.x / Xcode 26.x.
 
-## When to Use
+This is the API reference for TextKit 2 — the element-based, viewport-driven text system introduced in iOS 15 / macOS 12 and the default for `UITextView` and `NSTextView` since iOS 16 / macOS 13. The big shifts from TextKit 1 are: no glyph APIs, layout works in fragments addressed by object-based ranges, and the layout manager only ever lays out what's in (or near) the viewport. Before quoting any signature here as current, fetch the relevant page from Sosumi (`sosumi.ai/documentation/uikit/<class>`) — TextKit 2's enumeration options and viewport-controller surface have grown each release since iOS 15.
 
-- You are working with `NSTextLayoutManager`, `NSTextContentManager`, or fragments.
-- You need viewport-layout or migration details.
-- You are writing TextKit 2 code directly rather than choosing between stacks.
+## Contents
 
-## Quick Decision
+- [Architecture and design](#architecture-and-design)
+- [NSTextContentManager](#nstextcontentmanager)
+- [NSTextContentStorage](#nstextcontentstorage)
+- [NSTextRange and NSTextLocation](#nstextrange-and-nstextlocation)
+- [NSTextElement and NSTextParagraph](#nstextelement-and-nstextparagraph)
+- [NSTextLayoutManager](#nstextlayoutmanager)
+- [Fragment enumeration](#fragment-enumeration)
+- [Rendering attributes](#rendering-attributes)
+- [Viewport layout](#viewport-layout)
+- [Delegates](#delegates)
+- [Common Mistakes](#common-mistakes)
+- [References](#references)
 
-- Need to choose between TextKit 1 and 2 -> `/skill txt-textkit-choice`
-- Already committed to TextKit 2 and need exact APIs -> stay here
-- Need fragment/rendering behavior specifically -> `/skill txt-viewport-rendering`
-
-## Core Guidance
-
-Complete reference for TextKit 2 (iOS 15+ / macOS 12+). Replaces glyph-based TextKit 1 with element-based layout optimized for correctness, safety, and performance.
-
-Keep this file for the object model, editing rules, and layout-manager behavior. For fragment internals, object-based range mechanics, and the TextKit 1 to 2 mapping table, use [fragments-and-migration.md](references/fragments-and-migration.md).
-
-## Architecture
+## Architecture and design
 
 ```
-NSTextContentManager        NSTextLayoutManager         NSTextContainer
-(content model)        →    (layout controller)    →    (geometry)
-       │                           │                         │
-NSTextContentStorage        NSTextLayoutFragment         UITextView
-(wraps NSTextStorage)       NSTextLineFragment           NSTextView
-       │                           │
-NSTextElement               NSTextViewportLayoutController
-NSTextParagraph             (viewport management)
+NSTextContentManager  →  NSTextLayoutManager  →  NSTextContainer
+   (content model)         (layout controller)      (geometry)
+        │                           │
+NSTextContentStorage          NSTextLayoutFragment
+(wraps NSTextStorage)         NSTextLineFragment
+        │                           │
+NSTextElement                  NSTextViewportLayoutController
+NSTextParagraph                (orchestrates visible layout)
 ```
 
-### Design Principles
+Three principles drive the API:
 
-1. **Abstraction** — No glyph APIs. International text (Arabic, Devanagari, CJK) handled correctly without character-glyph mapping assumptions. Trade-off: glyph-level work requires TextKit 1 or Core Text.
-2. **Safety** — Immutable value semantics for elements and fragments. Thread-safe reads.
-3. **Performance** — Always non-contiguous. Only viewport text is laid out. O(viewport) not O(document).
+1. **Abstraction.** No glyph APIs. International scripts (Arabic, Devanagari, CJK) are handled correctly without character-glyph mapping assumptions. The trade-off is that glyph-level work has to drop to Core Text or back to TextKit 1.
+2. **Safety.** Elements and fragments have value semantics. Reads are thread-safe in a way that `NSLayoutManager` queries are not.
+3. **Viewport-first performance.** Layout is always non-contiguous; only fragments in or near the viewport are fully laid out. Off-screen content has estimated geometry only. The layout manager works in O(viewport), not O(document).
 
-## NSTextContentManager (Abstract)
+## NSTextContentManager
 
-Base class for content management. Manages document content as a tree of `NSTextElement` objects.
-
-### Key Properties
+Abstract base class. Manages document content as a tree of `NSTextElement` objects. The concrete subclass you almost always use is `NSTextContentStorage`; subclassing `NSTextContentManager` directly is the path for non-attributed-string backing stores (HTML DOM, AST, CRDT).
 
 ```swift
 var textLayoutManagers: [NSTextLayoutManager] { get }
 var primaryTextLayoutManager: NSTextLayoutManager? { get set }
-var automaticallySynchronizesTextLayoutManagers: Bool  // default: true
-var automaticallySynchronizesToBackingStore: Bool       // default: true
+var automaticallySynchronizesTextLayoutManagers: Bool   // default true
+var automaticallySynchronizesToBackingStore: Bool       // default true
+var documentRange: NSTextRange { get }
 ```
 
-### Editing Transaction
-
-All text storage modifications must be wrapped:
+All mutations to the underlying store go through an editing transaction:
 
 ```swift
 textContentManager.performEditingTransaction {
-    // Modify the backing store (NSTextStorage) here
     textStorage.replaceCharacters(in: range, with: newText)
 }
-// Layout invalidation happens automatically after the transaction
+// Element regeneration and layout invalidation happen at the close of the block.
 ```
 
-**Without the transaction wrapper:** Element regeneration and layout invalidation may not occur correctly.
+Skipping the transaction wrapper is one of the standing TextKit 2 bugs: edits go through, but element regeneration and layout invalidation may not, leaving fragments stale.
 
-### Element Enumeration
+Element enumeration:
 
 ```swift
 textContentManager.enumerateTextElements(from: location, options: []) { element in
     if let paragraph = element as? NSTextParagraph {
-        print(paragraph.attributedString)
+        // ...
     }
-    return true  // continue enumeration
+    return true   // continue enumeration
 }
 ```
 
-### Delegate
+## NSTextContentStorage
+
+Concrete subclass of `NSTextContentManager`. Wraps `NSTextStorage` and divides its content into `NSTextParagraph` elements automatically.
 
 ```swift
-// Filter elements from layout (e.g., hide comments in a code editor)
-func textContentManager(_ manager: NSTextContentManager,
-                        shouldEnumerate textElement: NSTextElement,
-                        options: NSTextContentManager.EnumerationOptions) -> Bool
+let contentStorage = NSTextContentStorage()
+contentStorage.textStorage = MyTextStorage()   // any NSTextStorage subclass
+let storage = contentStorage.textStorage       // backing store access
 ```
 
-## NSTextContentStorage (Concrete)
-
-Default `NSTextContentManager` subclass. Wraps `NSTextStorage` and automatically divides content into `NSTextParagraph` elements.
-
-### Relationship to NSTextStorage
-
-```swift
-let textContentStorage = NSTextContentStorage()
-textContentStorage.textStorage = myTextStorage  // Set backing store
-
-// Access text storage from content storage
-let storage = textContentStorage.textStorage
-```
-
-**NSTextContentStorage observes NSTextStorage edits** and regenerates paragraph elements automatically.
-
-### NSTextContentStorage vs NSTextStorage
+`NSTextContentStorage` observes the wrapped `NSTextStorage`'s edit notifications and regenerates affected paragraph elements. Paragraph boundaries are determined by paragraph separators (`\n`, `\r\n`, `\r`, `\u{2029}`).
 
 | Aspect | NSTextStorage | NSTextContentStorage |
-|--------|--------------|---------------------|
-| **Role** | Backing store (attributed string) | Content manager wrapping backing store |
-| **Addressing** | NSRange (integer-based) | NSTextRange / NSTextLocation (object-based) |
-| **Output** | Raw attributed string | NSTextElement tree (paragraphs) |
-| **Editing** | Direct mutations | `performEditingTransaction` wrapper |
-| **Notifications** | `processEditing()` | Element change tracking |
-| **When to subclass** | Custom backing store format | Custom content model (not attributed string based) |
+|---|---|---|
+| Role | Backing store (attributed string) | Content manager wrapping a backing store |
+| Addressing | `NSRange` (integer-based) | `NSTextRange` / `NSTextLocation` (object-based) |
+| Output | Raw attributed string | Tree of `NSTextElement`s |
+| Editing | Direct mutations | Wrapped in `performEditingTransaction` |
+| Notifications | `processEditing()` | Element change tracking |
+| Subclass when | Custom backing-store format | Non-attributed-string content model |
 
-**Decision:** Use NSTextContentStorage (default) unless you need a fundamentally different backing store (e.g., database-backed, DOM-based, piece table). In that case, subclass NSTextContentManager directly.
+The default architecture is: keep `NSTextStorage` as the backing store, use `NSTextContentStorage` (no subclass) on top of it. Custom backing stores (rope, piece table, gap buffer) subclass `NSTextStorage`. Custom content models (HTML DOM, AST) subclass `NSTextContentManager`. Subclassing `NSTextContentManager` without wrapping an `NSTextStorage` currently crashes during element generation.
 
-### Delegate
+## NSTextRange and NSTextLocation
 
-```swift
-// Create custom paragraph elements with modified display attributes
-// WITHOUT changing the underlying text storage
-func textContentStorage(_ storage: NSTextContentStorage,
-                        textParagraphWith range: NSRange) -> NSTextParagraph? {
-    // Return nil for default behavior
-    // Return custom NSTextParagraph to override display
-    let originalText = storage.textStorage!.attributedSubstring(from: range)
-    let modified = NSMutableAttributedString(attributedString: originalText)
-    modified.addAttribute(.foregroundColor, value: UIColor.gray, range: NSRange(location: 0, length: modified.length))
-    return NSTextParagraph(attributedString: modified)
-}
-```
-
-### Range Conversion
+TextKit 2 uses object-based ranges instead of `NSRange`. `NSTextLocation` is an opaque token; `NSTextRange` pairs two of them.
 
 ```swift
-// NSRange → NSTextRange
+let nsRange = NSRange(location: 0, length: 10)
 let textRange = textContentStorage.textRange(for: nsRange)
 
-// NSTextRange → NSRange
-let nsRange = textContentStorage.offset(from: textContentStorage.documentRange.location,
-                                         to: textRange.location)
+let documentStart = textContentStorage.documentRange.location
+let offset = textContentStorage.offset(from: documentStart, to: textRange.location)
 ```
 
-## NSTextElement
+The reason for the indirection: in a non-attributed-string backing store, "location 47" doesn't necessarily correspond to a character index. `NSTextLocation` lets the content manager define what a location is — DOM node + offset, AST path, etc.
 
-Abstract base class for document building blocks. Immutable (value semantics).
+For an `NSTextContentStorage`, locations correspond to character indices in the wrapped `NSTextStorage`, and the conversion methods round-trip cleanly.
 
-### Properties
+## NSTextElement and NSTextParagraph
+
+`NSTextElement` is the abstract base. Elements have value semantics and are immutable.
 
 ```swift
-var elementRange: NSTextRange? { get set }  // Range within document
+var elementRange: NSTextRange? { get set }
 var textContentManager: NSTextContentManager? { get }
-var childElements: [NSTextElement] { get }    // For nested structures
-var parentElement: NSTextElement? { get }
+var childElements: [NSTextElement] { get }
+weak var parent: NSTextElement? { get }
 var isRepresentedElement: Bool { get }
 ```
 
-## NSTextParagraph
-
-Default element type. One per paragraph of text.
+`NSTextParagraph` is the only element subclass guaranteed to work. Custom `NSTextElement` subclasses beyond `NSTextParagraph` trigger runtime assertions.
 
 ```swift
 let paragraph: NSTextParagraph
-paragraph.attributedString     // The paragraph's attributed content
-paragraph.paragraphContentRange // Range excluding paragraph separator
-paragraph.paragraphSeparators   // The paragraph separator characters
+paragraph.attributedString          // the paragraph's content
+paragraph.paragraphContentRange     // range without the separator
+paragraph.paragraphSeparators       // the separator characters
 ```
 
 ## NSTextLayoutManager
 
-Replaces NSLayoutManager. **No glyph APIs.** Operates on elements and fragments.
-
-### Key Properties
+Replaces `NSLayoutManager`. No glyph APIs. Operates on elements and fragments.
 
 ```swift
 var textContentManager: NSTextContentManager? { get }
-var textContainer: NSTextContainer? { get set }
+var textContainer: NSTextContainer? { get set }                 // exactly one
 var textViewportLayoutController: NSTextViewportLayoutController { get }
 var textSelectionNavigation: NSTextSelectionNavigation { get }
 var textSelections: [NSTextSelection] { get set }
-var usageBoundsForTextContainer: CGRect { get }
+var usageBoundsForTextContainer: CGRect { get }                  // estimate while scrolling
 var documentRange: NSTextRange { get }
 ```
 
-### Layout Fragment Enumeration
+`NSTextLayoutManager` supports exactly one container. Multi-container layout (multi-page, multi-column, linked text views) requires TextKit 1.
+
+`usageBoundsForTextContainer.height` is unstable while the document is being scrolled — TextKit 2 estimates the height based on partially-laid-out content and the estimate refines as more fragments are laid out. Code that depends on exact document height should either force layout for the full document range (defeating the viewport optimization) or use TextKit 1.
+
+## Fragment enumeration
+
+Layout fragments are roughly one-per-paragraph; each fragment contains one or more `NSTextLineFragment`s for the visual lines the paragraph wraps into.
 
 ```swift
-// Enumerate visible layout fragments
 textLayoutManager.enumerateTextLayoutFragments(
     from: textLayoutManager.documentRange.location,
     options: [.ensuresLayout, .ensuresExtraLineFragment]
 ) { fragment in
-    print("Frame: \(fragment.layoutFragmentFrame)")
-    for lineFragment in fragment.textLineFragments {
-        print("  Line: \(lineFragment.typographicBounds)")
+    let frame = fragment.layoutFragmentFrame
+    for line in fragment.textLineFragments {
+        let bounds = line.typographicBounds        // local to the fragment
     }
-    return true  // continue
+    return true   // continue
 }
 ```
 
-**Options:**
-- `.ensuresLayout` — Forces layout computation (expensive for large ranges)
-- `.ensuresExtraLineFragment` — Includes empty trailing line fragment
-- `.estimatesSize` — Use estimated sizes (faster, less accurate)
-- `.reverse` — Enumerate backwards
+Options:
 
-### Rendering Attributes
+| Option | Effect |
+|---|---|
+| `.ensuresLayout` | Force layout computation; expensive over large ranges |
+| `.ensuresExtraLineFragment` | Include the trailing empty line fragment after `\n` |
+| `.estimatesSize` | Use estimated geometry; cheap, less accurate |
+| `.reverse` | Enumerate backwards |
 
-Replace TextKit 1's temporary attributes. Overlay visual styling without modifying text storage:
+Enumerating from `documentRange.location` to the end with `.ensuresLayout` lays out the entire document — exactly the case TextKit 2 was designed to avoid. Enumerate over the viewport range instead, or only over the range you actually need geometry for.
+
+## Rendering attributes
+
+Replace TextKit 1's temporary attributes. Visual styling overlay that does not modify the storage and does not invalidate layout.
 
 ```swift
-// Set rendering attributes (replaces any existing)
 textLayoutManager.setRenderingAttributes(
     [.foregroundColor: UIColor.red],
     forTextRange: range
 )
-
-// Add rendering attributes (merges)
-textLayoutManager.addRenderingAttribute(.backgroundColor,
-                                        value: UIColor.yellow,
-                                        forTextRange: range)
-
-// Remove rendering attributes
+textLayoutManager.addRenderingAttribute(
+    .backgroundColor, value: UIColor.yellow,
+    forTextRange: range
+)
 textLayoutManager.removeRenderingAttribute(.backgroundColor, forTextRange: range)
 
-// Enumerate rendering attributes
-textLayoutManager.enumerateRenderingAttributes(
-    from: location, reverse: false
-) { manager, attributes, range in
+textLayoutManager.enumerateRenderingAttributes(from: location, reverse: false) {
+    manager, attributes, range in
     return true
 }
 ```
 
-**Key difference from text storage attributes:** Rendering attributes don't persist, don't modify the model, and don't trigger element regeneration.
+Rendering attributes attach to the layout manager, not to the storage. The common mistake is calling `textStorage.addAttribute` for what should be a rendering-only effect — it works but it modifies the document, mutates the editing lifecycle, and shows up in copy/paste and serialization.
 
-### Invalidating Layout
+Known bug (FB9692714): some rendering attribute combinations have drawing artifacts and the workaround is a custom `NSTextLayoutFragment` subclass that draws the effect itself. This is one of the active reasons to keep syntax highlighting on TextKit 1 (where `setTemporaryAttributes` is well-tested).
+
+## Viewport layout
+
+`NSTextViewportLayoutController` is the orchestrator. Delegate callbacks fire around viewport layout passes:
 
 ```swift
-// Invalidate specific range
-textLayoutManager.invalidateLayout(for: range)
+// Before layout begins — remove old fragment views
+func textViewportLayoutControllerWillLayout(
+    _ controller: NSTextViewportLayoutController
+)
 
-// TextKit 2 re-lays out affected fragments on next viewport update
+// For each visible layout fragment — position views/layers
+func textViewportLayoutController(
+    _ controller: NSTextViewportLayoutController,
+    configureRenderingSurfaceFor fragment: NSTextLayoutFragment
+)
+
+// After layout completes — update content size
+func textViewportLayoutControllerDidLayout(
+    _ controller: NSTextViewportLayoutController
+)
 ```
 
-### Delegate
+`renderingSurfaceBounds` on a layout fragment can extend beyond `layoutFragmentFrame` for content that draws outside the layout rect (diacritics, large descenders, custom backgrounds). Custom `NSTextLayoutFragment` subclasses that draw outside the default frame must override `renderingSurfaceBounds` or the drawing is clipped.
+
+`NSTextLineFragment.characterRange` is local to the line's own attributed string, not document-relative. Converting to a document range requires going through the parent layout fragment's range and offsetting. This is one of the most common bugs in code that ports from TextKit 1.
+
+Invalidation:
 
 ```swift
-// Custom layout fragments (e.g., chat bubble backgrounds)
-func textLayoutManager(_ manager: NSTextLayoutManager,
-                       textLayoutFragmentFor location: NSTextLocation,
-                       in textElement: NSTextElement) -> NSTextLayoutFragment {
+textLayoutManager.invalidateLayout(for: range)
+textLayoutManager.invalidateRenderingAttributes(for: range)
+
+textLayoutManager.textViewportLayoutController.layoutViewport()
+```
+
+After `invalidateLayout`, the viewport controller re-runs layout for the affected fragments on the next viewport pass. Manual `layoutViewport()` is rarely necessary — the system runs it after a transaction or a scroll.
+
+## Delegates
+
+`NSTextContentStorageDelegate` for custom paragraph generation:
+
+```swift
+// Display-only paragraph modification — does not change the underlying storage
+func textContentStorage(
+    _ storage: NSTextContentStorage,
+    textParagraphWith range: NSRange
+) -> NSTextParagraph?
+```
+
+Use case: line numbers, code folding, Markdown preview rendering — any time the displayed paragraph differs from the stored attributed string.
+
+`NSTextLayoutManagerDelegate` for custom layout fragments:
+
+```swift
+// Custom NSTextLayoutFragment subclass per element
+func textLayoutManager(
+    _ manager: NSTextLayoutManager,
+    textLayoutFragmentFor location: NSTextLocation,
+    in textElement: NSTextElement
+) -> NSTextLayoutFragment {
     return BubbleLayoutFragment(textElement: textElement, range: textElement.elementRange)
 }
 ```
 
-## Common Pitfalls
+Use case: chat bubbles, code-block backgrounds, callout boxes — anything that needs custom drawing under or around the text.
 
-1. **Using `ensuresLayout` for the full document** — O(document_size). Only ensure layout for visible ranges.
-2. **NSTextLineFragment.characterRange is local** — It's relative to the line's attributed string, NOT the document. Convert through the parent element.
-3. **`renderingSurfaceBounds` differs from `layoutFragmentFrame`** — Drawing can extend beyond the layout frame (diacritics, large descenders). Override `renderingSurfaceBounds` in custom fragments.
-4. **Forgetting `performEditingTransaction`** — Direct NSTextStorage edits may not trigger proper element regeneration.
-5. **Assuming layout exists outside viewport** — TextKit 2 may only have estimated layout for off-screen content. Use `.estimatesSize` option when precision isn't needed.
+## Common Mistakes
 
-## Related Skills
+1. **`enumerateTextLayoutFragments` over the document range with `.ensuresLayout`.** Forces full-document layout. The viewport optimization is exactly what's being defeated. Either drop `.ensuresLayout` (and accept estimated geometry off-screen) or limit the range to the viewport / the slice you actually need.
 
-- For fragment APIs, viewport controller hooks, range conversion, and migration tables, see [fragments-and-migration.md](references/fragments-and-migration.md).
-- Use `/skill txt-textkit-choice` for migration and stack choice.
-- Use `/skill txt-viewport-rendering` for fragment and rendering-pipeline behavior.
-- Use `/skill txt-storage` for backing-store and editing-transaction background.
+2. **Treating `NSTextLineFragment.characterRange` as document-relative.** It is local to the parent layout fragment's attributed string. Convert through the fragment's range to get document coordinates before using it for selection or hit-testing.
+
+3. **Custom layout fragments that draw outside `layoutFragmentFrame` without overriding `renderingSurfaceBounds`.** Drawing is clipped to the layout frame. Diacritics, large descenders, and chat-bubble shadows disappear at the edges.
+
+4. **Direct `NSTextStorage` mutations without `performEditingTransaction`.** The edits go through and `NSTextStorage`'s own delegates fire, but element regeneration and layout invalidation are unreliable. Wrap mutations:
+
+   ```swift
+   // CORRECT
+   contentStorage.performEditingTransaction {
+       textStorage.replaceCharacters(in: range, with: newText)
+   }
+   ```
+
+5. **Reading `usageBoundsForTextContainer.height` as exact document height while scrolling.** It is unstable by design: the value shifts as the viewport advances and TextKit 2 re-estimates unmeasured ranges. Wiring it directly to a `UIScrollView.contentSize` produces a scroller that jitters during fast scrolls — even Apple's TextEdit demonstrates this. The supported pattern is to update the host scroll view's content size only inside `textViewportLayoutControllerDidLayout(_:)`, after the current pass has settled, and to leave the value alone during the pass itself. If exact, stable height is a hard requirement (proportional minimap, ruler view, scroll-position indicator with absolute fractions), the right answer is TextKit 1.
+
+6. **`ensureLayout(for: documentRange)` to "warm up the layout manager".** It is a trap, and the trap has been confirmed by Apple DTS — the call can take seconds on documents large enough to be worth the optimization in the first place, because it materializes every fragment in the document. The supported pattern when scrolling to a target location is the four-step sequence: identify the target range, call `ensureLayout(for:)` for that range only, read the resulting fragment frame, then call `adjustViewport(byVerticalOffset:)` to move the viewport to it. This pulls in a bounded amount of layout work proportional to the distance from the current viewport, not to the document size.
+
+7. **Disabling line wrap to "speed up scrolling".** It is counterintuitive but `lineBreakMode = .byClipping` (or otherwise turning off wrapping) makes scrolling worse on TextKit 2, not better. Wrapping bounds each fragment's height to a small multiple of the line height, which lets the viewport controller cheaply estimate offscreen space. Turn wrap off and a single 50,000-character paragraph becomes one giant fragment that the controller has to lay out as one unit before it can place anything below it. Keep wrapping enabled on TextKit 2; if horizontal scroll of long lines is a feature, page the content into shorter logical paragraphs at edit time.
+
+8. **Custom `NSTextElement` subclasses other than `NSTextParagraph`.** Triggers runtime assertions. The supported way to get custom rendering is a custom `NSTextLayoutFragment` keyed off `NSTextParagraph`.
+
+9. **Custom `NSTextContentManager` subclass without an `NSTextStorage`.** Crashes during element generation in current SDKs. Subclass `NSTextStorage` and wrap it with `NSTextContentStorage` instead.
+
+10. **Setting rendering effects with `textStorage.addAttribute` instead of `setRenderingAttributes`.** The effect appears, but the modification persists into the document, copy/paste, undo, and serialization. Use rendering attributes for visual-only overlays.
+
+## References
+
+- `txt-textkit1` — the original TextKit stack, for the same problem on `NSLayoutManager`
+- `txt-textkit-choice` — picking between TextKit 1 and TextKit 2, including migration risk
+- `txt-fallback-triggers` — every API access that flips a TextKit 2 view to TextKit 1
+- `txt-viewport-rendering` — viewport behavior, fragment geometry, rendering attributes in depth
+- `txt-layout-invalidation` — what invalidates layout and the editing transaction model
+- `txt-nstextstorage` — backing-store subclassing and the editing lifecycle
+- `references/latest-apis.md` — current TextKit 2 API surface refreshed against Sosumi (signature source of truth)
+- [NSTextLayoutManager](https://sosumi.ai/documentation/uikit/nstextlayoutmanager)
+- [NSTextContentManager](https://sosumi.ai/documentation/uikit/nstextcontentmanager)
+- [NSTextContentStorage](https://sosumi.ai/documentation/uikit/nstextcontentstorage)
+- [NSTextLayoutFragment](https://sosumi.ai/documentation/uikit/nstextlayoutfragment)
+- [NSTextLineFragment](https://sosumi.ai/documentation/uikit/nstextlinefragment)
+- [NSTextViewportLayoutController](https://sosumi.ai/documentation/uikit/nstextviewportlayoutcontroller)
+- [NSTextRange](https://sosumi.ai/documentation/uikit/nstextrange)
+- [NSTextLocation](https://sosumi.ai/documentation/uikit/nstextlocation)
+- [NSTextElement](https://sosumi.ai/documentation/uikit/nstextelement)
+- [NSTextParagraph](https://sosumi.ai/documentation/uikit/nstextparagraph)
+- [NSTextLayoutManagerDelegate](https://sosumi.ai/documentation/uikit/nstextlayoutmanagerdelegate)
+- [NSTextContentStorageDelegate](https://sosumi.ai/documentation/uikit/nstextcontentstoragedelegate)

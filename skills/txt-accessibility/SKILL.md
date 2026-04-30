@@ -1,101 +1,65 @@
 ---
 name: txt-accessibility
-description: Use when implementing VoiceOver, Dynamic Type, or accessibility traits in custom Apple text editors
+description: Wire VoiceOver, accessibility traits, UIAccessibilityReadingContent, accessibilityTextualContext, and announcement notifications into custom or wrapped Apple text editors. Use when a UIViewRepresentable wrapper shadows a UITextView's accessibility, a custom text view doesn't appear in the accessibility tree, VoiceOver reads stale text or skips punctuation in a code editor, programmatic edits aren't announced, or rotor gestures don't navigate by character/word/line. Trigger on 'screen reader', 'VoiceOver', 'blind users', 'WCAG', or 'accessibility audit' even when traits and rotor aren't explicitly named. Do NOT use for Dynamic Type font scaling and content-size category — see txt-dynamic-type.
 license: MIT
 ---
 
-# Accessibility in Custom Text Editors
+# Accessibility for Custom Text Editors
 
-Use this skill when the main question is how to make a custom text editor work with VoiceOver, Dynamic Type, or other assistive technologies.
+Authored against iOS 26.x / Swift 6.x / Xcode 26.x.
 
-## When to Use
+This skill covers the accessibility surface that text editors specifically need: keeping `UITextView`'s built-in accessibility intact when wrapping it in SwiftUI, declaring traits and value on a from-scratch text view, adopting `UIAccessibilityReadingContent` so VoiceOver's text-navigation rotor works, choosing the right `accessibilityTextualContext` so prose vs code vs chat are read correctly, and posting announcements when programmatic changes happen. The patterns here are clues, not answers — before claiming any specific accessibility property exists or behaves a particular way, open the actual view code and verify the configuration, and fetch the current docs via Sosumi (`sosumi.ai/documentation/uikit/uiaccessibility`) for any signature you're not certain about.
 
-- Making a wrapped UITextView accessible in SwiftUI
-- VoiceOver not reading text or announcing changes in a custom editor
-- Dynamic Type not scaling in a custom text view
-- Custom view needs text editing accessibility traits
-- Accessibility Inspector shows missing or wrong information
+For Dynamic Type — text scaling, `UIFontMetrics`, content-size category notifications, AX size testing — see `txt-dynamic-type`. The boundary is intentional: this skill is about VoiceOver and trait wiring; that one is about size scaling.
 
-## Quick Decision
+## Contents
 
-- Need Dynamic Type font scaling -> `/skill txt-dynamic-type`
-- Need color contrast for text -> `/skill txt-colors`
-- Need UIViewRepresentable wrapping -> `/skill txt-representable`
-- Need general iOS accessibility beyond text editors -> see platform accessibility documentation
+- [What stock text views give you](#what-stock-text-views-give-you)
+- [SwiftUI representable wrappers](#swiftui-representable-wrappers)
+- [Custom text views from scratch](#custom-text-views-from-scratch)
+- [UIAccessibilityReadingContent](#uiaccessibilityreadingcontent)
+- [accessibilityTextualContext](#accessibilitytextualcontext)
+- [Announcing programmatic changes](#announcing-programmatic-changes)
+- [Accessibility Inspector checks](#accessibility-inspector-checks)
+- [Common Mistakes](#common-mistakes)
+- [References](#references)
 
-## Core Guidance
+## What stock text views give you
 
-## UITextView Accessibility (Built-In)
+`UITextView` and `NSTextView` are accessible by default. They report as static text or as an editable text field depending on `isEditable`, expose their text content as the accessibility value, support the rotor's character/word/line/heading navigation, and announce typing through the text input system. If a stock text view is silent in VoiceOver, the cause is upstream — a parent `isAccessibilityElement = false` shadowing the subtree, an overlay view obscuring it, or `accessibilityElementsHidden = true` on an ancestor — not the view itself.
 
-`UITextView` is accessible by default. It:
+Programmatic changes (insertions from autocomplete, clipboard pastes you trigger, formatting commands) are not auto-announced. Stock views announce only what flows through the input system. See "Announcing programmatic changes" below.
 
-- Reports as static text or editable text field depending on `isEditable`
-- Exposes text content to VoiceOver
-- Supports text navigation gestures (swipe up/down for character/word/line granularity)
-- Announces text changes automatically
+## SwiftUI representable wrappers
 
-If your `UITextView` is not accessible, check that it is not hidden behind another view, that `isAccessibilityElement` has not been set to `false`, and that it is within the accessibility hierarchy.
-
-## UIViewRepresentable Text View Accessibility
-
-### The Problem
-
-When wrapping `UITextView` in SwiftUI via `UIViewRepresentable`, the accessibility tree can break. SwiftUI may create its own accessibility element that shadows the UITextView's built-in accessibility.
-
-### The Fix
-
-Ensure the SwiftUI wrapper does not override the UITextView's accessibility:
+The most common failure is a `UIViewRepresentable` wrapper that accidentally replaces the `UITextView`'s accessibility subtree. SwiftUI generates an accessibility element for the representable container; if you set `.accessibilityLabel`/`.accessibilityValue` on the SwiftUI side, the SwiftUI element shadows the UIKit view's dynamic accessibility behavior.
 
 ```swift
+// WRONG — replaces UITextView's dynamic accessibility
+EditorView()
+    .accessibilityLabel("Editor")
+
+// CORRECT — set on the UITextView itself
 struct EditorView: UIViewRepresentable {
     func makeUIView(context: Context) -> UITextView {
-        let textView = UITextView()
-        textView.isEditable = true
-        textView.isSelectable = true
-        // Do NOT set accessibilityLabel or accessibilityValue on the wrapper
-        // Let UITextView handle its own accessibility
-        return textView
+        let tv = UITextView()
+        tv.isEditable = true
+        tv.accessibilityHint = "Double tap to edit"
+        // Do NOT set accessibilityLabel/accessibilityValue here —
+        // UITextView populates them dynamically from text and isEditable.
+        return tv
     }
-
-    func updateUIView(_ uiView: UITextView, context: Context) {
-        // Update text content only
-    }
+    func updateUIView(_ uiView: UITextView, context: Context) { }
 }
 ```
 
-If you need to add accessibility hints:
+The narrowest hint to add: a hint (not a label, not a value) on the UITextView itself. Hints supplement; labels and values replace. Letting `UITextView` continue to drive its label and value is what keeps the rotor and text navigation working.
 
-```swift
-func makeUIView(context: Context) -> UITextView {
-    let textView = UITextView()
-    textView.accessibilityHint = "Double tap to edit"
-    // accessibilityLabel and accessibilityValue are managed by UITextView
-    return textView
-}
-```
+If the SwiftUI side genuinely needs to expose its own label (because the editor is one element of a larger composite), apply `.accessibilityElement(children: .contain)` so the wrapper becomes a container that lets the UIKit subtree through, rather than `.accessibilityElement()` (no argument), which replaces the subtree with a single element.
 
-### SwiftUI Accessibility Modifiers vs UIKit
+## Custom text views from scratch
 
-Do NOT apply SwiftUI accessibility modifiers to the wrapper — they replace the UITextView's accessibility subtree:
-
-```swift
-// ❌ WRONG — shadows UITextView's built-in accessibility
-EditorView()
-    .accessibilityLabel("Editor")  // Replaces UITextView's dynamic label
-
-// ✅ CORRECT — set on the UITextView itself
-func makeUIView(context: Context) -> UITextView {
-    let textView = UITextView()
-    textView.accessibilityLabel = "Editor"  // Supplements, doesn't replace
-    return textView
-}
-```
-
-## Custom View Accessibility
-
-If you build a text view from scratch (not using UITextView), you must implement accessibility yourself.
-
-### Minimum Requirements
+A text view that doesn't inherit from `UITextView`/`NSTextView` is silent until you wire accessibility manually. The minimum surface is `isAccessibilityElement = true`, a label, a value, and traits matching the editing state.
 
 ```swift
 class CustomTextView: UIView {
@@ -105,7 +69,7 @@ class CustomTextView: UIView {
     }
 
     override var accessibilityTraits: UIAccessibilityTraits {
-        get { isEditable ? .none : .staticText }
+        get { isEditable ? [] : .staticText }
         set { }
     }
 
@@ -121,9 +85,13 @@ class CustomTextView: UIView {
 }
 ```
 
-### Text Editing Accessibility
+The trait set is empty for editable views and `.staticText` for read-only — VoiceOver derives "editable" handling from the absence of `.staticText` plus the input-system signals (focus state, first-responder status). Do not try to add a hypothetical `.editable` trait; the trait that exists is `.staticText` for the read-only case.
 
-For VoiceOver text navigation (character-by-character, word-by-word), adopt `UIAccessibilityReadingContent`:
+The accessibility value should reflect the current text content. If the editor stores text in a backing store that updates incrementally, ensure `accessibilityValue` reads the current state — caching a snapshot here is how "VoiceOver reads stale text" bugs originate.
+
+## UIAccessibilityReadingContent
+
+For VoiceOver's rotor to navigate the editor by line, the view must declare its line geometry through `UIAccessibilityReadingContent`. Without this protocol, character and word rotors still work (they use the value string), but line navigation does not.
 
 ```swift
 extension CustomTextView: UIAccessibilityReadingContent {
@@ -145,137 +113,94 @@ extension CustomTextView: UIAccessibilityReadingContent {
 }
 ```
 
-### UIAccessibilityTextualContext
+The frame returned by `accessibilityFrame(forLineNumber:)` is in screen coordinates — convert from your view's coordinate space via `convert(rect, to: nil)` if needed. VoiceOver uses this rect to position its highlight overlay; an incorrect coordinate space results in the focus indicator drawing in the wrong place.
 
-Set the textual context so the system optimizes VoiceOver behavior:
+`accessibilityPageContent()` returns the entire visible page of text; pagination is a concept VoiceOver uses to scope long documents. For editors that don't paginate, return the full content.
+
+## accessibilityTextualContext
+
+`UIAccessibilityTextualContext` tells VoiceOver how to read the content. The default treats text as ordinary prose; that's wrong for code (where punctuation matters), spreadsheets (where layout structure matters), and chat (where utterances are short and discrete). The right context per editor type:
+
+- `.sourceCode` — reads punctuation literally (braces, parens, colons, operators). The real differentiator for code editors; without it VoiceOver elides the symbols that carry meaning.
+- `.wordProcessing` — rich-text editor cues. Right for a Notes-style editor with formatting and structural elements.
+- `.narrative` — long-form prose readers (essays, articles, books). Reading cadence tuned for paragraphs.
+- `.console` — terminals and log viewers. Treats lines as discrete records, reads control characters.
+- `.messaging` — chat. Short discrete utterances, fast cadence.
+- `.spreadsheet` — tabular cells. VoiceOver reads coordinates and structure.
+- `.fileSystem` — paths and identifiers. Reads separators and segments rather than treating slashes as prose.
 
 ```swift
-textView.accessibilityTextualContext = .plain          // Default prose
-textView.accessibilityTextualContext = .sourceCode     // Code editor
-textView.accessibilityTextualContext = .messaging      // Chat messages
-textView.accessibilityTextualContext = .spreadsheet    // Tabular data
-textView.accessibilityTextualContext = .wordProcessing // Rich text editor
+textView.accessibilityTextualContext = .sourceCode
 ```
 
-This affects VoiceOver's reading behavior — for example, `.sourceCode` reads punctuation that would be skipped in `.plain`.
+Source-code context is the most consequential. In the default prose context, VoiceOver omits most punctuation — a comprehensible behavior for paragraphs, an incomprehensible one for code. A code editor that doesn't set `.sourceCode` is effectively unusable with VoiceOver.
 
-## Announcing Text Changes
+The property is settable on any `UIView` that can be an accessibility element, not just `UITextView`. Set it on the wrapper view of a custom editor as well.
 
-### Automatic Behavior
+### iOS 17 and iOS 18 rotor changes
 
-`UITextView` does NOT automatically post accessibility notifications like `screenChanged` or `layoutChanged`. For incremental typing, VoiceOver reads characters directly through the text input system. For programmatic changes that the user should know about, you must post notifications yourself.
+iOS 17 added a "Change Rotor with Item" toggle in Settings → Accessibility → VoiceOver → Rotor. With it enabled, focusing an item that has custom actions auto-switches the rotor to Actions; with it disabled (and many users now disable it after the iOS 17 default change), the rotor stays where the user left it. For a custom editor that exposes `accessibilityCustomActions`, this means the user may not discover the actions unless they manually rotate to the Actions rotor. Surface critical actions through the standard text-edit menu or via gesture as a backup, not only through custom actions.
 
-### Custom Announcements
+iOS 18 added a two-finger rotation gesture as an alternative to the rotor twist. It reaches the same rotor ring but can be performed with one hand. No code change is required for support — the gesture works on any view that participates in the rotor — but it's worth knowing when reproducing user reports of "I can't get to the rotor."
 
-When your editor makes programmatic changes that the user should know about:
+## Announcing programmatic changes
+
+VoiceOver is not aware of edits that happen outside the input system. Format commands, paste-and-clean operations, autocompletion expansions, AI rewrites — none of these emit accessibility events on their own. Post an announcement so the user knows what changed.
 
 ```swift
 func applyFormatting(_ style: FormatStyle) {
-    // Apply the formatting
     applyStyle(style, to: selectedRange)
-
-    // Announce to VoiceOver
     UIAccessibility.post(
         notification: .announcement,
         argument: "Applied \(style.name) formatting"
     )
 }
-
-func insertAutocompletion(_ text: String) {
-    insertText(text)
-
-    // Announce what was inserted
-    UIAccessibility.post(
-        notification: .announcement,
-        argument: "Autocompleted: \(text)"
-    )
-}
 ```
 
-### Layout Changes
-
-When the editor's content or layout changes significantly (e.g., content loaded, view resized):
+For larger structural changes (content reloaded, document switched, view layout substantially changed), post `.layoutChanged` with the new focus argument so VoiceOver re-reads the focused element:
 
 ```swift
 UIAccessibility.post(notification: .layoutChanged, argument: textView)
-// VoiceOver will re-read the focused element
 ```
 
-## Dynamic Type in Custom Editors
+Don't over-announce. An announcement on every keystroke or every autocorrect is noise that makes the editor harder to use, not easier. Reserve announcements for user-initiated commands the user might not have heard the result of.
 
-### Scaling Fonts
+`AccessibilityNotification` on macOS uses `NSAccessibility.post(...)` with `NSAccessibility.Notification.announcementRequested` — the equivalent path with a slightly different argument shape.
 
-If your editor uses custom fonts, they must scale with Dynamic Type:
+## Accessibility Inspector checks
 
-```swift
-let baseFont = UIFont(name: "Menlo", size: 14)!
-let scaledFont = UIFontMetrics(forTextStyle: .body).scaledFont(for: baseFont)
-textView.font = scaledFont
-```
+The Xcode Accessibility Inspector exposes the live tree. Run it against the simulator while interacting with the editor; the relevant fields:
 
-### Responding to Size Changes
+- The text view appears as an element (no shadowing parent).
+- Traits show as expected: `.staticText` for read-only, empty trait set for editable.
+- Value updates as text changes — typing in the editor should change the displayed value live.
+- Label is non-empty (a placeholder, a header label, or an accessibility-only label).
+- Hint, if set, supplements the label without duplicating it.
 
-```swift
-override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-    super.traitCollectionDidChange(previousTraitCollection)
-    if traitCollection.preferredContentSizeCategory != previousTraitCollection?.preferredContentSizeCategory {
-        // Re-apply fonts
-        updateFonts()
-    }
-}
-```
+The interaction surface should also be tested with a screen reader, not just the inspector. Accessibility Inspector confirms the wiring is present; VoiceOver confirms the wiring is correct.
 
-For iOS 17+, use `UITraitChangeObservable`:
+## Common Mistakes
 
-```swift
-registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (self: EditorView, _) in
-    self.updateFonts()
-}
-```
+1. **SwiftUI accessibility modifiers on a `UIViewRepresentable` wrapper.** `.accessibilityLabel("Editor")` on the SwiftUI side replaces the UITextView's dynamic value with a static label, breaking text navigation. Set accessibility properties on the underlying `UITextView`, or use `.accessibilityElement(children: .contain)` to leave the subtree intact.
 
-### adjustsFontForContentSizeCategory
+2. **Caching text in `accessibilityValue`.** A snapshot value stays stale as text changes. The getter should read current state from the backing store every call.
 
-For `UITextView` with a single font:
+3. **Missing `UIAccessibilityReadingContent` on a custom view.** Without it, the line rotor doesn't function. Character and word navigation still work (they only need `accessibilityValue`), but line navigation requires the protocol.
 
-```swift
-textView.adjustsFontForContentSizeCategory = true
-textView.font = UIFont.preferredFont(forTextStyle: .body)
-```
+4. **`.plain` context on a code editor.** VoiceOver skips most punctuation in prose context. Code becomes incomprehensible. Set `.sourceCode` on any text view whose content is code.
 
-For editors with mixed fonts (syntax highlighting), you must manually re-apply `UIFontMetrics.scaledFont(for:)` when the content size category changes.
+5. **Programmatic edits without an announcement.** A user invoking a "make this formal" rewrite hears nothing if the editor doesn't post an announcement. Post `.announcement` for command outcomes; post `.layoutChanged` for structural changes.
 
-## Accessibility Inspector Testing
+6. **Custom fonts without the `UIFontMetrics` + `adjustsFontForContentSizeCategory` pair.** Custom fonts re-scale only when both conditions are met: the font is wrapped via `UIFontMetrics.scaledFont(for:)` *and* the text view has `adjustsFontForContentSizeCategory = true`. Either alone is inert. This often surfaces during accessibility audits because reviewers test at AX sizes and the editor's text doesn't grow. See `/skill txt-dynamic-type` for the scaling pattern. Accessibility and Dynamic Type are separate but mutually reinforcing.
 
-### What to Check
+7. **Testing only with VoiceOver.** Switch Control, Voice Control, and Full Keyboard Access exercise different surfaces. A view that works with VoiceOver may still be unreachable by Switch Control if the trait set or focus order is wrong.
 
-1. **Element exists.** The text view appears in the Accessibility Inspector hierarchy.
-2. **Traits correct.** Shows as editable text (not just static text) when `isEditable = true`.
-3. **Value updates.** The `accessibilityValue` reflects current text content.
-4. **Label present.** Either set explicitly or derived from a placeholder.
-5. **Actions available.** Activate (double-tap) puts the view into editing mode.
-6. **Text navigation.** Rotor gestures work for character, word, line, and heading navigation.
+## References
 
-### Common Failures
-
-| Symptom | Likely Cause |
-|---------|-------------|
-| VoiceOver skips the editor | `isAccessibilityElement = false` or view is hidden |
-| VoiceOver reads stale text | `accessibilityValue` not updating after edits |
-| "Dimmed" announcement | `isEnabled = false` on the text view |
-| No text navigation gestures | Missing `UIAccessibilityReadingContent` on custom view |
-| SwiftUI modifier shadows UIKit | `.accessibilityLabel()` applied to UIViewRepresentable wrapper |
-
-## Common Pitfalls
-
-1. **SwiftUI accessibility modifiers on UIViewRepresentable wrappers.** These replace the UIKit view's accessibility subtree. Set accessibility properties on the UIKit view directly, not on the SwiftUI wrapper.
-2. **Not posting announcements for programmatic changes.** Users cannot see the screen — if your code changes text without user input, announce it.
-3. **Custom fonts without UIFontMetrics.** Raw `UIFont(name:size:)` does not scale with Dynamic Type. Always wrap in `UIFontMetrics.scaledFont(for:)`.
-4. **Forgetting to set accessibilityTextualContext.** Source code editors that don't set `.sourceCode` will have VoiceOver skip punctuation, making code incomprehensible.
-5. **Testing only with VoiceOver.** Also test with Switch Control, Voice Control, and Full Keyboard Access — each has different interaction patterns.
-
-## Related Skills
-
-- Use `/skill txt-dynamic-type` for comprehensive Dynamic Type patterns.
-- Use `/skill txt-colors` for color contrast and accessibility colors.
-- Use `/skill txt-representable` for UIViewRepresentable wrapping patterns.
-- Use `/skill txt-views` for choosing accessible text views.
+- `/skill txt-dynamic-type` — Dynamic Type scaling, content-size categories, `UIFontMetrics`
+- `/skill txt-wrap-textview` — `UIViewRepresentable` wrapping patterns and the SwiftUI/UIKit boundary
+- `/skill txt-view-picker` — picking an accessible text view in the first place
+- `/skill txt-colors` — text contrast and semantic color pairing
+- [UIAccessibility](https://sosumi.ai/documentation/uikit/uiaccessibility)
+- [UIAccessibilityReadingContent](https://sosumi.ai/documentation/uikit/uiaccessibilityreadingcontent)
+- [UIAccessibilityTextualContext](https://sosumi.ai/documentation/uikit/uiaccessibilitytextualcontext)

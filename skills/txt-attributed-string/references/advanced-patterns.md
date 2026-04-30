@@ -157,7 +157,7 @@ let attrStr = try NSAttributedString(data: htmlData,
     documentAttributes: nil)
 ```
 
-**HTML import is main-thread only.** It uses WebKit internally. Background calls deadlock or crash. It's also slow — not suitable for bulk conversions.
+HTML import is main-thread only because the initializer drives WebKit internally; calls from a background queue deadlock or crash. It's also slow, so it isn't suitable for bulk conversions.
 
 ### What Survives Each Format
 
@@ -201,7 +201,7 @@ let data = try JSONEncoder().encode(doc)
 let decoded = try JSONDecoder().decode(Document.self, from: data)
 ```
 
-**Without `@CodableConfiguration` or explicit scope, custom attributes are silently dropped.**
+Without `@CodableConfiguration` or an explicit scope, custom attributes are silently dropped — the encoder doesn't know which attribute keys exist outside the standard scope.
 
 ### When to Use Which
 

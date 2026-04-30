@@ -4,142 +4,143 @@
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-compatible-blue)](https://github.com/vercel-labs/skills)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Skills for Apple's text-editing stack: TextKit 1 and 2, UITextView, NSTextView, AttributedString, Core Text, Writing Tools, and the iOS 26 SwiftUI TextEditor.
+Agent Skills for Apple's text stack: TextKit 1 and 2, UITextView, NSTextView, AttributedString, Core Text, Writing Tools, and the iOS 26 SwiftUI TextEditor.
 
 ## Install
 
-### Recommended: any agent via [skills CLI](https://github.com/vercel-labs/skills)
-
 ```sh
-# Interactive picker for skills and agents
+# Any agent (Vercel skills CLI)
 npx skills add sitapix/apple-text
 
-# Install everything
-npx skills add sitapix/apple-text --all
-
-# Install specific skills
-npx skills add sitapix/apple-text --skill txt-views --skill txt-recipes
-npx skills add sitapix/apple-text --skill txt-writing-tools
-
-# Check for and apply updates
-npx skills check
-npx skills update
-```
-
-### Claude Code (plugin marketplace)
-
-```sh
-# Add the marketplace
+# Claude Code
 /plugin marketplace add sitapix/apple-text
-
-# Install the plugin
 /plugin install apple-text@apple-text
 ```
 
+For Claude Code installs, prefix slash commands with `apple-text:` (e.g., `/apple-text:txt-audit`).
+
 ## Skills
 
-### Routing & Diagnostics
+### Diagnostics
 
-| Skill | What it covers |
-|-------|----------------|
-| [txt-audit](skills/txt-audit/) | Review code for TextKit fallback risk, editing-lifecycle bugs, deprecated APIs |
-| [txt-textkit-debug](skills/txt-textkit-debug/) | Debug stale layout, editing crashes, fallback, Writing Tools issues, rendering artifacts |
-| [txt-fallback-triggers](skills/txt-fallback-triggers/) | TextKit 2 → 1 fallback catalog, detection, and recovery |
-| [txt-recipes](skills/txt-recipes/) | Quick snippets for background colors, line numbers, character limits, links, placeholders |
+| Skill | Covers |
+|---|---|
+| [txt-audit](skills/txt-audit/) | Severity-ranked code review |
+| [txt-textkit-debug](skills/txt-textkit-debug/) | Symptom-driven diagnosis |
+| [txt-fallback-triggers](skills/txt-fallback-triggers/) | TextKit 2→1 fallback catalog |
+| [txt-snippets](skills/txt-snippets/) | Quick recipes |
 
-### Choosing the Right API
+### Picking an API
 
-| Skill | What it covers |
-|-------|----------------|
-| [txt-views](skills/txt-views/) | Choose between SwiftUI Text/TextField/TextEditor, UITextView, or NSTextView |
-| [txt-textkit-choice](skills/txt-textkit-choice/) | TextKit 1 vs TextKit 2 decisions and migration risk |
-| [txt-attributed-string](skills/txt-attributed-string/) | AttributedString vs NSAttributedString, custom attributes, conversions |
-| [txt-appkit-vs-uikit](skills/txt-appkit-vs-uikit/) | NSTextView vs UITextView capability comparison and porting notes |
-| [txt-swiftui-texteditor](skills/txt-swiftui-texteditor/) | SwiftUI TextEditor on iOS 26+, when it replaces a UITextView wrapper |
+| Skill | Covers |
+|---|---|
+| [txt-view-picker](skills/txt-view-picker/) | Which text view to use |
+| [txt-textkit-choice](skills/txt-textkit-choice/) | TextKit 1 vs 2 |
+| [txt-attributed-string](skills/txt-attributed-string/) | AttributedString vs NSAttributedString |
+| [txt-appkit-vs-uikit](skills/txt-appkit-vs-uikit/) | NSTextView vs UITextView |
+| [txt-swiftui-texteditor](skills/txt-swiftui-texteditor/) | iOS 26 SwiftUI TextEditor |
 
-### TextKit & Layout
+### TextKit & layout
 
-| Skill | What it covers |
-|-------|----------------|
-| [txt-textkit1](skills/txt-textkit1/) | TextKit 1 APIs: NSLayoutManager, NSTextStorage, NSTextContainer, glyphs |
-| [txt-textkit2](skills/txt-textkit2/) | TextKit 2 APIs: NSTextLayoutManager, NSTextContentManager, viewport, fragments |
-| [txt-storage](skills/txt-storage/) | NSTextStorage, NSTextContentStorage, processEditing, delegate hooks |
-| [txt-viewport-rendering](skills/txt-viewport-rendering/) | Viewport layout, fragment geometry, rendering attributes, font substitution |
-| [txt-layout-invalidation](skills/txt-layout-invalidation/) | ensureLayout, invalidateLayout, debugging stale layout in TextKit 1 and 2 |
-| [txt-exclusion-paths](skills/txt-exclusion-paths/) | Wrap text around shapes, multi-column, linked containers, NSTextTable |
-| [txt-line-breaking](skills/txt-line-breaking/) | Line break mode, hyphenation, truncation, line height, paragraph spacing, tab stops |
-| [txt-measurement](skills/txt-measurement/) | Measure text size, boundingRect, sizing views to fit content |
-| [txt-core-text](skills/txt-core-text/) | Glyph-level access, custom typesetting, hit testing, font tables |
+| Skill | Covers |
+|---|---|
+| [txt-textkit1](skills/txt-textkit1/) | TextKit 1 reference |
+| [txt-textkit2](skills/txt-textkit2/) | TextKit 2 reference |
+| [txt-nstextstorage](skills/txt-nstextstorage/) | NSTextStorage subclassing |
+| [txt-viewport-rendering](skills/txt-viewport-rendering/) | Viewport, fragments, rendering attributes |
+| [txt-layout-invalidation](skills/txt-layout-invalidation/) | The invalidation model |
+| [txt-exclusion-paths](skills/txt-exclusion-paths/) | Wrapping around shapes, multi-column |
+| [txt-line-breaking](skills/txt-line-breaking/) | Hyphenation, truncation, paragraph spacing |
+| [txt-measurement](skills/txt-measurement/) | boundingRect, sizeThatFits |
+| [txt-core-text](skills/txt-core-text/) | Glyph-level access |
 
-### Attributed Text & Formatting
+### Attributes & content
 
-| Skill | What it covers |
-|-------|----------------|
-| [txt-formatting](skills/txt-formatting/) | NSAttributedString.Key values, underline styles, shadows, lists, tables |
-| [txt-attachments](skills/txt-attachments/) | Embed images, custom views, Genmoji via NSTextAttachment, view providers, baseline |
-| [txt-markdown](skills/txt-markdown/) | Markdown in SwiftUI Text and AttributedString, PresentationIntent, rendering gaps |
-| [txt-colors](skills/txt-colors/) | Text colors, semantic colors, dark mode, wide-color/HDR across UIKit, AppKit, SwiftUI |
-| [txt-foundation-utils](skills/txt-foundation-utils/) | NSRegularExpression, NSDataDetector, NLTagger, NLTokenizer, NSString bridging |
+| Skill | Covers |
+|---|---|
+| [txt-attribute-keys](skills/txt-attribute-keys/) | NSAttributedString.Key catalog |
+| [txt-attachments](skills/txt-attachments/) | Inline images, Genmoji |
+| [txt-markdown](skills/txt-markdown/) | Markdown in SwiftUI Text and AttributedString |
+| [txt-colors](skills/txt-colors/) | Text colors, dark mode, HDR |
+| [txt-detectors-tagger](skills/txt-detectors-tagger/) | NSDataDetector, NLTagger, NLTokenizer |
 
-### Editing & Interaction
+### Editing & input
 
-| Skill | What it covers |
-|-------|----------------|
-| [txt-interaction](skills/txt-interaction/) | Selection, edit menus, link taps, gestures, cursor appearance, long-press actions |
-| [txt-find-replace](skills/txt-find-replace/) | UIFindInteraction, NSTextFinder, highlighting, replace-all |
-| [txt-undo](skills/txt-undo/) | Undo/redo grouping, coalescing, NSUndoManager integration |
-| [txt-pasteboard](skills/txt-pasteboard/) | Copy/cut/paste, format stripping, rich text sanitization, custom pasteboard types |
-| [txt-drag-drop](skills/txt-drag-drop/) | UITextDraggable, UITextDroppable, drag previews, custom drop handling |
-| [txt-spell-autocorrect](skills/txt-spell-autocorrect/) | UITextChecker, NSSpellChecker, UITextInputTraits, text completion |
+| Skill | Covers |
+|---|---|
+| [txt-uitextinput](skills/txt-uitextinput/) | UITextInput / NSTextInputClient |
+| [txt-selection-menus](skills/txt-selection-menus/) | Selection UI, edit menus, gestures |
+| [txt-find-replace](skills/txt-find-replace/) | UIFindInteraction, NSTextFinder |
+| [txt-spell-autocorrect](skills/txt-spell-autocorrect/) | UITextChecker, NSSpellChecker |
+| [txt-undo](skills/txt-undo/) | NSUndoManager grouping |
+| [txt-pasteboard](skills/txt-pasteboard/) | Copy/cut/paste, format stripping |
+| [txt-drag-drop](skills/txt-drag-drop/) | UITextDraggable, UITextDroppable |
+| [txt-bidi](skills/txt-bidi/) | RTL, bidirectional text |
+| [txt-regex](skills/txt-regex/) | Swift Regex vs NSRegularExpression |
 
-### Input & Internationalization
+### SwiftUI bridging
 
-| Skill | What it covers |
-|-------|----------------|
-| [txt-input](skills/txt-input/) | UITextInput, UIKeyInput, NSTextInputClient, marked text, custom input |
-| [txt-bidi](skills/txt-bidi/) | Bidirectional text, RTL languages, writing direction, cursor behavior |
-| [txt-parsing](skills/txt-parsing/) | Swift Regex vs NSRegularExpression, bridging to NSRange |
+| Skill | Covers |
+|---|---|
+| [txt-swiftui-interop](skills/txt-swiftui-interop/) | What crosses the SwiftUI/TextKit boundary |
+| [txt-wrap-textview](skills/txt-wrap-textview/) | UIViewRepresentable around UITextView/NSTextView |
 
-### SwiftUI Bridging
+### Modern & maintenance
 
-| Skill | What it covers |
-|-------|----------------|
-| [txt-swiftui-bridging](skills/txt-swiftui-bridging/) | When a text type or attribute crosses the SwiftUI/TextKit boundary cleanly |
-| [txt-representable](skills/txt-representable/) | Wrap UITextView/NSTextView in SwiftUI: binding, focus, sizing, cursor preservation |
+| Skill | Covers |
+|---|---|
+| [txt-writing-tools](skills/txt-writing-tools/) | UIWritingToolsCoordinator, behavior, ignored ranges |
+| [txt-dynamic-type](skills/txt-dynamic-type/) | UIFontMetrics, adjustsFontForContentSizeCategory |
+| [txt-accessibility](skills/txt-accessibility/) | VoiceOver, accessibilityTextualContext |
+| [txt-apple-docs](skills/txt-apple-docs/) | Sosumi + `xcrun mcpbridge` |
+| [txt-refresh-against-sosumi](skills/txt-refresh-against-sosumi/) | Refresh latest-apis.md after Xcode releases |
 
-### Modern Features & Accessibility
+## Example prompts
 
-| Skill | What it covers |
-|-------|----------------|
-| [txt-writing-tools](skills/txt-writing-tools/) | Writing Tools: writingToolsBehavior, UIWritingToolsCoordinator, protected ranges |
-| [txt-dynamic-type](skills/txt-dynamic-type/) | Dynamic Type scaling, custom font metrics, content size category changes |
-| [txt-accessibility](skills/txt-accessibility/) | VoiceOver, Dynamic Type, accessibility traits in custom Apple text editors |
-| [txt-apple-docs](skills/txt-apple-docs/) | Apple-authored docs, exact API signatures, Swift diagnostic explanations |
+Phrasings that route to the right skill, including ones that don't name the API.
 
-## Getting Started
+### Diagnose a bug
 
-Skills activate from your questions. Ask your assistant:
+| Prompt | Triggers |
+|---|---|
+| "Writing Tools stopped showing the inline rewrite animation — only the floating panel opens now. Started after we added a custom NSTextStorage." | [txt-fallback-triggers](skills/txt-fallback-triggers/) |
+| "Lines in our editor sometimes render half-drawn — descenders chopped, characters bleeding into the next paragraph." | [txt-textkit-debug](skills/txt-textkit-debug/) |
+| "Cursor jumps to the end every time my SwiftUI binding pushes new text into the wrapped UITextView." | [txt-wrap-textview](skills/txt-wrap-textview/) |
+| "Cmd-Z undoes one character at a time after a paste — should be one step." | [txt-undo](skills/txt-undo/) |
+| "Diacritics get clipped at the top of my custom NSTextLayoutFragment." | [txt-viewport-rendering](skills/txt-viewport-rendering/) |
+| "boundingRect returns a single-line size for multi-line text." | [txt-measurement](skills/txt-measurement/) |
+| "Cursor jumps unpredictably when I type Arabic mixed with English." | [txt-bidi](skills/txt-bidi/) |
+| "VoiceOver skips punctuation in our code editor." | [txt-accessibility](skills/txt-accessibility/) |
 
-```
-"My UITextView fell back to TextKit 1"
-"Which text view should I use?"
-"How do I wrap UITextView in SwiftUI?"
-"Audit this editor for anti-patterns"
-"What changed in Apple's latest styled text editing docs?"
-"How do I use TextEditor with AttributedString in iOS 26?"
-```
+### Pick an API
 
-Or invoke a skill directly:
+| Prompt | Triggers |
+|---|---|
+| "Starting a new code editor — TextKit 1 or TextKit 2?" | [txt-textkit-choice](skills/txt-textkit-choice/) |
+| "AttributedString or NSAttributedString for a notes-app model?" | [txt-attributed-string](skills/txt-attributed-string/) |
+| "Multi-line search box in SwiftUI — TextField or TextEditor?" | [txt-view-picker](skills/txt-view-picker/) |
+| "Porting our Mac editor to iPad — what AppKit features have no UIKit equivalent?" | [txt-appkit-vs-uikit](skills/txt-appkit-vs-uikit/) |
 
-```
-/txt-audit          # scan code for TextKit anti-patterns
-/txt-views          # choose the right text view
-/txt-textkit-debug  # debug broken text behavior
-/txt-recipes        # quick how-do-I snippets
-```
+### Build a feature
 
-If you installed via the Claude Code plugin marketplace, prefix each command with `apple-text:`. For example, `/apple-text:txt-audit`.
+| Prompt | Triggers |
+|---|---|
+| "How do I add a placeholder to UITextView?" | [txt-snippets](skills/txt-snippets/) |
+| "Wrap article text around an inline circular thumbnail." | [txt-exclusion-paths](skills/txt-exclusion-paths/) |
+| "Add cmd-F find UI to my UITextView with replace-all." | [txt-find-replace](skills/txt-find-replace/) |
+| "Drop an image into my editor as an inline attachment." | [txt-drag-drop](skills/txt-drag-drop/) |
+| "Rewrite is mangling code blocks in our doc editor — protect them from Writing Tools." | [txt-writing-tools](skills/txt-writing-tools/) |
+| "Bind AttributedString to TextEditor on iOS 26 with a formatting toolbar." | [txt-swiftui-texteditor](skills/txt-swiftui-texteditor/) |
+| "Building a canvas-based code editor and the keyboard / autocorrect / magnifier are wrong." | [txt-uitextinput](skills/txt-uitextinput/) |
 
-## Acknowledgments
+### Audit and maintenance
 
-Apple Text borrows its packaging and documentation patterns from [Axiom](https://github.com/CharlesWiltgen/Axiom) by Charles Wiltgen.
+| Prompt | Triggers |
+|---|---|
+| "Review our text-editor module before we ship — flag fallback risks and deprecated APIs." | [txt-audit](skills/txt-audit/) |
+| "Refresh the skills against current Apple docs now that Xcode 26.4 is out." | [txt-refresh-against-sosumi](skills/txt-refresh-against-sosumi/) |
+| "Look up the current `AttributedString(markdown:)` initializer signature." | [txt-apple-docs](skills/txt-apple-docs/) |
+
+## Contributing
+
+[`AGENTS.md`](AGENTS.md) covers authoring rules, anti-patterns, and the freshness contract. [`references/topic-boundaries.md`](references/topic-boundaries.md) explains sibling splits. Skill content links to [sosumi.ai](https://sosumi.ai/) instead of `developer.apple.com` (the latter renders with JavaScript and returns a stub to non-browser fetches).

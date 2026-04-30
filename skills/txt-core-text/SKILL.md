@@ -1,329 +1,309 @@
 ---
 name: txt-core-text
-description: Use when working with Core Text for glyph-level access, custom typesetting, hit testing, font tables, or when TextKit 2 lacks the glyph APIs you need
+description: Use Core Text directly — CTLine, CTRun, CTFramesetter, CTTypesetter, CTFont, CTRunDelegate — for glyph-level access, custom typesetting, hit testing outside a text container, font tables, or per-glyph Core Graphics rendering. Use when you need glyph IDs and positions, custom line breaking, drawing text into a CGContext, OpenType feature inspection, or inline non-text elements with custom metrics. Read the actual rendering pipeline (especially the coordinate flip) before reciting fixes — most Core Text bugs are inverted axes or attribute-key type mismatches. Do NOT use when TextKit 2 already exposes the APIs you need — see txt-textkit2.
 license: MIT
 ---
 
-# Core Text for TextKit Developers
+# Core Text
 
-Use this skill when you need glyph-level control — either because TextKit 2 has no glyph APIs, or because your use case (custom typesetting, font tables, per-glyph rendering) requires the Core Text layer directly.
+Authored against iOS 26.x / Swift 6.x / Xcode 26.x.
 
-## When to Use
+Core Text is the C-API typesetting and font layer that sits directly above Core Graphics. Both TextKit 1 and TextKit 2 render through it — they are clients, not alternatives. This skill covers when to drop down to Core Text directly: TextKit 2 deliberately hides glyph-level access (positions, advances, glyph IDs); custom typesetting or non-standard line breaking needs `CTTypesetter`; per-glyph drawing into a `CGContext` needs `CTLine` or `CTFrame`; font tables and OpenType feature inspection need `CTFont`. The patterns here describe how Core Text usually fails in TextKit-adjacent code — verify against the actual call site, especially the coordinate transform in any `draw(_:)` override.
 
-- You need glyph positions, advances, or bounding boxes that TextKit 2 hides
-- You are doing custom typesetting or non-standard line breaking
-- You need font table access or OpenType feature control
-- You are rendering text with custom Core Graphics effects per glyph
-- You need hit testing or caret positioning outside of a TextKit text container
+A practical rule before reaching for Core Text: if TextKit 2's `NSTextLayoutFragment` and `NSTextLineFragment` already expose what you need, stay there. The `txt-textkit2` skill covers fragment geometry. Core Text is the right layer when fragments don't expose individual glyph positions, when you're typesetting outside of an `NSTextContainer`, or when the destination is a `CGContext` you control.
 
-## Quick Decision
+## Contents
 
-```
-Need glyph-level access?
-    TextKit 1 available? → Use NSLayoutManager glyph APIs
-    TextKit 2 only? → Drop to Core Text (this skill)
+- [Architecture overview](#architecture-overview)
+- [CTLine — the common entry point](#ctline--the-common-entry-point)
+- [CTRun — glyph-level access](#ctrun--glyph-level-access)
+- [CTFramesetter and CTFrame](#ctframesetter-and-ctframe)
+- [CTTypesetter — custom line breaking](#cttypesetter--custom-line-breaking)
+- [CTFont — metrics, glyphs, features](#ctfont--metrics-glyphs-features)
+- [CTRunDelegate — inline custom metrics](#ctrundelegate--inline-custom-metrics)
+- [Coordinate system and the flip](#coordinate-system-and-the-flip)
+- [Bridging TextKit and attribute keys](#bridging-textkit-and-attribute-keys)
+- [Common Mistakes](#common-mistakes)
+- [References](#references)
 
-Need custom line breaking?
-    → CTTypesetter
-
-Need to draw text into a CGContext directly?
-    → CTLine or CTFrame
-
-Need font metrics, tables, or OpenType features?
-    → CTFont
-
-Need inline non-text elements with custom metrics?
-    → CTRunDelegate
-```
-
-## Core Guidance
-
-## Architecture
+## Architecture overview
 
 ```
-CTFramesetter (factory)
-    → CTTypesetter (line breaking)
-        → CTFrame (laid-out region)
-            → CTLine (one visual line)
-                → CTRun (contiguous glyphs, same attributes)
-                    → CGGlyph[] (actual glyph IDs)
-                    → CGPoint[] (positions)
-                    → CGSize[]  (advances)
+CTFramesetter   (factory)
+  └─ CTTypesetter   (line breaking)
+       └─ CTFrame   (laid-out region)
+            └─ CTLine   (one visual line)
+                 └─ CTRun   (contiguous glyphs sharing attributes)
+                      └─ CGGlyph[]  (glyph IDs)
+                      └─ CGPoint[]  (positions, line-relative)
+                      └─ CGSize[]   (advances)
 ```
 
-Core Text sits directly above Core Graphics. It is a C API using Core Foundation types. Available since iOS 3.2 / macOS 10.5. Both TextKit 1 and TextKit 2 render through Core Text internally — it is the foundation under both, not part of either.
+Available since iOS 3.2 and macOS 10.5. Core Text uses Core Foundation types (`CFAttributedString`, `CFArray`, `CFRange`); `NSAttributedString` is toll-free bridged on both platforms.
 
-**Thread safety:** Font objects (CTFont, CTFontDescriptor, CTFontCollection) are thread-safe and can be shared across threads. Layout objects (CTTypesetter, CTFramesetter, CTRun, CTLine, CTFrame) are **NOT thread-safe** — use them on a single thread only.
+Thread safety: font types (`CTFont`, `CTFontDescriptor`, `CTFontCollection`) are thread-safe and can be shared across threads. Layout types (`CTTypesetter`, `CTFramesetter`, `CTRun`, `CTLine`, `CTFrame`) are not — use them on a single thread per object.
 
-## CTLine — The Most Common Escape Hatch
+## CTLine — the common entry point
 
-For most TextKit developers, `CTLine` is the entry point. Create one from an attributed string to get glyph information:
+For most TextKit-adjacent work, `CTLine` is the right entry point. It typesets an attributed string into one visual line and exposes the geometry you actually want — typographic bounds, hit testing, per-glyph positions.
 
 ```swift
-let attributedString = NSAttributedString(string: "Hello 👋🏽",
+let attributed = NSAttributedString(string: "Hello world",
     attributes: [.font: UIFont.systemFont(ofSize: 16)])
-let line = CTLineCreateWithAttributedString(attributedString)
+let line = CTLineCreateWithAttributedString(attributed)
 
-// Typographic bounds
+// Typographic bounds (used for line height calculations)
 var ascent: CGFloat = 0, descent: CGFloat = 0, leading: CGFloat = 0
-let width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
-let height = ascent + descent + leading
+let typographicWidth = CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
+let lineHeight = ascent + descent + leading
 
-// Hit testing: point → string index
-let index = CTLineGetStringIndexForPosition(line, CGPoint(x: 50, y: 0))
+// Image bounds (actual rendered pixels — accounts for descenders/diacritics)
+let context = UIGraphicsGetCurrentContext()!
+let imageBounds = CTLineGetImageBounds(line, context)
 
-// Caret positioning: string index → x offset
-let offset = CTLineGetOffsetForStringIndex(line, 3, nil)
+// Hit testing: viewport point → string index
+let stringIndex = CTLineGetStringIndexForPosition(line, CGPoint(x: 50, y: 0))
 
-// Image bounds (actual rendered pixels, not typographic)
-let ctx = UIGraphicsGetCurrentContext()!
-let imageBounds = CTLineGetImageBounds(line, ctx)
+// Caret positioning: string index → x offset along the line
+let xOffset = CTLineGetOffsetForStringIndex(line, 3, nil)
 ```
 
-## CTRun — Glyph-Level Access
+`CTLine` ignores any `NSParagraphStyle` line break, paragraph spacing, or wrapping — it produces exactly one line regardless of width. For wrapped multi-line layout, use `CTFramesetter` or `CTTypesetter`.
 
-Each `CTRun` is a contiguous sequence of glyphs sharing the same attributes:
+## CTRun — glyph-level access
+
+A `CTRun` is a contiguous sequence of glyphs sharing identical attributes. Walking the runs of a `CTLine` is how you get individual glyph IDs, positions, and advances:
 
 ```swift
 let runs = CTLineGetGlyphRuns(line) as! [CTRun]
 
 for run in runs {
-    let glyphCount = CTRunGetGlyphCount(run)
+    let count = CTRunGetGlyphCount(run)
+    let fullRange = CFRange(location: 0, length: count)
 
-    // Get all glyphs
-    var glyphs = [CGGlyph](repeating: 0, count: glyphCount)
-    CTRunGetGlyphs(run, CFRange(location: 0, length: glyphCount), &glyphs)
+    var glyphs = [CGGlyph](repeating: 0, count: count)
+    CTRunGetGlyphs(run, fullRange, &glyphs)
 
-    // Get positions (relative to line origin)
-    var positions = [CGPoint](repeating: .zero, count: glyphCount)
-    CTRunGetPositions(run, CFRange(location: 0, length: glyphCount), &positions)
+    var positions = [CGPoint](repeating: .zero, count: count)
+    CTRunGetPositions(run, fullRange, &positions)
 
-    // Get advances (width of each glyph)
-    var advances = [CGSize](repeating: .zero, count: glyphCount)
-    CTRunGetAdvances(run, CFRange(location: 0, length: glyphCount), &advances)
+    var advances = [CGSize](repeating: .zero, count: count)
+    CTRunGetAdvances(run, fullRange, &advances)
 
-    // Map glyph indices back to string indices (UTF-16)
-    var stringIndices = [CFIndex](repeating: 0, count: glyphCount)
-    CTRunGetStringIndices(run, CFRange(location: 0, length: glyphCount), &stringIndices)
+    // Map each glyph back to a UTF-16 string index in the original attributed string
+    var stringIndices = [CFIndex](repeating: 0, count: count)
+    CTRunGetStringIndices(run, fullRange, &stringIndices)
 
-    // Get the run's attributes
     let attrs = CTRunGetAttributes(run) as! [NSAttributedString.Key: Any]
     let font = attrs[.font] as! CTFont
 }
 ```
 
-## CTFramesetter / CTFrame — Multi-Line Layout
+Glyph-to-character mapping is not 1:1: ligatures produce fewer glyphs than characters; Arabic and Devanagari can produce more glyphs than characters. `CTRunGetStringIndices` is the canonical bridge — never compute it from `glyphCount`.
 
-For laying out text into a rectangular (or custom-shaped) region:
+Positions are line-relative. To draw or hit-test in document coordinates, add the line's origin (from `CTFrameGetLineOrigins`) and the host frame's origin.
+
+## CTFramesetter and CTFrame
+
+For laying out attributed text into a rectangular or path-shaped region:
 
 ```swift
-let framesetter = CTFramesetterCreateWithAttributedString(attributedString)
+let framesetter = CTFramesetterCreateWithAttributedString(attributed)
 
-// Suggest frame size for constrained width
+// Suggest the size needed for a given width constraint.
 let constraint = CGSize(width: 300, height: .greatestFiniteMagnitude)
 let suggestedSize = CTFramesetterSuggestFrameSizeWithConstraints(
-    framesetter, CFRange(location: 0, length: 0), nil, constraint, nil)
+    framesetter,
+    CFRange(location: 0, length: 0),  // 0 length means "all of the string"
+    nil,
+    constraint,
+    nil
+)
 
-// Create frame in a path
 let path = CGPath(rect: CGRect(origin: .zero, size: suggestedSize), transform: nil)
-let frame = CTFramesetterCreateFrame(framesetter, CFRange(location: 0, length: 0), path, nil)
+let frame = CTFramesetterCreateFrame(
+    framesetter,
+    CFRange(location: 0, length: 0),
+    path,
+    nil
+)
 
-// Get lines and origins
 let lines = CTFrameGetLines(frame) as! [CTLine]
 var origins = [CGPoint](repeating: .zero, count: lines.count)
 CTFrameGetLineOrigins(frame, CFRange(location: 0, length: lines.count), &origins)
 
-// Draw the entire frame
+// Draw the entire laid-out frame in one call
 CTFrameDraw(frame, context)
 ```
 
-## CTTypesetter — Custom Line Breaking
+`CTFrameGetLineOrigins` returns origins in Core Text's bottom-left coordinate space — see [Coordinate system and the flip](#coordinate-system-and-the-flip).
 
-For control over where lines break:
+## CTTypesetter — custom line breaking
+
+When you need to control where lines break — for justified ragged-right layout, custom hyphenation, or non-rectangular layout — `CTTypesetter` is the lower level under `CTFramesetter`:
 
 ```swift
-let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
+let typesetter = CTTypesetterCreateWithAttributedString(attributed)
 
 var start: CFIndex = 0
-let stringLength = CFAttributedStringGetLength(attributedString)
+let length = CFAttributedStringGetLength(attributed)
 
-while start < stringLength {
-    // Suggest line break for a given width
-    let count = CTTypesetterSuggestLineBreak(typesetter, start, 300.0)
+while start < length {
+    // Suggest where to break for a target width
+    let breakLength = CTTypesetterSuggestLineBreak(typesetter, start, 300.0)
 
-    // Or suggest with cluster breaking (for CJK)
-    // let count = CTTypesetterSuggestClusterBreak(typesetter, start, 300.0)
+    // Or the cluster-aware variant for CJK and complex scripts
+    // let breakLength = CTTypesetterSuggestClusterBreak(typesetter, start, 300.0)
 
-    let line = CTTypesetterCreateLine(typesetter, CFRange(location: start, length: count))
-    // Position and draw the line
-    start += count
+    let line = CTTypesetterCreateLine(typesetter, CFRange(location: start, length: breakLength))
+    // Position and draw the line at the appropriate y-coordinate
+    start += breakLength
 }
 ```
 
-## CTFont — Font Metrics and Features
+The two suggest functions differ in what they consider an acceptable break point. `SuggestLineBreak` follows standard line-breaking rules; `SuggestClusterBreak` accepts breaks at every grapheme cluster boundary, which produces tighter packing for CJK content where every character can theoretically wrap.
+
+## CTFont — metrics, glyphs, features
 
 ```swift
-// Create from UIFont
 let uiFont = UIFont.systemFont(ofSize: 16)
 let ctFont = CTFontCreateWithName(uiFont.fontName as CFString, uiFont.pointSize, nil)
 
-// Metrics
 let ascent = CTFontGetAscent(ctFont)
 let descent = CTFontGetDescent(ctFont)
 let leading = CTFontGetLeading(ctFont)
 let unitsPerEm = CTFontGetUnitsPerEm(ctFont)
 
-// Get glyphs for characters
+// Character → glyph mapping
 var characters: [UniChar] = Array("A".utf16)
 var glyphs = [CGGlyph](repeating: 0, count: characters.count)
 CTFontGetGlyphsForCharacters(ctFont, &characters, &glyphs, characters.count)
 
-// Glyph bounding boxes
-var boundingRects = [CGRect](repeating: .zero, count: glyphs.count)
-CTFontGetBoundingRectsForGlyphs(ctFont, .default, glyphs, &boundingRects, glyphs.count)
+// Glyph bounding rectangles
+var rects = [CGRect](repeating: .zero, count: glyphs.count)
+CTFontGetBoundingRectsForGlyphs(ctFont, .default, glyphs, &rects, glyphs.count)
 
-// Glyph path (for custom rendering)
+// Glyph outline path — useful for custom CG rendering
 if let path = CTFontCreatePathForGlyph(ctFont, glyphs[0], nil) {
-    // Draw the glyph outline
     context.addPath(path)
     context.fillPath()
 }
 
-// OpenType features
+// OpenType features (small caps, alternate glyphs, etc.)
 let features = CTFontCopyFeatures(ctFont) as? [[String: Any]] ?? []
 ```
 
-## CTRunDelegate — Inline Custom Elements
+`CTFontCreatePathForGlyph` is the entry point for custom per-glyph drawing — outline animation, glyph distortion, glyph fills with `CGGradient`. The path is in the font's design space; scale by `pointSize / unitsPerEm` to convert to point space.
 
-Reserve space in a line for non-text content (images, custom views):
+## CTRunDelegate — inline custom metrics
+
+`CTRunDelegate` lets you reserve a chunk of width inside a line of text for non-text content while keeping Core Text's typesetting in charge of line breaking:
 
 ```swift
-var callbacks = CTRunDelegateCallbacks(version: kCTRunDelegateCurrentVersion,
+var callbacks = CTRunDelegateCallbacks(
+    version: kCTRunDelegateCurrentVersion,
     dealloc: { _ in },
-    getAscent: { _ in 20 },   // Height above baseline
-    getDescent: { _ in 5 },    // Depth below baseline
-    getWidth: { _ in 30 }      // Width of the space
+    getAscent: { _ in 20 },     // height above baseline
+    getDescent: { _ in 5 },      // depth below baseline
+    getWidth: { _ in 30 }        // horizontal space reserved
 )
 
 let delegate = CTRunDelegateCreate(&callbacks, nil)!
-
 let attrs: [NSAttributedString.Key: Any] = [
-    kCTRunDelegateAttributeName as NSAttributedString.Key: delegate
+    kCTRunDelegateAttributeName as NSAttributedString.Key: delegate,
 ]
 let placeholder = NSAttributedString(string: "\u{FFFC}", attributes: attrs)
-
-// Insert into your attributed string
-// Then draw your custom content at the run's position after layout
 ```
 
-## Critical: Coordinate System
+The delegate reserves space; you draw the actual content at the run's position after layout. This is the building block under `NSTextAttachment` — but it is closer to the metal and lets you draw whatever you want at the reserved location.
 
-**Core Text uses bottom-left origin (Core Graphics). UIKit uses top-left origin.**
+## Coordinate system and the flip
 
-### Drawing Core Text in UIKit
+Core Text uses Core Graphics's bottom-left-origin coordinate system. UIKit uses top-left origin. Drawing Core Text directly into a UIKit `CGContext` requires flipping the context, and forgetting the flip is the most common Core Text mistake — text either renders upside-down or at a wrong y position.
 
 ```swift
 override func draw(_ rect: CGRect) {
     guard let context = UIGraphicsGetCurrentContext() else { return }
 
-    // REQUIRED: Flip coordinate system for Core Text
+    // Required: reset and flip
     context.textMatrix = .identity
     context.translateBy(x: 0, y: bounds.height)
     context.scaleBy(x: 1, y: -1)
 
-    // Now draw
     CTLineDraw(line, context)
     // or CTFrameDraw(frame, context)
 }
 ```
 
-**Forgetting the flip is the #1 Core Text mistake.** Text renders upside-down or at the wrong position.
+`textMatrix` persists between drawing calls — leaving a non-identity matrix from a previous operation causes the next Core Text drawing to be transformed unexpectedly. Always reset it before drawing.
 
-### Converting Line Origins from CTFrame
-
-`CTFrameGetLineOrigins` returns origins in Core Text coordinates (bottom-left). To use in UIKit:
+`CTFrameGetLineOrigins` returns origins in Core Text coordinates. Converting to UIKit coordinates means flipping the y axis against the frame height:
 
 ```swift
-let lines = CTFrameGetLines(frame) as! [CTLine]
-var origins = [CGPoint](repeating: .zero, count: lines.count)
-CTFrameGetLineOrigins(frame, CFRange(location: 0, length: lines.count), &origins)
-
 for (i, line) in lines.enumerated() {
-    // Flip y: UIKit y = frameHeight - CoreText y
-    let uikitY = frameRect.height - origins[i].y
-    // uikitY is now the BASELINE position in UIKit coordinates
+    let uikitBaselineY = frameRect.height - origins[i].y
 }
 ```
 
-## Bridging TextKit ↔ Core Text
+## Bridging TextKit and attribute keys
 
-### TextKit 2: Getting Glyph Info from a Layout Fragment
-
-```swift
-// In a custom NSTextLayoutFragment or delegate callback:
-let attributedString = textElement.attributedString
-let line = CTLineCreateWithAttributedString(attributedString as CFAttributedString)
-let runs = CTLineGetGlyphRuns(line) as! [CTRun]
-
-for run in runs {
-    let glyphCount = CTRunGetGlyphCount(run)
-    var positions = [CGPoint](repeating: .zero, count: glyphCount)
-    CTRunGetPositions(run, CFRange(location: 0, length: glyphCount), &positions)
-
-    // positions are relative to the line origin
-    // Add layoutFragmentFrame.origin to get document coordinates
-    // Remember to handle the coordinate flip if drawing in UIKit
-}
-```
-
-### Font Bridging
+Most TextKit-adjacent work bridges `NSAttributedString` into Core Text — toll-free bridging means no copy:
 
 ```swift
-// macOS: NSFont ↔ CTFont is toll-free bridged
-let ctFont = nsFont as CTFont
-let nsFont = ctFont as NSFont
-
-// iOS: UIFont ↔ CTFont is NOT toll-free bridged
-// UIFont → CTFont
-let ctFont = CTFontCreateWithName(uiFont.fontName as CFString, uiFont.pointSize, nil)
-
-// CTFont → UIFont
-let uiFont = UIFont(name: CTFontCopyPostScriptName(ctFont) as String,
-                     size: CTFontGetSize(ctFont))!
-
-// NSAttributedString ↔ CFAttributedString IS toll-free bridged (both platforms)
-let cfAttrStr = attributedString as CFAttributedString
+let cf = attributedString as CFAttributedString
+let line = CTLineCreateWithAttributedString(cf)
 ```
 
-### Attribute Key Differences
+Font bridging is platform-dependent. On macOS, `NSFont` and `CTFont` are toll-free bridged:
 
-Core Text uses its own attribute keys that differ from UIKit/AppKit:
+```swift
+let ct = nsFont as CTFont
+let ns = ctFont as NSFont
+```
 
-| Purpose | Core Text Key | UIKit/AppKit Key |
-|---------|--------------|-----------------|
+On iOS, `UIFont` and `CTFont` are *not* toll-free bridged. Construct explicitly:
+
+```swift
+let ct = CTFontCreateWithName(uiFont.fontName as CFString, uiFont.pointSize, nil)
+let ui = UIFont(name: CTFontCopyPostScriptName(ctFont) as String, size: CTFontGetSize(ctFont))!
+```
+
+Attribute key types diverge between Core Text and UIKit/AppKit. The same conceptual attribute uses different keys and different value types:
+
+| Purpose | Core Text key | UIKit/AppKit key |
+|---------|---------------|-----------------|
 | Font | `kCTFontAttributeName` (CTFont) | `.font` (UIFont/NSFont) |
 | Foreground color | `kCTForegroundColorAttributeName` (CGColor) | `.foregroundColor` (UIColor/NSColor) |
 | Paragraph style | `kCTParagraphStyleAttributeName` (CTParagraphStyle) | `.paragraphStyle` (NSParagraphStyle) |
 | Kern | `kCTKernAttributeName` | `.kern` |
 
-**When creating attributed strings for Core Text directly, use the `kCT*` keys.** Mixing Core Text keys and UIKit keys in the same attributed string can cause subtle rendering differences.
+`UIFont` happens to wrap a `CTFont` internally, so the UIKit `.font` key works in Core Text. `UIColor` and `CGColor` are different types, so `.foregroundColor: UIColor.red` does *not* work for Core Text foreground — the run renders in default color. For attributed strings constructed for direct Core Text use, use the `kCT*` keys with their expected value types.
 
-In practice, UIKit's `.font` attribute (UIFont) works with Core Text because UIFont wraps a CTFont internally. But `.foregroundColor` (UIColor) does NOT — Core Text needs CGColor.
+## Common Mistakes
 
-## Common Pitfalls
+1. **Forgetting the coordinate flip.** Core Text draws bottom-left; UIKit is top-left. Without resetting `textMatrix` and flipping, text renders upside-down or off-screen. Always set `context.textMatrix = .identity`, translate by `bounds.height`, and scale y by -1 at the start of any `draw(_:)` that calls Core Text. `textMatrix` also persists between calls — leaving a non-identity matrix from earlier code transforms subsequent Core Text drawing unexpectedly.
 
-1. **Forgetting to flip coordinates** — Core Text is bottom-left origin. UIKit is top-left. Text appears upside-down or at wrong position. Always set `context.textMatrix = .identity` and flip.
-2. **Not resetting text matrix** — `CGContext.textMatrix` persists between drawing calls. If a previous operation set a non-identity matrix, your Core Text drawing will be transformed unexpectedly.
-3. **String indices are UTF-16** — `CTRunGetStringIndices` returns UTF-16 code unit indices (matching NSString), not Swift Character indices. A single emoji can span 2-4 UTF-16 units.
-4. **CTFont ≠ UIFont on iOS** — They are NOT toll-free bridged on iOS. Create CTFont explicitly.
-5. **CTFrameGetLines returns non-retained array** — In Swift this is usually managed automatically, but be careful with the CFArray if you bridge to C.
-6. **Attribute key mismatch** — `kCTForegroundColorAttributeName` expects CGColor, not UIColor. Passing UIColor silently fails (no color rendered).
-7. **Character-glyph mapping is not 1:1** — Ligatures produce fewer glyphs than characters. Complex scripts (Arabic, Devanagari) can produce more glyphs than characters. Always use `CTRunGetStringIndices` for the mapping.
-8. **CTParagraphStyle is not NSParagraphStyle** — They are related but not interchangeable. CTParagraphStyle uses a C struct API; NSParagraphStyle has Objective-C properties. NSParagraphStyle internally wraps CTParagraphStyle.
+2. **Treating string indices as Swift Character indices.** `CTRunGetStringIndices` returns UTF-16 code unit offsets matching `NSString`. A single emoji can span 2-4 UTF-16 units; combining marks add more. Convert via `String.Index(utf16Offset:in:)` if you need a Swift index.
 
-## Related Skills
+3. **`UIFont` and `CTFont` interchangeable on iOS.** They aren't toll-free bridged on iOS (only on macOS, where `NSFont` and `CTFont` are bridged). The UIKit `.font` attribute happens to work in Core Text because UIFont's storage is a CTFont, but `CTFont as UIFont` doesn't compile. Construct explicitly with `UIFont(name:size:)` or `CTFontCreateWithName`.
 
-- Use `/skill txt-textkit2` for the TextKit 2 APIs that sit above Core Text.
-- Use `/skill txt-textkit1` when NSLayoutManager's glyph APIs are sufficient (no need to drop lower).
-- Use `/skill txt-viewport-rendering` for how Core Text fits into the rendering pipeline.
-- Use `/skill txt-attachments` when CTRunDelegate is used for inline non-text content.
+4. **`UIColor` for `kCTForegroundColorAttributeName`.** That key wants `CGColor`. A `UIColor` value silently fails — the run renders in the default (black) foreground. Use `uiColor.cgColor`. The `.foregroundColor` UIKit key is a different attribute and works in TextKit; it does not work for direct Core Text drawing.
+
+5. **One-glyph-per-character assumption.** Ligatures produce fewer glyphs than characters; complex scripts (Arabic, Devanagari) produce more glyphs than characters. Don't compute string indices from glyph indices arithmetically — use `CTRunGetStringIndices`.
+
+6. **`CTFrame` used for single-line layout.** `CTLine` does the same job in one call without the framesetter overhead. Reach for `CTFramesetter` when you need wrapped multi-line layout, `CTLine` for one-line measurement and drawing.
+
+7. **`NSParagraphStyle` and `CTParagraphStyle` treated as the same type.** `NSParagraphStyle` wraps `CTParagraphStyle` internally, but the C-struct API and the Objective-C property API are different APIs. When building an attributed string for direct Core Text use, construct a `CTParagraphStyle`.
+
+## References
+
+- `txt-textkit2` — TextKit 2 fragment APIs that often suffice without dropping to Core Text
+- `txt-textkit1` — `NSLayoutManager` glyph APIs (still available when TextKit 1 is acceptable)
+- `txt-viewport-rendering` — fragment geometry and the rendering pipeline
+- `txt-attachments` — `NSTextAttachment` is the higher-level wrapper around `CTRunDelegate`
+- [Core Text overview](https://sosumi.ai/documentation/coretext)
+- [CTLine](https://sosumi.ai/documentation/coretext/ctline)
+- [CTFramesetter](https://sosumi.ai/documentation/coretext/ctframesetter)
+- [CTTypesetter](https://sosumi.ai/documentation/coretext/cttypesetter)
+- [CTFont](https://sosumi.ai/documentation/coretext/ctfont)
+- [CTRunDelegate](https://sosumi.ai/documentation/coretext/ctrundelegate)

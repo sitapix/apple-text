@@ -1,98 +1,81 @@
 ---
 name: txt-colors
-description: Use when choosing text colors, semantic colors, dark mode adaptation, or wide-color/HDR text across UIKit, AppKit, and SwiftUI
+description: Pick text colors that adapt to dark mode, vibrancy, and accessibility settings across UIKit, AppKit, and SwiftUI — semantic label colors, AppKit's textColor vs labelColor split, dark-mode adaptation rules, wide-color (Display P3), HDR/EDR limits for text. Use when text disappears in dark mode, an attributed string defaults to invisible black, an NSTextView body looks dim, you're picking between systemRed and a P3 red, or designing for high-contrast accessibility. Read the actual color initializers and trait responses before reciting fixes — the patterns here describe how color adaptation usually fails, not where the bug is in your code.
 license: MIT
 ---
 
-# Text Colors, Dark Mode & Wide Color
+# Text Colors
 
-Use this skill when the main question is how text color should adapt across UIKit, AppKit, SwiftUI, dark mode, or wide-color environments.
+Authored against iOS 26.x / Swift 6.x / Xcode 26.x.
 
-## When to Use
+Apple's text APIs have semantic colors that adapt to dark mode, vibrancy, and accessibility contrast settings — and a long tail of legacy or hardcoded values that don't. This skill covers which colors adapt, why attributed strings default to a non-adaptive black, the AppKit `textColor`-vs-`labelColor` split (which gets people coming from iOS), and how wide-color and HDR fit into text rendering. The patterns here describe how color adaptation typically fails; before claiming a specific cause, check the call site that constructs the color, the attributed string that stores it, and any explicit overrides on the host view.
 
-- You need semantic text colors.
-- You are debugging dark-mode text issues.
-- You need to know whether wide color or HDR applies to text rendering.
+A small but recurring trap: `NSAttributedString`'s default foreground is opaque black, not the semantic label color. An attributed string built without an explicit `.foregroundColor` renders fine in light mode and goes invisible in dark mode. Most "text disappears in dark mode" bugs are this, not a TextKit issue.
 
-## Quick Decision
+## Contents
 
-- Need adaptive body text colors -> use semantic label/text colors
-- Need attributed text colors that survive mode changes -> resolve dynamic colors correctly
-- Need advanced formatting attributes -> `/skill txt-formatting`
+- [UIKit semantic text colors](#uikit-semantic-text-colors)
+- [AppKit textColor vs labelColor](#appkit-textcolor-vs-labelcolor)
+- [SwiftUI semantic colors](#swiftui-semantic-colors)
+- [Dark mode adaptation](#dark-mode-adaptation)
+- [Custom dynamic colors and trait response](#custom-dynamic-colors-and-trait-response)
+- [Wide color and Display P3](#wide-color-and-display-p3)
+- [HDR and EDR for text](#hdr-and-edr-for-text)
+- [WCAG contrast](#wcag-contrast)
+- [Common Mistakes](#common-mistakes)
+- [References](#references)
 
-## Core Guidance
+## UIKit semantic text colors
 
-## UIKit Semantic Text Colors (Complete)
+The label hierarchy expresses primary-to-quaternary emphasis, all adaptive across light and dark:
 
-### Label Hierarchy
-
-| Color | Light Mode | Dark Mode | Use For |
-|-------|-----------|-----------|---------|
-| `.label` | Black (a1.0) | White (a1.0) | Primary text |
-| `.secondaryLabel` | #3C3C43 (a0.6) | #EBEBF5 (a0.6) | Secondary text |
-| `.tertiaryLabel` | #3C3C43 (a0.3) | #EBEBF5 (a0.3) | Tertiary text |
-| `.quaternaryLabel` | #3C3C43 (a0.18) | #EBEBF5 (a0.18) | Disabled/hint text |
-| `.placeholderText` | #3C3C43 (a0.3) | #EBEBF5 (a0.3) | Placeholder in fields |
+| Color | Light | Dark | Use for |
+|-------|------|------|---------|
+| `.label` | Black α1.0 | White α1.0 | Primary text |
+| `.secondaryLabel` | #3C3C43 α0.6 | #EBEBF5 α0.6 | Secondary text |
+| `.tertiaryLabel` | #3C3C43 α0.3 | #EBEBF5 α0.3 | Tertiary text |
+| `.quaternaryLabel` | #3C3C43 α0.18 | #EBEBF5 α0.18 | Disabled, hint |
+| `.placeholderText` | #3C3C43 α0.3 | #EBEBF5 α0.3 | Field placeholder |
 | `.link` | #007AFF | #0984FF | Tappable links |
 
-### Legacy (NON-Dynamic — Avoid)
+The legacy non-adaptive colors `.lightText` and `.darkText` exist on UIColor and don't adapt. They predate the semantic palette and stay constant across light and dark. There is no good reason to reach for them in modern code.
 
-| Color | Value | Problem |
-|-------|-------|---------|
-| `.lightText` | White (a0.6) — always | Does NOT adapt to dark mode |
-| `.darkText` | Black (a1.0) — always | Does NOT adapt to dark mode |
+System tint colors all shift slightly between light and dark for contrast; use them rather than fixed RGB:
 
-**Always use `.label` instead of `.darkText`, `.lightText`, or hardcoded black/white.**
+```swift
+// Adapts: #FF3B30 in light, #FF453A in dark
+let red = UIColor.systemRed
 
-### System Tint Colors (Adaptive)
+// Does not adapt: stays #FF3B30 always
+let red = UIColor(red: 1.0, green: 0.231, blue: 0.188, alpha: 1.0)
+```
 
-All shift slightly between light and dark for contrast:
+## AppKit textColor vs labelColor
 
-| Color | Light | Dark |
-|-------|-------|------|
-| `.systemBlue` | #007AFF | #0A84FF |
-| `.systemRed` | #FF3B30 | #FF453A |
-| `.systemGreen` | #34C759 | #30D158 |
-| `.systemOrange` | #FF9500 | #FF9F0A |
-| `.systemPurple` | #AF52DE | #BF5AF2 |
-| `.systemPink` | #FF2D55 | #FF375F |
-| `.systemYellow` | #FFCC00 | #FFD60A |
-| `.systemIndigo` | #5856D6 | #5E5CE6 |
-| `.systemTeal` | #5AC8FA | #64D2FF |
-| `.systemCyan` | #32ADE6 | #64D2FF |
-| `.systemMint` | #00C7BE | #63E6E2 |
-| `.systemBrown` | #A2845E | #AC8E68 |
+AppKit splits "text color" into two semantic names, and the difference matters because of vibrancy:
 
-## AppKit Semantic Text Colors
+- `.textColor` — fully opaque (alpha 1.0), no vibrancy. The default for `NSTextView` body content, document text, and anything inside `NSScrollView`-hosted text.
+- `.labelColor` — partially transparent (~0.85 alpha), participates in vibrancy. The default for UI chrome — labels in the sidebar, button captions, control names.
 
-### Critical: `.textColor` vs `.labelColor`
+They look nearly identical at rest. The difference appears against vibrant backgrounds (sidebar materials, sheets, popovers): `.labelColor` gets blended with the underlying material; `.textColor` does not. For body text in `NSTextView`, `.textColor` is correct. For chrome around the editor, `.labelColor` is correct.
 
-| Color | Alpha | Vibrancy | Use For |
-|-------|-------|----------|---------|
-| `.textColor` | 1.0 (fully opaque) | ❌ No | Document body text, NSTextView content |
-| `.labelColor` | ~0.85 | ✅ Yes | UI labels, buttons, sidebar items |
+Other relevant AppKit semantic colors:
 
-**On macOS, `.textColor` is the right default for text views.** `.labelColor` is for UI chrome. They look similar but behave differently with vibrancy.
-
-### Full macOS Text Color Catalog
-
-| Color | Light | Dark | Use For |
-|-------|-------|------|---------|
-| `.textColor` | Black (a1.0) | White (a1.0) | Body text |
-| `.textBackgroundColor` | White (a1.0) | #1E1E1E (a1.0) | Text view background |
-| `.selectedTextColor` | White | White | Selected text foreground |
+| Color | Light | Dark | Use for |
+|-------|------|------|---------|
+| `.textColor` | Black α1.0 | White α1.0 | Body text |
+| `.textBackgroundColor` | White α1.0 | #1E1E1E α1.0 | Text view background |
+| `.selectedTextColor` | White | White | Selected foreground |
 | `.selectedTextBackgroundColor` | #0063E1 | #0050AA | Selection highlight |
-| `.unemphasizedSelectedTextColor` | Black | White | Selection (window inactive) |
-| `.unemphasizedSelectedTextBackgroundColor` | #DCDCDC | #464646 | Selection bg (inactive) |
-| `.placeholderTextColor` | Black (a0.25) | White (a0.25) | Placeholder text |
-| `.headerTextColor` | Black (a0.85) | White (a1.0) | Section headers |
+| `.placeholderTextColor` | Black α0.25 | White α0.25 | Field placeholder |
 | `.linkColor` | #0068DA | #419CFF | Hyperlinks |
-| `.controlTextColor` | Black (a0.85) | White (a0.85) | Control labels |
-| `.disabledControlTextColor` | Black (a0.25) | White (a0.25) | Disabled controls |
+| `.controlTextColor` | Black α0.85 | White α0.85 | Control labels |
+| `.disabledControlTextColor` | Black α0.25 | White α0.25 | Disabled controls |
+| `.unemphasizedSelectedTextColor` | Black | White | Inactive-window selection |
 
-## SwiftUI Semantic Colors
+## SwiftUI semantic colors
 
-### Text Foreground Styles
+SwiftUI exposes adaptive foregrounds via `ShapeStyle`:
 
 ```swift
 Text("Primary").foregroundStyle(.primary)      // ≈ .label
@@ -100,110 +83,78 @@ Text("Secondary").foregroundStyle(.secondary)  // ≈ .secondaryLabel
 Text("Tertiary").foregroundStyle(.tertiary)    // ≈ .tertiaryLabel
 ```
 
-### Bridging UIKit/AppKit Colors
+To use UIKit/AppKit semantic colors directly in SwiftUI, bridge via the platform initializer:
 
 ```swift
-// Use UIKit semantic colors in SwiftUI
-Text("Label").foregroundStyle(Color(uiColor: .label))
-Text("Link").foregroundStyle(Color(uiColor: .link))
-
-// macOS
-Text("Text").foregroundStyle(Color(nsColor: .textColor))
+Text("Body").foregroundStyle(Color(uiColor: .label))
+Text("Body").foregroundStyle(Color(nsColor: .textColor))   // macOS
 ```
 
-### SwiftUI Color Literals
+`Color.primary`, `Color.secondary`, `Color.accentColor` are adaptive. `Color.red`, `Color.blue`, etc. are predefined and adapt for contrast across light/dark — they are not the same as fixed RGB.
+
+## Dark mode adaptation
+
+What auto-adapts and what doesn't comes down to whether the color value resolves dynamically at draw time:
+
+- `UILabel.textColor = .label` — re-resolves on every draw, adapts.
+- `UITextView` with no explicit color — defaults to `.label` in TextKit 2 mode.
+- `NSAttributedString` with `.foregroundColor: UIColor.label` — UIKit re-resolves the dynamic color when drawing.
+- `NSAttributedString` with `.foregroundColor: UIColor.red` — fixed RGB, stays the same in light and dark.
+- `NSAttributedString` with `.foregroundColor: UIColor.systemRed` — adaptive system tint, shifts.
+- SwiftUI `Text` with `foregroundStyle(.primary)` or `foregroundStyle(Color.red)` — adaptive.
+- `CALayer.borderColor` (a `CGColor`) — does *not* re-resolve. CGColor has no notion of trait collection.
+
+The default `NSAttributedString` foreground color is opaque black, not `.label`. An attributed string built without an explicit foreground color goes invisible in dark mode:
 
 ```swift
-Color.primary    // Adaptive: black in light, white in dark
-Color.secondary  // Adaptive: with reduced opacity
-Color.accentColor // App tint color (default: .blue)
-```
+// WRONG — defaults to UIColor.black, invisible in dark mode
+let str = NSAttributedString(string: "Hello")
 
-## Dark Mode Adaptation
-
-### What Auto-Adapts
-
-| Scenario | Auto-adapts? |
-|----------|-------------|
-| UILabel with `.textColor = .label` | ✅ |
-| UITextView with no explicit color | ✅ (defaults to `.label` in TextKit 2) |
-| NSAttributedString with `.foregroundColor: UIColor.label` | ✅ UIKit re-resolves at draw time |
-| NSAttributedString with `.foregroundColor: UIColor.red` (hardcoded) | ❌ Stays red always |
-| NSAttributedString with `.foregroundColor: UIColor.systemRed` | ✅ Shifts between light/dark variants |
-| SwiftUI Text with `.foregroundStyle(.primary)` | ✅ |
-| SwiftUI Text with `.foregroundStyle(Color.red)` | ✅ (Color.red is adaptive) |
-| CALayer.borderColor (CGColor) | ❌ Must update manually |
-
-### The Default Foreground Color Trap
-
-**UIKit default attributed string foreground is black, NOT `.label`.**
-
-```swift
-// ❌ This text will be invisible in dark mode
-let str = NSAttributedString(string: "Hello")  // foreground defaults to .black
-textView.attributedText = str
-
-// ✅ Always set foreground color explicitly
+// CORRECT — explicit semantic foreground
 let str = NSAttributedString(string: "Hello", attributes: [
-    .foregroundColor: UIColor.label
+    .foregroundColor: UIColor.label,
 ])
 ```
 
-### Making Attributed String Colors Dynamic
+This is by far the most common "text disappears in dark mode" bug.
 
-Use semantic UIColors — they auto-resolve:
+## Custom dynamic colors and trait response
 
-```swift
-let attrs: [NSAttributedString.Key: Any] = [
-    .foregroundColor: UIColor.label,           // ✅ Adapts
-    .backgroundColor: UIColor.systemYellow,     // ✅ Adapts
-]
-```
-
-**Do NOT use:**
-```swift
-.foregroundColor: UIColor(red: 0, green: 0, blue: 0, alpha: 1)  // ❌ Always black
-.foregroundColor: UIColor.black  // ❌ Always black
-```
-
-### Custom Dynamic Colors
+`UIColor(dynamicProvider:)` returns a color that re-resolves per trait collection. Use it for adaptive brand colors that aren't in the system palette:
 
 ```swift
-let adaptiveColor = UIColor { traitCollection in
-    switch traitCollection.userInterfaceStyle {
-    case .dark:
-        return UIColor(red: 0.9, green: 0.9, blue: 1.0, alpha: 1.0)
-    default:
-        return UIColor(red: 0.1, green: 0.1, blue: 0.2, alpha: 1.0)
+let brand = UIColor { trait in
+    switch trait.userInterfaceStyle {
+    case .dark:  UIColor(red: 0.9, green: 0.9, blue: 1.0, alpha: 1)
+    default:     UIColor(red: 0.1, green: 0.1, blue: 0.2, alpha: 1)
     }
 }
 ```
 
-### High Contrast (Increase Contrast)
-
-Semantic colors also adapt to the Increase Contrast accessibility setting:
+The same provider can branch on `accessibilityContrast` for high-contrast support:
 
 ```swift
-let color = UIColor { traitCollection in
-    if traitCollection.accessibilityContrast == .high {
-        return .black  // Higher contrast variant
-    } else {
-        return UIColor(white: 0.3, alpha: 1.0)
+let contrastAware = UIColor { trait in
+    if trait.accessibilityContrast == .high {
+        return .black
     }
+    return UIColor(white: 0.3, alpha: 1.0)
 }
 ```
 
-Apple's built-in semantic colors already handle this — `.label` becomes pure black/white in high contrast.
+Apple's semantic colors already adapt to Increase Contrast — `.label` becomes pure black/white, `.secondaryLabel` pulls toward the foreground.
 
-### Responding to Trait Changes
+To respond to trait changes in a view that caches `CGColor` (or otherwise needs manual updates), use the iOS 17+ trait-change registration:
 
 ```swift
-// iOS 17+ (preferred)
 registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
     self.updateColors()
 }
+```
 
-// iOS 13-16
+The pre-iOS 17 hook still works:
+
+```swift
 override func traitCollectionDidChange(_ previous: UITraitCollection?) {
     super.traitCollectionDidChange(previous)
     if traitCollection.hasDifferentColorAppearance(comparedTo: previous) {
@@ -212,75 +163,81 @@ override func traitCollectionDidChange(_ previous: UITraitCollection?) {
 }
 ```
 
-## Wide Color / Display P3
+## Wide color and Display P3
 
-### Creating P3 Colors for Text
+Apple's text rendering goes through Core Text into a `CGContext` whose color space matches the backing `CALayer`. On Display P3 hardware (iPhone 7 and later, recent iPads, Macs with P3 panels), the layer uses a P3 color space, and text rendered with P3 colors displays in the wider gamut.
+
+Creating P3 colors:
 
 ```swift
 // UIKit
-let p3Color = UIColor(displayP3Red: 1.0, green: 0.1, blue: 0.1, alpha: 1.0)
+let p3 = UIColor(displayP3Red: 1.0, green: 0.1, blue: 0.1, alpha: 1.0)
 
 // AppKit
-let p3Color = NSColor(displayP3Red: 1.0, green: 0.1, blue: 0.1, alpha: 1.0)
+let p3 = NSColor(displayP3Red: 1.0, green: 0.1, blue: 0.1, alpha: 1.0)
 
 // SwiftUI
-let p3Color = Color(.displayP3, red: 1.0, green: 0.1, blue: 0.1, opacity: 1.0)
-
-// Note: SwiftUI Color(red:green:blue:) defaults to sRGB, NOT P3
+let p3 = Color(.displayP3, red: 1.0, green: 0.1, blue: 0.1, opacity: 1.0)
 ```
 
-### Does Text Actually Render in P3?
+`Color(red:green:blue:)` defaults to sRGB — it is *not* P3.
 
-**Yes**, on P3 displays. Text rendering goes through Core Text → Core Graphics, which renders in the color space of the CGContext. On P3 displays (iPhone 7+, iPad Pro, Mac with P3 display), the backing CALayer uses a P3 color space, so text colors outside sRGB gamut are rendered correctly.
+Practical notes for text: P3 reds and greens are visibly more saturated, which can hurt readability on long-form body copy. Use wide-color for accent and brand applications (a logo, a callout color) and stick to sRGB or semantic colors for body text. Contrast ratio matters more than gamut for legibility.
 
-**Practical impact for text:** Minimal. Text readability depends on contrast, not gamut. P3 colors that are more saturated than sRGB may reduce readability. Use P3 for branding colors on text, not for body copy.
+## HDR and EDR for text
 
-## HDR / EDR for Text
+Standard text views (UILabel, UITextView, NSTextView, SwiftUI Text) are not an HDR rendering surface in any documented, supported way. Apple's EDR guidance treats 1.0 as reference UI white; pushing text above that creates a glowing appearance that hurts readability and is outside the design intent of the text APIs.
 
-### Can Text Be HDR?
+SwiftUI does expose `allowedDynamicRange(_:)` as a view environment using `Image.DynamicRange`, but the documented HDR APIs are centered on image, video, and custom Metal/Core Animation rendering — not text. Custom Metal pipelines can render text into HDR layers using public APIs, but that is special-effect graphics work, not a recommended path for body or UI text.
 
-**Not through the standard text APIs in a normal, supported way.** Standard text views (UILabel, UITextView, NSTextView, SwiftUI Text) are not the usual HDR rendering path and should be treated as SDR text for UI design.
+The practical guidance is to design text contrast for SDR readability and reserve EDR-aware rendering for non-text content.
 
-Apple's EDR guidance treats 1.0 as reference/UI white, and most UI should not exceed that. Pushing text above it tends to create a glowing look that hurts readability.
+## WCAG contrast
 
-### What About `allowedDynamicRange(.high)`?
-
-SwiftUI does expose `allowedDynamicRange` as a view environment using `Image.DynamicRange`, but Apple's HDR APIs and examples are centered on image/video/custom rendering content, not standard text as a recommended HDR workflow.
-
-### Possible Workarounds
-
-1. Custom Metal/CAMetalLayer rendering using public Core Animation and Metal APIs
-2. Private CAFilter APIs (not App Store safe)
-3. Core Image or other custom compositing pipelines
-
-The first category can be App Store-safe if it stays on documented APIs, but it is custom graphics work, not standard text rendering. Treat it as a special effect path, not normal body text/UI text design.
-
-**Bottom line:** HDR text is not a standard or recommended text treatment for regular UI. Use semantic colors and normal SDR text contrast for readability; reserve custom HDR rendering for niche visual effects where you accept the complexity and readability tradeoffs.
-
-## WCAG Contrast for Text
-
-| Level | Normal Text | Large Text (18pt+ or 14pt+ bold) |
-|-------|-------------|----------------------------------|
+| Level | Normal text | Large text (18pt+, or 14pt+ bold) |
+|-------|-------------|-----------------------------------|
 | AA | 4.5:1 | 3:1 |
 | AAA | 7:1 | 4.5:1 |
 
-Apple's semantic label colors meet WCAG AA on their corresponding backgrounds:
-- `.label` on `.systemBackground` → 21:1 (light), 18:1 (dark)
-- `.secondaryLabel` on `.systemBackground` → meets AA
-- `.tertiaryLabel` → may NOT meet AA for small text (use for decorative/hint only)
+Apple's semantic label colors meet AA on their corresponding backgrounds:
 
-## Common Pitfalls
+- `.label` on `.systemBackground` reaches roughly 21:1 in light mode and 18:1 in dark.
+- `.secondaryLabel` on `.systemBackground` clears AA for normal text.
+- `.tertiaryLabel` typically does not meet AA for normal text — appropriate for hint, decorative, or disabled-only use.
 
-1. **Attributed string default foreground is black, not `.label`** — invisible in dark mode. Always set explicitly.
-2. **Using `UIColor.black`/`.white` instead of `.label`** — doesn't adapt to dark mode.
-3. **Using `.lightText`/`.darkText`** — legacy, non-adaptive. Use `.label` variants.
-4. **macOS: Using `.labelColor` for NSTextView body text** — Use `.textColor` (fully opaque, no vibrancy).
-5. **P3 colors for body text** — Saturated colors reduce readability. Use for accents only.
-6. **Not testing high contrast mode** — Some custom colors fail WCAG AA when Increase Contrast is on.
-7. **CALayer colors (CGColor) not updating** — Must manually re-resolve on trait changes.
+Custom palettes need to be checked against both modes plus high-contrast variants. Xcode's Accessibility Inspector and the per-color contrast preview in the asset catalog are the on-device verification path.
 
-## Related Skills
+## Common Mistakes
 
-- Use `/skill txt-formatting` for broader attributed-text formatting rules.
-- Use `/skill txt-dynamic-type` when color decisions interact with accessibility text sizing.
-- Use `/skill txt-attributed-string` when the color question is really about attribute storage and conversion.
+1. **Hardcoded `UIColor.black` or fixed RGB instead of `.label`.** The text reads correctly in light mode and disappears in dark. The fix is always `.label` (or `Color.primary` / `NSColor.textColor` on the relevant platform).
+
+   ```swift
+   // WRONG
+   let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: UIColor.black]
+
+   // CORRECT
+   let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: UIColor.label]
+   ```
+
+2. **Forgetting that NSAttributedString defaults to opaque black foreground.** No explicit `.foregroundColor` means invisible text in dark mode. Always set the foreground explicitly when building attributed strings — this is the single most common dark-mode text bug.
+
+3. **`.lightText` / `.darkText` for adaptive text.** They look adaptive (the names imply intent) but are fixed RGB. Use the semantic label colors.
+
+4. **macOS body text rendered with `.labelColor`.** `.labelColor` is for chrome and participates in vibrancy. For NSTextView body content, `.textColor` is the right default. The two look identical against opaque backgrounds and diverge inside vibrant materials.
+
+5. **CGColor on a CALayer that needs to adapt.** `CGColor` has no trait collection. A border or shadow set as a `CGColor` from a dynamic `UIColor` captures the resolution at the moment of access; the layer won't update on dark-mode change. Re-resolve in `traitCollectionDidChange` (or via `registerForTraitChanges` on iOS 17+).
+
+6. **Wide-color body copy.** Display P3 reds and greens are visibly more saturated than sRGB. They are great for brand accents and bad for paragraph text. Reserve P3 for accent colors and use sRGB or semantic colors for body.
+
+7. **Not testing Increase Contrast.** Custom palettes that look fine at default contrast can fail WCAG AA when Increase Contrast is on. The Apple semantic colors handle this automatically; custom dynamic colors need explicit `accessibilityContrast == .high` branches.
+
+## References
+
+- `txt-attribute-keys` — `.foregroundColor`, `.backgroundColor`, `.strokeColor` value types and view compatibility
+- `txt-attributed-string` — applying colors via AttributedString vs NSAttributedString
+- `txt-dynamic-type` — color decisions that interact with content size category
+- `txt-accessibility` — VoiceOver and accessibility-driven color overrides
+- [UIColor](https://sosumi.ai/documentation/uikit/uicolor)
+- [UIColor.label](https://sosumi.ai/documentation/uikit/uicolor/label)
+- [NSColor](https://sosumi.ai/documentation/appkit/nscolor)
+- [SwiftUI Color](https://sosumi.ai/documentation/swiftui/color)

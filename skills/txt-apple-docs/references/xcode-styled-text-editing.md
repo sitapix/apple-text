@@ -404,10 +404,10 @@ Text("Hello, \(username)")
 
 ## References
 
-- [SwiftUI Text and Symbol Modifiers](https://developer.apple.com/documentation/SwiftUI/View-Text-and-Symbols)
-- [Applying Custom Fonts to Text](https://developer.apple.com/documentation/SwiftUI/Applying-Custom-Fonts-to-Text)
-- [Building Rich SwiftUI Text Experiences](https://developer.apple.com/documentation/SwiftUI/building-rich-swiftui-text-experiences)
-- [Creating Visual Effects with SwiftUI](https://developer.apple.com/documentation/SwiftUI/Creating-visual-effects-with-SwiftUI)
-- [Text View Documentation](https://developer.apple.com/documentation/SwiftUI/Text)
-- [AttributedString Documentation](https://developer.apple.com/documentation/Foundation/AttributedString)
-- [TextEditor Documentation](https://developer.apple.com/documentation/SwiftUI/TextEditor)
+- [SwiftUI Text and Symbol Modifiers](https://sosumi.ai/documentation/SwiftUI/View-Text-and-Symbols)
+- [Applying Custom Fonts to Text](https://sosumi.ai/documentation/SwiftUI/Applying-Custom-Fonts-to-Text)
+- [Building Rich SwiftUI Text Experiences](https://sosumi.ai/documentation/SwiftUI/building-rich-swiftui-text-experiences)
+- [Creating Visual Effects with SwiftUI](https://sosumi.ai/documentation/SwiftUI/Creating-visual-effects-with-SwiftUI)
+- [Text View Documentation](https://sosumi.ai/documentation/SwiftUI/Text)
+- [AttributedString Documentation](https://sosumi.ai/documentation/Foundation/AttributedString)
+- [TextEditor Documentation](https://sosumi.ai/documentation/SwiftUI/TextEditor)

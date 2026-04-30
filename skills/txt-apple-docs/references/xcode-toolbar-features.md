@@ -201,8 +201,8 @@ The `DefaultToolbarItem` initializer creates system-defined toolbar items with s
 
 ## References
 
-- [SwiftUI Documentation: SearchToolbarBehavior](https://developer.apple.com/documentation/SwiftUI/SearchToolbarBehavior)
-- [SwiftUI Documentation: ToolbarSpacer](https://developer.apple.com/documentation/SwiftUI/ToolbarSpacer)
-- [SwiftUI Documentation: DefaultToolbarItem](https://developer.apple.com/documentation/SwiftUI/DefaultToolbarItem)
-- [SwiftUI Documentation: ToolbarItemPlacement](https://developer.apple.com/documentation/SwiftUI/ToolbarItemPlacement)
-- [SwiftUI Documentation: CustomizableToolbarContent](https://developer.apple.com/documentation/SwiftUI/CustomizableToolbarContent)
+- [SwiftUI Documentation: SearchToolbarBehavior](https://sosumi.ai/documentation/SwiftUI/SearchToolbarBehavior)
+- [SwiftUI Documentation: ToolbarSpacer](https://sosumi.ai/documentation/SwiftUI/ToolbarSpacer)
+- [SwiftUI Documentation: DefaultToolbarItem](https://sosumi.ai/documentation/SwiftUI/DefaultToolbarItem)
+- [SwiftUI Documentation: ToolbarItemPlacement](https://sosumi.ai/documentation/SwiftUI/ToolbarItemPlacement)
+- [SwiftUI Documentation: CustomizableToolbarContent](https://sosumi.ai/documentation/SwiftUI/CustomizableToolbarContent)

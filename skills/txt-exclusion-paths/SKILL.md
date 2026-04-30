@@ -1,445 +1,155 @@
 ---
 name: txt-exclusion-paths
-description: Use when text needs to wrap around images or shapes, building multi-column text layout, or using exclusion paths, linked containers, and NSTextTable
+description: Wrap text around shapes, build multi-column or magazine layouts, and embed tables in attributed strings using NSTextContainer.exclusionPaths, linked NSTextContainer arrays, NSTextTable, NSTextTableBlock, NSTextList, and custom NSTextContainer subclasses. Covers TextKit 1 and TextKit 2 differences, the text container coordinate system, the lineFragmentRect override, and the UIKit fallback for tables via NSTextAttachmentViewProvider. Use when text needs to flow around an image, when an article needs side-by-side columns or paginated text flow, when an editor needs an in-text table, or when the question involves non-rectangular text regions. Use whenever the user mentions text wrapping, columns, or magazine layout, even if they do not name exclusion paths. Do NOT use for simple line wrapping, hyphenation, or paragraph spacing — see txt-line-breaking. Do NOT use for embedding interactive views inline — see txt-attachments.
 license: MIT
 ---
 
-# Exclusion Paths, Multi-Container & Text Tables
+# Exclusion Paths and Multi-Region Layout
 
-Use this skill when text needs to flow around objects, across columns, or render as tables.
+Authored against iOS 26.x / Swift 6.x / Xcode 26.x.
 
-## When to Use
+`NSTextContainer.exclusionPaths` carves holes in the text region so glyphs flow around them. A linked array of containers lets a single layout manager spread one document across columns or pages. AppKit's `NSTextTable` builds tables out of paragraph-level attributes. These three mechanisms together cover the layout shapes that don't fit a single rectangle. The patterns below are starting points; before quoting any specific API signature, fetch the current Apple docs via Sosumi (`sosumi.ai/documentation/uikit/nstextcontainer/exclusionpaths`) and verify the actual code matches the pattern — exclusion-path geometry bugs almost always come from the wrong coordinate space, and table bugs almost always come from a missing trailing newline.
 
-- You need text to wrap around an image or arbitrary shape.
-- You need multi-column or multi-page text layout.
-- You need linked text containers (text flows from one to the next).
-- You need in-text tables using NSTextTable/NSTextBlock (AppKit).
-- You need non-rectangular text containers.
+The deeper material — full multi-column layout, AppKit table construction, the UIKit attachment-based table fallback, and `NSTextList` markers — lives in `references/multi-container-and-tables.md`. Load it when the work moves past simple text wrapping.
 
-## Quick Decision
+## Contents
 
-- Text wraps around a shape -> `exclusionPaths`
-- Text flows across columns/pages -> linked `NSTextContainer` array
-- Table of data inside a text view -> `NSTextTable` + `NSTextTableBlock` (AppKit) or `NSTextAttachmentViewProvider` (UIKit)
-- Non-rectangular text region -> subclass `NSTextContainer` and override `lineFragmentRect(forProposedRect:...)`
+- [Exclusion paths](#exclusion-paths)
+- [Coordinate system](#coordinate-system)
+- [Custom non-rectangular containers](#custom-non-rectangular-containers)
+- [Multi-container layout](#multi-container-layout)
+- [Tables and lists](#tables-and-lists)
+- [Common Mistakes](#common-mistakes)
+- [References](#references)
 
-## Exclusion Paths
+## Exclusion paths
 
-### What They Are
-
-`NSTextContainer.exclusionPaths` is an array of `UIBezierPath`/`NSBezierPath` objects that define "holes" where text cannot appear. The text system flows text around these shapes.
-
-### Basic Usage
+`NSTextContainer.exclusionPaths` is an array of `UIBezierPath` (or `NSBezierPath`) objects defining regions where text cannot appear. The text system flows lines around them. Multiple paths combine — pass an array, not separate properties.
 
 ```swift
-// Create a circular exclusion in the top-right corner
-let circlePath = UIBezierPath(
-    ovalIn: CGRect(x: 200, y: 20, width: 120, height: 120)
-)
-textView.textContainer.exclusionPaths = [circlePath]
+let circle = UIBezierPath(ovalIn: CGRect(x: 200, y: 20, width: 120, height: 120))
+textView.textContainer.exclusionPaths = [circle]
 ```
 
-Text will wrap around the circle. Multiple paths are supported:
+Mutating the array invalidates layout. On TextKit 1 the relayout is full-document; on TextKit 2 it is viewport-scoped, which is meaningfully cheaper for long documents. Either way, per-frame mutation during a scroll or animation will hammer the layout pipeline. Update on size change, on image load, on the bounds change that motivates the exclusion — not in `scrollViewDidScroll`.
 
-```swift
-textView.textContainer.exclusionPaths = [imageRect, pullQuoteRect, sidebarRect]
-```
+Paths can be any closed shape. An L-shape, a star, an irregular cutout from a die-cut graphic — the typesetter cares only that the path is closed and that points inside it are excluded. Open paths produce undefined results.
 
-### Coordinate System
+## Coordinate system
 
-Exclusion paths use the **text container's coordinate system**, not the text view's:
+Exclusion paths live in the **text container's** coordinate space, not the text view's. UITextView and NSTextView both apply a `textContainerInset` between their bounds and the container's origin, plus a `lineFragmentPadding` (default 5pt each side) that further insets the usable region. A path computed from the view's bounds will appear shifted by the inset.
 
 ```swift
 // Convert from text view coordinates to text container coordinates
-let containerOrigin = textView.textContainerOrigin  // UITextView
-// or
-let containerInset = textView.textContainerInset     // UITextView
-let containerPoint = CGPoint(
-    x: viewPoint.x - containerInset.left,
-    y: viewPoint.y - containerInset.top
-)
+let inset = textView.textContainerInset
+let containerPoint = CGPoint(x: viewPoint.x - inset.left,
+                             y: viewPoint.y - inset.top)
 ```
 
-### Dynamic Exclusion Paths (Image Follows Scroll)
+For a path that should track a sibling subview (a floating image, a pull quote box), translate the subview's frame into the container's space on every layout pass:
 
 ```swift
-func updateExclusionForFloatingImage(_ imageView: UIImageView) {
-    let imageFrame = textView.convert(imageView.frame, from: imageView.superview)
-    let containerInset = textView.textContainerInset
-    let exclusionRect = CGRect(
-        x: imageFrame.origin.x - containerInset.left,
-        y: imageFrame.origin.y - containerInset.top,
-        width: imageFrame.width + 8,   // padding
-        height: imageFrame.height + 8
-    )
-    textView.textContainer.exclusionPaths = [UIBezierPath(rect: exclusionRect)]
+func updateExclusion(for floatingView: UIView) {
+    let frameInTextView = textView.convert(floatingView.frame, from: floatingView.superview)
+    let inset = textView.textContainerInset
+    let rect = CGRect(x: frameInTextView.minX - inset.left,
+                      y: frameInTextView.minY - inset.top,
+                      width: frameInTextView.width + 8,
+                      height: frameInTextView.height + 8)
+    textView.textContainer.exclusionPaths = [UIBezierPath(rect: rect)]
 }
 ```
 
-**Performance warning:** Changing `exclusionPaths` invalidates the entire layout. For frequently-moving exclusions (e.g., during scroll), batch updates and avoid per-frame changes.
+## Custom non-rectangular containers
 
-### Complex Shapes
+Exclusion paths cut holes out of a rectangular region. To shape the region itself — text inside a circle, along a curve, conforming to a die line — subclass `NSTextContainer` and override `lineFragmentRect(forProposedRect:at:writingDirection:remaining:)`. The override receives the rect the typesetter would *like* to use for the next line and returns the rect the typesetter is *allowed* to use. Returning `.zero` skips the line entirely.
 
-```swift
-// L-shaped exclusion
-let path = UIBezierPath()
-path.move(to: CGPoint(x: 150, y: 0))
-path.addLine(to: CGPoint(x: 300, y: 0))
-path.addLine(to: CGPoint(x: 300, y: 200))
-path.addLine(to: CGPoint(x: 200, y: 200))
-path.addLine(to: CGPoint(x: 200, y: 100))
-path.addLine(to: CGPoint(x: 150, y: 100))
-path.close()
-textView.textContainer.exclusionPaths = [path]
-```
-
-### TextKit 1 vs TextKit 2
-
-| Behavior | TextKit 1 | TextKit 2 |
-|----------|-----------|-----------|
-| `exclusionPaths` property | Yes | Yes |
-| Re-layout on change | Full relayout | Viewport relayout |
-| Performance with many paths | Degrades | Better (viewport-scoped) |
-| Custom container subclass | Override `lineFragmentRect(forProposedRect:...)` | Same method |
-
-## Multi-Container (Linked) Layout
-
-### What It Is
-
-A single `NSLayoutManager` (TK1) or `NSTextLayoutManager` (TK2) can manage text across **multiple** `NSTextContainer` instances. When text overflows the first container, it flows into the second, and so on. This is how you build multi-column, multi-page, or magazine-style layouts.
-
-### TextKit 1 — Multiple Containers
-
-```swift
-let textStorage = NSTextStorage(attributedString: content)
-let layoutManager = NSLayoutManager()
-textStorage.addLayoutManager(layoutManager)
-
-// Column 1
-let container1 = NSTextContainer(size: CGSize(width: 300, height: 500))
-layoutManager.addTextContainer(container1)
-let textView1 = UITextView(frame: .zero, textContainer: container1)
-
-// Column 2
-let container2 = NSTextContainer(size: CGSize(width: 300, height: 500))
-layoutManager.addTextContainer(container2)
-let textView2 = UITextView(frame: .zero, textContainer: container2)
-
-// Text automatically flows from container1 -> container2
-```
-
-**Key rules:**
-- Container order matters — `layoutManager.textContainers` is an ordered array
-- Text fills containers in order; overflow goes to the next
-- Each container can have its own `exclusionPaths`
-- Each container gets its own `UITextView`/`NSTextView`
-- You manage the views' frames yourself (the text system only handles text flow)
-
-### TextKit 2 — Multiple Containers
-
-TextKit 2 uses a slightly different model. `NSTextLayoutManager` manages a single `NSTextContainer` by default, but you can use `NSTextContentManager` with multiple layout managers:
-
-```swift
-let contentManager = NSTextContentStorage()
-contentManager.attributedString = content
-
-// Layout manager per column
-let layoutManager1 = NSTextLayoutManager()
-let container1 = NSTextContainer(size: CGSize(width: 300, height: 500))
-layoutManager1.textContainer = container1
-contentManager.addTextLayoutManager(layoutManager1)
-
-let layoutManager2 = NSTextLayoutManager()
-let container2 = NSTextContainer(size: CGSize(width: 300, height: 500))
-layoutManager2.textContainer = container2
-contentManager.addTextLayoutManager(layoutManager2)
-```
-
-### Detecting Overflow
-
-```swift
-// TextKit 1: Check if text overflows a container
-let glyphRange = layoutManager.glyphRange(for: container1)
-let charRange = layoutManager.characterRange(forGlyphRange: glyphRange,
-                                              actualGlyphRange: nil)
-let hasOverflow = charRange.upperBound < textStorage.length
-```
-
-### Practical: Two-Column Layout
-
-```swift
-class TwoColumnView: UIView {
-    let textStorage = NSTextStorage()
-    let layoutManager = NSLayoutManager()
-    var leftTextView: UITextView!
-    var rightTextView: UITextView!
-
-    func setup() {
-        textStorage.addLayoutManager(layoutManager)
-
-        let leftContainer = NSTextContainer(size: .zero)
-        leftContainer.widthTracksTextView = true
-        leftContainer.heightTracksTextView = true
-        layoutManager.addTextContainer(leftContainer)
-        leftTextView = UITextView(frame: .zero, textContainer: leftContainer)
-        leftTextView.isEditable = false
-        addSubview(leftTextView)
-
-        let rightContainer = NSTextContainer(size: .zero)
-        rightContainer.widthTracksTextView = true
-        rightContainer.heightTracksTextView = true
-        layoutManager.addTextContainer(rightContainer)
-        rightTextView = UITextView(frame: .zero, textContainer: rightContainer)
-        rightTextView.isEditable = false
-        addSubview(rightTextView)
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        let columnWidth = (bounds.width - 16) / 2  // 16pt gap
-        leftTextView.frame = CGRect(x: 0, y: 0,
-                                     width: columnWidth, height: bounds.height)
-        rightTextView.frame = CGRect(x: columnWidth + 16, y: 0,
-                                      width: columnWidth, height: bounds.height)
-    }
-}
-```
-
-## NSTextContainer Subclassing
-
-For truly non-rectangular text regions (circular, triangular, path-based):
+When you override that method, also override `isSimpleRectangularTextContainer` to return `false`. The text system uses the simple-rectangular flag as a fast-path gate for layout shortcuts; a `false` return forces the slower path that consults your override.
 
 ```swift
 class CircularTextContainer: NSTextContainer {
+    override var isSimpleRectangularTextContainer: Bool { false }
+
     override func lineFragmentRect(
         forProposedRect proposedRect: CGRect,
         at characterIndex: Int,
         writingDirection baseWritingDirection: NSWritingDirection,
         remaining remainingRect: UnsafeMutablePointer<CGRect>?
     ) -> CGRect {
-        // Start with the standard rect
         var result = super.lineFragmentRect(
             forProposedRect: proposedRect,
             at: characterIndex,
             writingDirection: baseWritingDirection,
-            remaining: remainingRect
-        )
+            remaining: remainingRect)
 
-        // Constrain to a circle
         let center = CGPoint(x: size.width / 2, y: size.height / 2)
         let radius = min(size.width, size.height) / 2
-        let y = proposedRect.origin.y + proposedRect.height / 2
-        let dy = y - center.y
-
+        let dy = (proposedRect.midY) - center.y
         guard abs(dy) < radius else { return .zero }
 
         let dx = sqrt(radius * radius - dy * dy)
-        let minX = center.x - dx + lineFragmentPadding
-        let maxX = center.x + dx - lineFragmentPadding
-
-        result.origin.x = minX
-        result.size.width = maxX - minX
-
+        result.origin.x = center.x - dx + lineFragmentPadding
+        result.size.width = (2 * dx) - (2 * lineFragmentPadding)
         return result
     }
-
-    override var isSimpleRectangularTextContainer: Bool { false }
 }
 ```
 
-**`isSimpleRectangularTextContainer`** — Return `false` when you override `lineFragmentRect(forProposedRect:...)`. This tells the text system it can't take layout shortcuts.
+## Multi-container layout
 
-## NSTextTable / NSTextBlock (AppKit)
-
-### What They Are
-
-AppKit provides `NSTextTable` and `NSTextTableBlock` for rendering tables directly inside attributed strings. These are **paragraph-level attributes** — each table cell is a paragraph whose `NSParagraphStyle.textBlocks` includes an `NSTextTableBlock`.
-
-**Platform availability:** Primarily AppKit (NSTextView). UIKit has the classes but rendering support is limited.
-
-### Creating a Table
+A single `NSLayoutManager` (TextKit 1) manages an ordered array of `NSTextContainer` instances. The first fills first; overflow flows to the next. This is how columns, pages, and magazine spreads are built. Each container can have its own `exclusionPaths`. Each gets its own text view; you place the views yourself.
 
 ```swift
-// Create a 3-column table
-let table = NSTextTable()
-table.numberOfColumns = 3
-table.collapsesBorders = true
+let storage = NSTextStorage(attributedString: content)
+let lm = NSLayoutManager()
+storage.addLayoutManager(lm)
 
-// Create a cell: row 0, column 0
-let cell = NSTextTableBlock(table: table,
-                             startingRow: 0, rowSpan: 1,
-                             startingColumn: 0, columnSpan: 1)
-cell.setContentWidth(33.33, type: .percentageValueType)
-cell.backgroundColor = .controlBackgroundColor
-cell.setWidth(0.5, type: .absoluteValueType, for: .border)
-cell.setBorderColor(.separatorColor)
-cell.setValue(4, type: .absoluteValueType, for: .padding)
+let c1 = NSTextContainer(size: CGSize(width: 300, height: 500))
+lm.addTextContainer(c1)
+let v1 = UITextView(frame: .zero, textContainer: c1)
 
-// Attach to paragraph style
-let style = NSMutableParagraphStyle()
-style.textBlocks = [cell]
-
-// Create the cell content
-let cellText = NSAttributedString(
-    string: "Cell content\n",  // Note: must end with newline
-    attributes: [
-        .paragraphStyle: style,
-        .font: NSFont.systemFont(ofSize: 13)
-    ]
-)
+let c2 = NSTextContainer(size: CGSize(width: 300, height: 500))
+lm.addTextContainer(c2)
+let v2 = UITextView(frame: .zero, textContainer: c2)
 ```
 
-### Building a Full Table
+TextKit 2 splits the same job across `NSTextContentStorage` and multiple `NSTextLayoutManager` instances. Editing across linked containers is fragile — selection, caret, and IME marked text assume a single container in the stock UITextView/NSTextView code paths. Read-only flow works well; an editable multi-column editor is a meaningful project. Full TK1 and TK2 setups, overflow detection, and a working two-column subclass live in `references/multi-container-and-tables.md`.
 
-```swift
-func makeTable(rows: Int, columns: Int, data: [[String]]) -> NSAttributedString {
-    let table = NSTextTable()
-    table.numberOfColumns = columns
-    table.collapsesBorders = true
+## Tables and lists
 
-    let result = NSMutableAttributedString()
+`NSTextTable` plus `NSTextTableBlock` render in-attributed-string tables on AppKit's NSTextView. The table is a paragraph-level attribute: each cell is a paragraph whose `NSParagraphStyle.textBlocks` includes the cell's `NSTextTableBlock`, and **every cell must end with `\n`** or adjacent cells merge. UIKit has the classes but no rendering for them — on iOS, embed a `UITableView` (or any view) via an `NSTextAttachmentViewProvider` instead.
 
-    for row in 0..<rows {
-        for col in 0..<columns {
-            let cell = NSTextTableBlock(table: table,
-                                         startingRow: row, rowSpan: 1,
-                                         startingColumn: col, columnSpan: 1)
-            cell.setContentWidth(CGFloat(100 / columns),
-                                 type: .percentageValueType)
-            cell.setValue(4, type: .absoluteValueType, for: .padding)
-            cell.setWidth(0.5, type: .absoluteValueType, for: .border)
-            cell.setBorderColor(.separatorColor)
+`NSTextList` produces ordered or unordered list markers (decimal, alpha, roman, disc, circle, square, hyphen). Like tables, lists are paragraph-level: a paragraph style with `textLists = [list]` and a hanging indent that accounts for the marker width.
 
-            if row == 0 {
-                cell.backgroundColor = .controlAccentColor.withAlphaComponent(0.1)
-            }
+Full table-construction code, the AppKit `NSTextBlock` property reference, the UIKit attachment fallback, and nested-list patterns are in `references/multi-container-and-tables.md`. Load that reference before writing real table code.
 
-            let style = NSMutableParagraphStyle()
-            style.textBlocks = [cell]
+## Common Mistakes
 
-            let text = data[row][col] + "\n"  // Each cell ends with newline
-            result.append(NSAttributedString(string: text, attributes: [
-                .paragraphStyle: style,
-                .font: row == 0 ? NSFont.boldSystemFont(ofSize: 13)
-                                : NSFont.systemFont(ofSize: 13)
-            ]))
-        }
-    }
+1. **Exclusion path in the wrong coordinate space.** Computing the path from the text view's bounds without subtracting `textContainerInset` and `lineFragmentPadding` produces a path shifted by ~10-15 points. The symptom is a wrap that "almost works" but consistently misses by a small amount. Convert via the inset before constructing the path.
 
-    return result
-}
-```
+2. **Mutating exclusion paths every frame.** Each assignment to `exclusionPaths` invalidates layout — full-document on TK1, viewport-scoped on TK2. A scroll handler or animation that updates paths per frame will tank scroll performance. Update on the events that actually change the geometry, not on every redraw.
 
-### NSTextBlock Properties
+3. **Open path used as an exclusion.** The typesetter's containment test assumes a closed path. An open path returns undefined inside/outside results, manifesting as text passing through the "exclusion" or vanishing inside it. Call `path.close()` before assignment.
 
-| Property | Purpose |
-|----------|---------|
-| `backgroundColor` | Cell background color |
-| `setBorderColor(_:for:)` | Per-edge border color |
-| `setWidth(_:type:for:edge:)` | Margin, border, or padding per edge |
-| `setWidth(_:type:for:)` | Margin, border, or padding for all edges of a layer |
-| `setContentWidth(_:type:)` | Cell content width (absolute or percentage) |
-| `verticalAlignment` | `.top`, `.middle`, `.bottom`, `.baseline` |
-| `setValue(_:type:for:)` | Set dimension values (minWidth, maxWidth, minHeight, maxHeight) |
+4. **Custom NSTextContainer without overriding `isSimpleRectangularTextContainer`.** The default returns `true`, which lets the text system take fast paths that bypass `lineFragmentRect`. The custom geometry never runs and the text lays out as if the container were rectangular. Override to `false` whenever the lineFragmentRect override is non-trivial.
 
-### NSTextBlock.Layer
+5. **NSTextTable cell missing trailing newline.** Each cell is a paragraph; without the `\n` terminator the next cell's content joins this one's paragraph and the layout manager merges the cells visually. Append `\n` to every cell string.
 
-```swift
-cell.setWidth(1, type: .absoluteValueType, for: .border)   // Border layer
-cell.setValue(8, type: .absoluteValueType, for: .padding)   // Padding layer
-cell.setValue(4, type: .absoluteValueType, for: .margin)    // Margin layer
-```
+6. **NSTextTable expected to render on UIKit.** UITextView has the classes but not the rendering. Tables either render incompletely or not at all. The supported pattern on iOS is `NSTextAttachmentViewProvider` with a `UITableView` or custom view (see `references/multi-container-and-tables.md`).
 
-### UIKit Alternative: Tables via Attachments
+7. **Editing in a linked-container layout.** Multi-container flow is read-stable but edit-fragile. Selection, caret rendering, and IME marked text assume a single container in stock views; cursor placement at container boundaries misbehaves. If editing is required, expect to write substantial selection/caret code or constrain the editor to a single container per session.
 
-Since UIKit doesn't fully support NSTextTable rendering, use `NSTextAttachmentViewProvider` (TextKit 2) to embed a `UITableView` or custom view:
+8. **Assuming `lineFragmentPadding` is zero.** UITextView's default container has 5pt of padding on each side. A custom container subclass that ignores `lineFragmentPadding` in its computed rect produces lines that are 10pt wider than the apparent shape, with glyphs spilling into the exclusion.
 
-```swift
-// See /skill txt-attachments for full NSTextAttachmentViewProvider pattern
-class TableAttachmentViewProvider: NSTextAttachmentViewProvider {
-    override func loadView() {
-        let tableView = MyCompactTableView(data: extractData(from: textAttachment))
-        view = tableView
-    }
+## References
 
-    override func attachmentBounds(
-        for attributes: [NSAttributedString.Key: Any],
-        location: NSTextLocation,
-        textContainer: NSTextContainer?,
-        proposedLineFragment: CGRect,
-        position: CGPoint
-    ) -> CGRect {
-        // Full-width, calculated height
-        let width = proposedLineFragment.width
-        let height = calculateTableHeight(for: width)
-        return CGRect(x: 0, y: 0, width: width, height: height)
-    }
-}
-```
-
-## NSTextList
-
-For ordered/unordered lists inside attributed strings:
-
-```swift
-let list = NSTextList(markerFormat: .decimal, options: 0)
-list.startingItemNumber = 1
-
-let style = NSMutableParagraphStyle()
-style.textLists = [list]
-style.headIndent = 24       // Indent for wrapped lines
-style.firstLineHeadIndent = 0  // Marker hangs in the margin
-
-let item = NSAttributedString(
-    string: "\t\(list.marker(forItemNumber: 1))\tFirst item\n",
-    attributes: [.paragraphStyle: style, .font: UIFont.systemFont(ofSize: 15)]
-)
-```
-
-### Marker Formats
-
-| Format | Appearance |
-|--------|-----------|
-| `.decimal` | 1. 2. 3. |
-| `.octal` | 1. 2. 3. (base 8) |
-| `.lowercaseAlpha` | a. b. c. |
-| `.uppercaseAlpha` | A. B. C. |
-| `.lowercaseRoman` | i. ii. iii. |
-| `.uppercaseRoman` | I. II. III. |
-| `.disc` | bullet (filled circle) |
-| `.circle` | open circle |
-| `.square` | filled square |
-| `.diamond` | diamond |
-| `.hyphen` | hyphen |
-
-### Nested Lists
-
-```swift
-let outerList = NSTextList(markerFormat: .decimal, options: 0)
-let innerList = NSTextList(markerFormat: .lowercaseAlpha, options: 0)
-
-let innerStyle = NSMutableParagraphStyle()
-innerStyle.textLists = [outerList, innerList]  // Nesting = array order
-innerStyle.headIndent = 48   // Double indent
-```
-
-## Pitfalls
-
-1. **Exclusion path coordinates** — Must be in text container coordinates, not view coordinates. Account for `textContainerInset` and `textContainerOrigin`.
-
-2. **Exclusion path performance** — Each change triggers full relayout in TextKit 1. Batch changes; don't update per-frame during animations.
-
-3. **NSTextTable on UIKit** — The classes exist but rendering is incomplete. Use attachment view providers on iOS instead.
-
-4. **Each table cell must end with `\n`** — NSTextTable cells are paragraph-level. Missing the trailing newline merges cells.
-
-5. **Multi-container editing** — Editing in linked containers is fragile. Works well for read-only; editing across container boundaries requires careful cursor management.
-
-6. **`isSimpleRectangularTextContainer`** — If you subclass `NSTextContainer` and override `lineFragmentRect`, you must return `false` or layout may use incorrect fast paths.
-
-## Related Skills
-
-- For embedding interactive views inline -> `/skill txt-attachments`
-- For viewport-scoped layout with exclusions -> `/skill txt-viewport-rendering`
-- For paragraph style formatting details -> `/skill txt-formatting`
-- For layout invalidation after changing exclusion paths -> `/skill txt-layout-invalidation`
+- `references/multi-container-and-tables.md` — full multi-column setups (TK1 and TK2), AppKit `NSTextTable` construction, UIKit table fallback via `NSTextAttachmentViewProvider`, `NSTextList` patterns
+- `/skill txt-attachments` — `NSTextAttachment` and view providers when the goal is embedding interactive content
+- `/skill txt-line-breaking` — paragraph style settings (line break mode, hyphenation, line height)
+- `/skill txt-viewport-rendering` — viewport-scoped layout details for TextKit 2
+- `/skill txt-layout-invalidation` — what `exclusionPaths` mutations invalidate, and when
+- [NSTextContainer.exclusionPaths](https://sosumi.ai/documentation/uikit/nstextcontainer/exclusionpaths)
+- [NSTextContainer.lineFragmentRect](https://sosumi.ai/documentation/uikit/nstextcontainer/linefragmentrect(forproposedrect:at:writingdirection:remaining:))
+- [NSTextTable](https://sosumi.ai/documentation/appkit/nstexttable)
+- [NSTextList](https://sosumi.ai/documentation/appkit/nstextlist)
+- [NSTextAttachmentViewProvider](https://sosumi.ai/documentation/uikit/nstextattachmentviewprovider)

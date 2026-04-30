@@ -234,7 +234,7 @@ struct SuggestionsView: View { ... }
 
 ## References
 
-- [Apple Developer Documentation: AttributedString](https://developer.apple.com/documentation/Foundation/AttributedString)
-- [Apple Developer Documentation: AttributedString.TextAlignment](https://developer.apple.com/documentation/Foundation/AttributedString/TextAlignment)
-- [Apple Developer Documentation: AttributedString.LineHeight](https://developer.apple.com/documentation/Foundation/AttributedString/LineHeight)
-- [Apple Developer Documentation: DiscontiguousAttributedSubstring](https://developer.apple.com/documentation/Foundation/DiscontiguousAttributedSubstring)
+- [Apple Developer Documentation: AttributedString](https://sosumi.ai/documentation/Foundation/AttributedString)
+- [Apple Developer Documentation: AttributedString.TextAlignment](https://sosumi.ai/documentation/Foundation/AttributedString/TextAlignment)
+- [Apple Developer Documentation: AttributedString.LineHeight](https://sosumi.ai/documentation/Foundation/AttributedString/LineHeight)
+- [Apple Developer Documentation: DiscontiguousAttributedSubstring](https://sosumi.ai/documentation/Foundation/DiscontiguousAttributedSubstring)
